@@ -1,6 +1,6 @@
 {
   "name": "@lyfie/luthor",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A modular Notion-style Lexical editor",
   "license": "MIT",
   "author": "Rahul NS Anand",
