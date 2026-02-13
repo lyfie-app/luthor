@@ -254,14 +254,14 @@ Ready to try it? Pick your package manager above and let's build something amazi
           </p>
           <div className="flex items-center md:gap-6 gap-4 pt-2">
             <a
-              href="https://github.com/novincode/luthor"
+              href="https://github.com/lyfie-app/luthor"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
             >
               ⭐ Star on GitHub
             </a>
             <span className="text-muted-foreground">•</span>
             <a
-              href="https://github.com/sponsors/novincode"
+              href="https://github.com/sponsors/rahulnsanand"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               💝 Support the project
@@ -350,7 +350,7 @@ Ready to try it? Pick your package manager above and let's build something amazi
           
             <span className="text-muted-foreground">•</span>
             <Link
-              href="https://github.com/novincode/luthor"
+              href="https://github.com/lyfie-app/luthor"
               target="_blank"
               
               className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"

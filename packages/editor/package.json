@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/novincode/luthor.git"
+    "url": "https://github.com/lyfie-app/luthor.git"
   },
   "bugs": {
-    "url": "https://github.com/novincode/luthor/issues"
+    "url": "https://github.com/lyfie-app/luthor/issues"
   },
-  "homepage": "https://github.com/novincode/luthor#readme",
+  "homepage": "https://github.com/lyfie-app/luthor#readme",
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",

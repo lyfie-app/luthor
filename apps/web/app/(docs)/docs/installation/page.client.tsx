@@ -268,7 +268,7 @@ export function InstallationPageClient() {
               Explore Extensions
             </Link>
             <Link
-              href="https://github.com/novincode/luthor"
+              href="https://github.com/lyfie-app/luthor"
               className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
             >
               <Github className="h-4 w-4" />

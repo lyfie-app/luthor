@@ -588,7 +588,7 @@ Select some text and try the **floating toolbar** that appears, or right-click f
         </Tabs>
 
         <div className="flex justify-center pt-6">
-          <Link href="https://github.com/novincode/luthor/tree/main/apps/web/components/templates/shadcn">
+          <Link href="https://github.com/lyfie-app/luthor/tree/main/apps/web/components/templates/shadcn">
             <Button variant="outline" className="flex items-center gap-2">
               <Github className="h-4 w-4" />
               View on GitHub

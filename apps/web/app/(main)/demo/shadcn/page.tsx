@@ -28,7 +28,7 @@ export default function ShadcnTemplatePage() {
             </Button>
             <Button asChild variant="outline">
               <a
-                href="https://github.com/novincode/luthor/tree/main/apps/web/components/templates/shadcn"
+                href="https://github.com/lyfie-app/luthor/tree/main/apps/web/components/templates/shadcn"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2"

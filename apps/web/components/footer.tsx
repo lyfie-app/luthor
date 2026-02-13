@@ -87,7 +87,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://github.com/novincode/luthor"
+                  href="https://github.com/lyfie-app/luthor"
                   target="_blank"
                   className="hover:text-foreground transition-colors"
                 >
@@ -103,7 +103,7 @@ export function Footer() {
             <div className="space-y-3">
               <Button asChild size="sm" className="w-full">
                 <Link
-                  href="https://github.com/sponsors/novincode"
+                  href="https://github.com/sponsors/rahulnsanand"
                   target="_blank"
                   className="flex items-center gap-2"
                 >
@@ -113,7 +113,7 @@ export function Footer() {
               </Button>
               <Button variant="outline" size="sm" asChild className="w-full">
                 <Link
-                  href="https://github.com/novincode/luthor"
+                  href="https://github.com/lyfie-app/luthor"
                   target="_blank"
                   className="flex items-center gap-2"
                 >
@@ -140,7 +140,7 @@ export function Footer() {
                 Docs
               </Link>
               <Link
-                href="https://github.com/novincode/luthor"
+                href="https://github.com/lyfie-app/luthor"
                 target="_blank"
                 className="hover:text-foreground transition-colors"
               >

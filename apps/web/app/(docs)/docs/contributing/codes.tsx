@@ -4,7 +4,7 @@ const CONTRIBUTING_CODES: RegisteredCodeSnippet[] = [
   {
     id: "contributing-clone-repo",
     language: "bash",
-    code: `git clone https://github.com/novincode/luthor.git
+    code: `git clone https://github.com/lyfie-app/luthor.git
 cd luthor`,
   },
   {

@@ -346,11 +346,11 @@ Select some text and try the toolbar buttons above, or press **Ctrl+K** to open 
             <div className="bg-muted p-4 rounded-lg">
               <p className="font-medium mb-2">From this GitHub location:</p>
               <Link
-                href="https://github.com/novincode/luthor/tree/main/apps/web/components/templates/default"
+                href="https://github.com/lyfie-app/luthor/tree/main/apps/web/components/templates/default"
                 target="_blank"
                 className="text-primary hover:underline"
               >
-                https://github.com/novincode/luthor/tree/main/apps/web/components/templates/default
+                https://github.com/lyfie-app/luthor/tree/main/apps/web/components/templates/default
               </Link>
             </div>
 
@@ -661,7 +661,7 @@ Select some text and try the toolbar buttons above, or press **Ctrl+K** to open 
         </Tabs>
 
         <div className="flex justify-center pt-6">
-          <Link href="https://github.com/novincode/luthor/tree/main/apps/web/components/templates/default">
+          <Link href="https://github.com/lyfie-app/luthor/tree/main/apps/web/components/templates/default">
             <Button size="lg" className="flex items-center gap-3">
               <Github className="h-5 w-5" />
               View on GitHub

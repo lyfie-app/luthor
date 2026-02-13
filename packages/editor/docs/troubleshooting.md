@@ -343,9 +343,9 @@ If you're still having issues:
 
 1. **Check the Documentation**: Review the [API Reference](api-reference.md) and [Getting Started](getting-started.md) guides.
 
-2. **Search Issues**: Look for similar issues in the [GitHub repository](https://github.com/novincode/luthor/issues).
+2. **Search Issues**: Look for similar issues in the [GitHub repository](https://github.com/lyfie-app/luthor/issues).
 
-3. **Create an Issue**: If you can't find a solution, [open a new issue](https://github.com/novincode/luthor/issues/new) with:
+3. **Create an Issue**: If you can't find a solution, [open a new issue](https://github.com/lyfie-app/luthor/issues/new) with:
    - Your Luthor version
    - Browser and OS information
    - Code sample that reproduces the issue

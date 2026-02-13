@@ -118,7 +118,7 @@ export function TopNavigation({
         <div className="ml-auto flex items-center space-x-2">
           <Button variant="ghost" size="lg" asChild className="hidden md:flex">
             <Link
-              href="https://github.com/novincode/luthor"
+              href="https://github.com/lyfie-app/luthor"
               target="_blank"
               className="flex items-center gap-2"
             >
@@ -168,7 +168,7 @@ export function TopNavigation({
               </Link>
             ))}
             <Link
-              href="https://github.com/novincode/luthor"
+              href="https://github.com/lyfie-app/luthor"
               target="_blank"
               className="flex items-center gap-1 text-foreground/60 hover:text-foreground transition-colors"
               onClick={() => setIsMenuOpen(false)}

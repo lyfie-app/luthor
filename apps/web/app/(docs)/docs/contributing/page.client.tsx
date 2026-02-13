@@ -347,7 +347,7 @@ export default function ContributingPageClient() {
         </p>
 
         <div className="flex flex-col md:grid md:grid-cols-2 gap-4 md:gap-6">
-          <Link href="https://github.com/novincode/luthor/issues">
+          <Link href="https://github.com/lyfie-app/luthor/issues">
             <Card className="border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">
@@ -364,7 +364,7 @@ export default function ContributingPageClient() {
             </Card>
           </Link>
 
-          <Link href="https://github.com/novincode/luthor/discussions">
+          <Link href="https://github.com/lyfie-app/luthor/discussions">
             <Card className="border-primary/20 hover:border-primary/40 transition-colors cursor-pointer">
               <CardHeader>
                 <CardTitle className="flex items-center gap-3">

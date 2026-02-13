@@ -307,7 +307,7 @@ Use CSS variables for runtime theme switching:
 
 ## Default Theme Reference
 
-Check out the [default theme](https://github.com/novincode/luthor/blob/main/apps/web/app/templates/default/theme.ts) and [styles](https://github.com/novincode/luthor/blob/main/apps/web/app/templates/default/styles.css) for a complete reference implementation.
+Check out the [default theme](https://github.com/lyfie-app/luthor/blob/main/apps/web/app/templates/default/theme.ts) and [styles](https://github.com/lyfie-app/luthor/blob/main/apps/web/app/templates/default/styles.css) for a complete reference implementation.
 
 ## Troubleshooting
 

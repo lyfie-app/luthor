@@ -145,8 +145,8 @@ Luthor powers editors in:
 ## Community & Support
 
 - **[💬 Discord](https://discord.gg/RAMYSDRag7)** - Get help, share ideas
-- **[🐛 GitHub Issues](https://github.com/novincode/luthor/issues)** - Bug reports, feature requests
-- **[💭 Discussions](https://github.com/novincode/luthor/discussions)** - Questions, showcase your projects
+- **[🐛 GitHub Issues](https://github.com/lyfie-app/luthor/issues)** - Bug reports, feature requests
+- **[💭 Discussions](https://github.com/lyfie-app/luthor/discussions)** - Questions, showcase your projects
 
 ## Contributing
 
@@ -164,13 +164,13 @@ Check our [Contributing Guide](./CONTRIBUTING.md) to get started.
 Luthor is free and open source, built by developers for developers. If it's helping you build better editors, consider supporting its development:
 
 - **⭐ Star this repository** to show your support
-- **💝 [Sponsor the project](https://github.com/sponsors/novincode)** to help with maintenance and new features
+- **💝 [Sponsor the project](https://github.com/sponsors/rahulnsanand)** to help with maintenance and new features
 - **📢 Share Luthor** with other developers
 
 Your support keeps this project alive and helps us build better tools for the React community.
 
 ---
 
-**Built with ❤️ by [novincode](https://github.com/novincode)**
+**Built with ❤️ by [Rahul NS Anand](https://github.com/rahulnsanand)**
 
 MIT License - Use it however you want.</content>

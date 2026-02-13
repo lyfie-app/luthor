@@ -107,7 +107,7 @@ That's it! You're ready to build something amazing.`);
                   asChild
                 >
                   <a
-                    href="https://github.com/novincode/luthor"
+                    href="https://github.com/lyfie-app/luthor"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -342,7 +342,7 @@ That's it! You're ready to build something amazing.`);
                 asChild
               >
                 <a
-                  href="https://github.com/novincode/luthor"
+                  href="https://github.com/lyfie-app/luthor"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -405,7 +405,7 @@ That's it! You're ready to build something amazing.`);
 
             <Button size="lg" asChild variant="default">
               <a
-                href="https://github.com/sponsors/novincode"
+                href="https://github.com/sponsors/rahulnsanand"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2"
