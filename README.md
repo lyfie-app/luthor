@@ -7,7 +7,8 @@ If you want a shorter, architecture-only summary, see [architecture.md](architec
 ## Repository Map
 
 - [apps/web](apps/web): Next.js 15 site for docs, demos, and examples.
-- [packages/editor](packages/editor): Core editor library published as `@lyfie/luthor`.
+- [packages/headless](packages/headless): Core editor library published as `@lyfie/luthor-headless`.
+- [packages/luthor](packages/luthor): Presets and plug-and-play configs published as `@lyfie/luthor`.
 - [packages/ui](packages/ui): Shared UI component library used by the site.
 - [packages/eslint-config](packages/eslint-config): Shared ESLint configs for the workspace.
 - [packages/typescript-config](packages/typescript-config): Shared TypeScript configs for the workspace.
@@ -17,8 +18,9 @@ If you want a shorter, architecture-only summary, see [architecture.md](architec
 
 ## How The Pieces Fit Together
 
-- The web app in [apps/web](apps/web) consumes `@lyfie/luthor` and `@repo/ui` via workspace dependencies.
-- The editor library in [packages/editor](packages/editor) is headless and provides the core extension system; the web app builds UI around it.
+- The web app in [apps/web](apps/web) consumes `@lyfie/luthor-headless` and `@repo/ui` via workspace dependencies.
+- The editor library in [packages/headless](packages/headless) is headless and provides the core extension system; the web app builds UI around it.
+- The presets package in [packages/luthor](packages/luthor) provides ready-to-use preset definitions for plug-and-play setups.
 - The UI library in [packages/ui](packages/ui) hosts reusable React components (Radix UI based) and is used by the web app.
 - Shared linting and TypeScript configs in [packages/eslint-config](packages/eslint-config) and [packages/typescript-config](packages/typescript-config) are imported by app and package tsconfig/eslint config files.
 - Turbo in [turbo.json](turbo.json) orchestrates builds and caches outputs across all packages.
@@ -46,19 +48,31 @@ Build and deployment:
 
 ## Packages
 
-### Core Editor (packages/editor)
+### Core Editor (packages/headless)
 
-The editor library published as `@lyfie/luthor`.
+The editor library published as `@lyfie/luthor-headless`.
 
 Key folders and what they do:
 
-- [packages/editor/src/core](packages/editor/src/core): Editor system, extension base types, and theming.
-- [packages/editor/src/extensions](packages/editor/src/extensions): Built-in extensions (formatting, media, tables, exports, etc.).
-- [packages/editor/docs](packages/editor/docs): User-facing documentation and API reference for the editor.
+- [packages/headless/src/core](packages/headless/src/core): Editor system, extension base types, and theming.
+- [packages/headless/src/extensions](packages/headless/src/extensions): Built-in extensions (formatting, media, tables, exports, etc.).
+- [packages/headless/docs](packages/headless/docs): User-facing documentation and API reference for the editor.
 
 Build output:
 
-- Bundled via `tsup` to [packages/editor/dist](packages/editor/dist).
+- Bundled via `tsup` to [packages/headless/dist](packages/headless/dist).
+
+### Presets Package (packages/luthor)
+
+Presets and plug-and-play configurations published as `@lyfie/luthor`.
+
+Key folders and what they do:
+
+- [packages/luthor/src/presets](packages/luthor/src/presets): Preset definitions and registry.
+
+Build output:
+
+- Bundled via `tsup` to [packages/luthor/dist](packages/luthor/dist).
 
 ### UI Library (packages/ui)
 
@@ -90,12 +104,12 @@ This is a high-level summary of where key dependencies live. See each package.js
 ### apps/web
 
 - Next.js 15 + React 19 for the docs site.
-- Lexical packages and `@lyfie/luthor` for the editor demos.
+- Lexical packages and `@lyfie/luthor-headless` for the editor demos.
 - `@repo/ui` for shared UI.
 - Shiki and rehype tooling for code highlighting.
 - Zustand for local state.
 
-### packages/editor
+### packages/headless
 
 - No runtime dependencies; Lexical and React are peer dependencies.
 - Uses tsup for bundling and eslint for linting.
@@ -136,8 +150,9 @@ Turbo tasks are defined in [turbo.json](turbo.json):
 ## Where To Start
 
 - Product overview and architecture: [architecture.md](architecture.md)
-- Editor package docs and API reference: [packages/editor/docs](packages/editor/docs)
+- Editor package docs and API reference: [packages/headless/docs](packages/headless/docs)
 - Site source (docs and demos): [apps/web](apps/web)
+
 
 
 

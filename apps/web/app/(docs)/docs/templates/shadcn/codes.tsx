@@ -3,7 +3,7 @@ import { RegisteredCodeSnippet } from "@/app/(docs)/lib/types";
 const SHADCN_TEMPLATE_CODES: RegisteredCodeSnippet[] = [
   {
     id: "shadcn-template-basic-usage",
-    code: `import { ShadcnTemplate } from '@lyfie/luthor/templates'
+    code: `import { ShadcnTemplate } from '@lyfie/luthor-headless/templates'
 
 function MyEditor() {
   return (
@@ -23,7 +23,7 @@ function MyEditor() {
   {
     id: "shadcn-template-with-ref",
     code: `import { useRef } from 'react'
-import { ShadcnTemplate, ShadcnTemplateRef } from '@lyfie/luthor/templates'
+import { ShadcnTemplate, ShadcnTemplateRef } from '@lyfie/luthor-headless/templates'
 
 function MyEditor() {
   const editorRef = useRef<ShadcnTemplateRef>(null)
@@ -56,7 +56,7 @@ function MyEditor() {
   tableExtension,
   codeExtension,
   // ... many more extensions
-} from '@lyfie/luthor'
+} from '@lyfie/luthor-headless'
 
 const extensions = [
   boldExtension,
@@ -78,7 +78,7 @@ const extensions = [
   },
   {
     id: "shadcn-template-create-system",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
 
 // Define your extensions
 const extensions = [boldExtension, italicExtension] as const
@@ -122,7 +122,7 @@ type EditorStateQueries = ExtractStateQueries<typeof extensions>`,
   },
   {
     id: "shadcn-template-theme",
-    code: `import { shadcnTheme } from '@lyfie/luthor/templates'
+    code: `import { shadcnTheme } from '@lyfie/luthor-headless/templates'
 
 // Use the built-in shadcn theme
 <ShadcnTemplate />
@@ -163,7 +163,7 @@ const customTheme = {
   },
   {
     id: "shadcn-template-command-palette",
-    code: `import { commandPaletteExtension } from '@lyfie/luthor'
+    code: `import { commandPaletteExtension } from '@lyfie/luthor-headless'
 
 // Add to extensions array
 const extensions = [
@@ -235,7 +235,7 @@ function MyEditor() {
   },
   {
     id: "shadcn-template-markdown-import",
-    code: `import { markdownExtension } from '@lyfie/luthor'
+    code: `import { markdownExtension } from '@lyfie/luthor-headless'
 
 // Add to extensions
 const extensions = [
@@ -317,3 +317,4 @@ This is **bold** and *italic* text.
 ];
 
 export default SHADCN_TEMPLATE_CODES;
+

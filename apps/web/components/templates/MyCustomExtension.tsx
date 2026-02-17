@@ -1,5 +1,5 @@
 import React from "react";
-import { createCustomNodeExtension } from "@lyfie/luthor/extensions/custom";
+import { createCustomNodeExtension } from "@lyfie/luthor-headless/extensions/custom";
 import {
   $getSelection,
   $isRangeSelection,
@@ -76,3 +76,4 @@ export { MyCustomExtension };
 // 2. Use the insertCustomNode command to insert nodes
 // 3. The container will render with native Lexical editing capabilities
 // 4. Style the container using CSS: [data-custom-node-type="myBlock"]
+

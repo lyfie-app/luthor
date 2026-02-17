@@ -1,6 +1,6 @@
 import React from "react";
-import { BaseExtension } from "@lyfie/luthor/extensions/base/BaseExtension";
-import { ExtensionCategory } from "@lyfie/luthor/extensions/types";
+import { BaseExtension } from "@lyfie/luthor-headless/extensions/base/BaseExtension";
+import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import {
   LexicalEditor,
   $getSelection,
@@ -98,3 +98,4 @@ class TestBaseExtensionClass extends BaseExtension<
 
 // Export a singleton instance
 export const TestBaseExtension = new TestBaseExtensionClass();
+

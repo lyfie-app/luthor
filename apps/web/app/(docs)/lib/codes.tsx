@@ -5,21 +5,21 @@ import { RegisteredCodeSnippet } from "./types";
 export const INSTALLATION_EXAMPLES: RegisteredCodeSnippet[] = [
   {
     id: "install-npm",
-    code: "npm install @lyfie/luthor",
+    code: "npm install @lyfie/luthor-headless",
     language: "bash",
     title: "Install with npm",
     description: "Install Luthor using npm",
   },
   {
     id: "install-pnpm",
-    code: "pnpm add @lyfie/luthor",
+    code: "pnpm add @lyfie/luthor-headless",
     language: "bash",
     title: "Install with pnpm",
     description: "Install Luthor using pnpm",
   },
   {
     id: "install-yarn",
-    code: "yarn add @lyfie/luthor",
+    code: "yarn add @lyfie/luthor-headless",
     language: "bash",
     title: "Install with yarn",
     description: "Install Luthor using yarn",
@@ -30,8 +30,8 @@ export const INSTALLATION_EXAMPLES: RegisteredCodeSnippet[] = [
 export const BASIC_USAGE_EXAMPLES: RegisteredCodeSnippet[] = [
   {
     id: "basic-import",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
-import { DefaultTemplate } from '@lyfie/luthor/templates'`,
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
+import { DefaultTemplate } from '@lyfie/luthor-headless/templates'`,
     language: "typescript",
     title: "Import Luthor",
     description: "Import the main components",
@@ -82,7 +82,7 @@ import { DefaultTemplate } from '@lyfie/luthor/templates'`,
 export const EXTENSION_EXAMPLES: RegisteredCodeSnippet[] = [
   {
     id: "create-extension-basic",
-    code: `import { createExtension } from '@lyfie/luthor'
+    code: `import { createExtension } from '@lyfie/luthor-headless'
 
 const MyExtension = createExtension({
   name: 'my-extension',
@@ -268,7 +268,7 @@ function MyEditor() {
   },
   {
     id: "richtext-with-extensions",
-    code: `import { createEditorSystem, richTextExtension, boldExtension, italicExtension, historyExtension } from "@lyfie/luthor"
+    code: `import { createEditorSystem, richTextExtension, boldExtension, italicExtension, historyExtension } from "@lyfie/luthor-headless"
 
 // Declare extensions as const for type safety
 const extensions = [
@@ -305,7 +305,7 @@ function MyEditor() {
   },
   {
     id: "richtext-lexical-direct",
-    code: `import { createEditorSystem, boldExtension, italicExtension, historyExtension } from "@lyfie/luthor"
+    code: `import { createEditorSystem, boldExtension, italicExtension, historyExtension } from "@lyfie/luthor-headless"
 import { LexicalComposer } from '@lexical/react/LexicalComposer'
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin'
 import { ContentEditable } from '@lexical/react/LexicalContentEditable'
@@ -485,3 +485,4 @@ const ALL_SNIPPETS: RegisteredCodeSnippet[] = [
 ];
 
 export default ALL_SNIPPETS;
+

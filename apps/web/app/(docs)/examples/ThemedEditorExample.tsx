@@ -13,8 +13,8 @@ import {
   linkExtension,
   historyExtension,
   RichText,
-} from "@lyfie/luthor";
-import { LuthorTheme } from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
+import { LuthorTheme } from "@lyfie/luthor-headless";
 import "./themed-editor.css";
 
 // Define a custom theme with classnames
@@ -181,3 +181,4 @@ export function ThemedEditorExample() {
     </div>
   );
 }
+

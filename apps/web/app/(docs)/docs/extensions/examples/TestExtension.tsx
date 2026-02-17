@@ -1,6 +1,6 @@
 import React from "react";
-import { createExtension } from "@lyfie/luthor";
-import { ExtensionCategory } from "@lyfie/luthor/extensions/types";
+import { createExtension } from "@lyfie/luthor-headless";
+import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import {
   LexicalEditor,
   $getSelection,
@@ -92,3 +92,4 @@ const TestExtension = createExtension<
 });
 
 export { TestExtension };
+

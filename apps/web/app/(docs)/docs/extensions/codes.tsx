@@ -4,7 +4,7 @@ import { RegisteredCodeSnippet } from "../../lib/types";
 export const EXTENSION_EXAMPLES: RegisteredCodeSnippet[] = [
   {
     id: "create-extension-basic",
-    code: `import { createExtension } from '@lyfie/luthor'
+    code: `import { createExtension } from '@lyfie/luthor-headless'
 
 const MyExtension = createExtension({
   name: 'my-extension',
@@ -193,3 +193,4 @@ function MyEditor() {
 
 // Combine all examples for default export
 export default EXTENSION_EXAMPLES;
+

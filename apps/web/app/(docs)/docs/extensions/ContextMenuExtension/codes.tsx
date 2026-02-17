@@ -3,8 +3,8 @@ import { RegisteredCodeSnippet } from "../../../lib/types";
 const CONTEXT_MENU_EXTENSION_CODES: RegisteredCodeSnippet[] = [
   {
     id: "context-menu-import",
-    code: `import { contextMenuExtension } from '@lyfie/luthor/extensions'
-import { DefaultTemplate } from '@lyfie/luthor/templates'`,
+    code: `import { contextMenuExtension } from '@lyfie/luthor-headless/extensions'
+import { DefaultTemplate } from '@lyfie/luthor-headless/templates'`,
     language: "typescript",
     title: "Import ContextMenuExtension",
     description: "Import the extension and template",
@@ -60,7 +60,7 @@ import { DefaultTemplate } from '@lyfie/luthor/templates'`,
   },
   {
     id: "context-menu-table-integration",
-    code: `import { TableExtension } from '@lyfie/luthor/extensions'
+    code: `import { TableExtension } from '@lyfie/luthor-headless/extensions'
 
 // Configure the table extension with a context menu
 const tableWithContextMenu = new TableExtension().configure({
@@ -227,3 +227,4 @@ const customContextMenu = contextMenuExtension.configure({
 ];
 
 export default CONTEXT_MENU_EXTENSION_CODES;
+

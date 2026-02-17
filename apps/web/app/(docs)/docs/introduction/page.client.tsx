@@ -28,7 +28,7 @@ import {
   Rocket,
   Github,
   BookOpen,
-} from "lucide-react";
+} from "@/components/icons";
 import { Button } from "@repo/ui/components/button";
 import { InstallCommand } from "@/components/install-command";
 import { DynamicCodeExample } from "../../components/dynamic-code-example";
@@ -220,7 +220,7 @@ Ready to try it? Pick your package manager above and let's build something amazi
 
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Install Luthor</h3>
-          <InstallCommand packages={["@lyfie/luthor"]} />
+          <InstallCommand packages={["@lyfie/luthor-headless"]} />
         </div>
 
         <div className="space-y-2">
@@ -363,3 +363,4 @@ Ready to try it? Pick your package manager above and let's build something amazi
     </div>
   );
 }
+

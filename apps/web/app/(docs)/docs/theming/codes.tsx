@@ -3,7 +3,7 @@ import { RegisteredCodeSnippet } from "@/app/(docs)/lib/types";
 export const THEMING_CODES: RegisteredCodeSnippet[] = [
   {
     id: "theming-basic-usage",
-    code: `import { LuthorTheme } from '@lyfie/luthor'
+    code: `import { LuthorTheme } from '@lyfie/luthor-headless'
 
 const myTheme: LuthorTheme = {
   // Content styles
@@ -62,7 +62,7 @@ const myTheme: LuthorTheme = {
   },
   {
     id: "theming-tailwind-theme",
-    code: `import { LuthorTheme } from '@lyfie/luthor'
+    code: `import { LuthorTheme } from '@lyfie/luthor-headless'
 
 const tailwindTheme: LuthorTheme = {
   // Content styles
@@ -105,7 +105,7 @@ const tailwindTheme: LuthorTheme = {
   },
   {
     id: "theming-merge-themes",
-    code: `import { mergeThemes, defaultLuthorTheme, LuthorTheme } from '@lyfie/luthor'
+    code: `import { mergeThemes, defaultLuthorTheme, LuthorTheme } from '@lyfie/luthor-headless'
 
   // Start from the default theme
 const baseTheme = defaultLuthorTheme
@@ -215,7 +215,7 @@ const finalTheme = mergeThemes(baseTheme, customOverrides)
     code: `"use client"
 
 import { useState } from 'react'
-import { LuthorTheme } from '@lyfie/luthor'
+import { LuthorTheme } from '@lyfie/luthor-headless'
 
 const lightTheme: LuthorTheme = {
   container: 'bg-white border-gray-200',
@@ -281,7 +281,7 @@ function ThemeableEditor() {
   },
   {
     id: "theming-migration-after",
-    code: `import { LuthorTheme } from '@lyfie/luthor'
+    code: `import { LuthorTheme } from '@lyfie/luthor-headless'
 
 const luthorTheme: LuthorTheme = {
   ...lexicalTheme,
@@ -301,7 +301,7 @@ const luthorTheme: LuthorTheme = {
   },
   {
     id: "theming-component-level",
-    code: `import { LuthorTheme } from '@lyfie/luthor'
+    code: `import { LuthorTheme } from '@lyfie/luthor-headless'
 
 // Different themes per editor instance
 const minimalTheme: LuthorTheme = {
@@ -358,3 +358,4 @@ function MultiEditorApp() {
 ];
 
 export default THEMING_CODES;
+

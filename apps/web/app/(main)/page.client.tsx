@@ -6,6 +6,8 @@ import {
   DefaultTemplate,
   DefaultTemplateRef,
 } from "@/components/templates/default/DefaultTemplate";
+import { ExtensiveEditor } from "@lyfie/luthor/presets/extensive";
+import { ExtensiveEditorRef } from "@lyfie/luthor/presets/extensive/ExtensiveEditor";
 import { Badge } from "@repo/ui/components/badge";
 import { Button } from "@repo/ui/components/button";
 import {
@@ -33,7 +35,7 @@ import {
   BookOpen,
   Play,
   ChevronDown,
-} from "lucide-react";
+} from "@/components/icons";
 import { InstallCommand } from "@/components/install-command";
 
 export function HomePageClient() {
@@ -59,7 +61,7 @@ Luthor is a modern, type-safe React framework built on top of Meta's Lexical tha
 ## 🏁 Quick Start
 
 \`\`\`bash
-npm install @lyfie/luthor lexical @lexical/react
+npm install @lyfie/luthor-headless lexical @lexical/react
 \`\`\`
 
 That's it! You're ready to build something amazing.`);
@@ -137,6 +139,7 @@ That's it! You're ready to build something amazing.`);
             <div className="relative w-full max-w-4xl text-left">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-3xl blur-3xl" />
               <div className="relative">
+                <ExtensiveEditor ref={editorRef} onReady={handleEditorReady} />
                 <DefaultTemplate ref={editorRef} onReady={handleEditorReady} />
               </div>
             </div>
@@ -273,7 +276,7 @@ That's it! You're ready to build something amazing.`);
             <div className="space-y-6">
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Install Luthor</h3>
-                <InstallCommand packages={["@lyfie/luthor"]} />
+                <InstallCommand packages={["@lyfie/luthor-headless"]} />
               </div>
 
               <div className="space-y-3">
@@ -421,3 +424,4 @@ That's it! You're ready to build something amazing.`);
     </div>
   );
 }
+

@@ -35,7 +35,7 @@ import {
   blockFormatExtension,
   RichText,
   defaultLuthorTheme,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import {
   Bold,
   Italic,
@@ -48,7 +48,7 @@ import {
   Link,
   Undo,
   Redo,
-} from "lucide-react";
+} from "@/components/icons";
 import "./advanced-editor.css";
 
 // 1. Define your extensions (as const for type safety)
@@ -317,3 +317,4 @@ export function AdvancedFeaturesExample() {
     </Provider>
   );
 }
+

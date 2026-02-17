@@ -1,5 +1,5 @@
 import React from "react";
-import { LuthorTheme } from "@lyfie/luthor";
+import { LuthorTheme } from "@lyfie/luthor-headless";
 
 export const shadcnTheme: LuthorTheme = {
   // Toolbar styles - using SHADCN classes
@@ -141,3 +141,4 @@ export const shadcnTheme: LuthorTheme = {
     textarea: "w-full h-full min-h-[600px] p-4 bg-background border-none rounded-none font-mono text-sm resize-none focus:outline-none focus:ring-0",
   },
 };
+

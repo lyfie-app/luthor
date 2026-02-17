@@ -35,11 +35,11 @@ import {
   type ExtractCommands,
   type ExtractStateQueries,
   type BaseCommands,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalEditor } from "lexical";
-import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Undo, Redo, Sun, Moon, Image as ImageIcon, AlignLeft, AlignCenter, AlignRight, Upload, Link, Unlink, Minus, Code, Terminal, Table as TableIcon, FileCode, Eye, Pencil, Command, Type, Quote, Indent, Outdent } from "lucide-react";
+import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Undo, Redo, Sun, Moon, ImageIcon, AlignLeft, AlignCenter, AlignRight, Upload, Link, Unlink, Minus, Code, Terminal, TableIcon, FileCode, Eye, Pencil, Command, Type, Quote, Indent, Outdent } from "@/components/icons";
 import { Select, Dropdown, Dialog } from "./components";
 import {
   commandsToCommandPaletteItems,
@@ -692,3 +692,4 @@ export const DefaultTemplate = forwardRef<DefaultTemplateRef, DefaultTemplatePro
 });
 
 DefaultTemplate.displayName = "DefaultTemplate";
+

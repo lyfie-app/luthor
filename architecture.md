@@ -11,7 +11,8 @@ luthor/
 ├── apps/
 │   └── web/                 # Next.js documentation and demo site
 ├── packages/
-│   ├── editor/              # Core @lyfie/luthor package
+│   ├── headless/            # Core @lyfie/luthor-headless package
+│   ├── luthor/              # Presets package @lyfie/luthor
 │   ├── ui/                  # Shared UI components (@repo/ui)
 │   ├── eslint-config/       # Shared ESLint configurations
 │   └── typescript-config/   # Shared TypeScript configurations
@@ -47,7 +48,7 @@ The main Next.js application serving as the project's website:
 - **Deployment**: Cloudflare Pages with `next-on-pages`
 - **Key Dependencies**:
   - Lexical packages for editor functionality
-  - @lyfie/luthor for demos
+  - @lyfie/luthor-headless for demos
   - @repo/ui for consistent UI
   - Zustand for state management
   - Shiki for code highlighting
@@ -59,11 +60,11 @@ The main Next.js application serving as the project's website:
 
 ## Packages
 
-### Editor Package (`packages/editor`)
+### Editor Package (`packages/headless`)
 
 The core library providing the type-safe rich text editor:
 
-- **Package**: `@lyfie/luthor`
+- **Package**: `@lyfie/luthor-headless`
 - **Architecture**: Extension-based, headless design
 - **Key Features**:
   - Type-safe command and state APIs
@@ -163,7 +164,7 @@ The web app includes scripts for generating documentation content:
 
 ### Publishing
 
-- **Editor Package**: Published to npm as `@lyfie/luthor`
+- **Editor Package**: Published to npm as `@lyfie/luthor-headless`
 - **Internal Packages**: Not published (workspace-only)
 
 ## Deployment
@@ -176,7 +177,7 @@ The web app includes scripts for generating documentation content:
 
 ### Packages
 
-- **Editor Package**: Published to npm as `@lyfie/luthor`
+- **Editor Package**: Published to npm as `@lyfie/luthor-headless`
 - **Registry**: npm
 - **Automation**: Manual publishing with version bumps
 - **CDN**: Packages distributed via npm's CDN

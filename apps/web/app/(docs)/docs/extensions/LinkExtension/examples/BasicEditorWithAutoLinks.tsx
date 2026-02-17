@@ -7,7 +7,7 @@ import {
   historyExtension,
   linkExtension,
   RichText,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import "@/app/(docs)/examples/basic-editor.css";
 
 // Auto-linking configuration
@@ -93,3 +93,4 @@ export function BasicEditorWithAutoLinks() {
     </Provider>
   );
 }
+

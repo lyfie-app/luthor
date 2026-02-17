@@ -26,7 +26,7 @@ import {
   Lightbulb,
   Package,
   BookOpen,
-} from "lucide-react";
+} from "@/components/icons";
 import { InstallCommand } from "@/components/install-command";
 import { DynamicCodeExample } from "../../components/dynamic-code-example";
 import { BasicEditorExample } from "../../examples/BasicEditorExample";
@@ -112,7 +112,7 @@ Ready to build something amazing? Let's get started! 🚀`);
                 <Package className="h-4 w-4" />
                 Install Luthor
               </h4>
-              <InstallCommand packages={["@lyfie/luthor"]} />
+              <InstallCommand packages={["@lyfie/luthor-headless"]} />
             </div>
             <div className="bg-background/80 rounded-lg p-4 border">
               <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -560,3 +560,4 @@ Ready to build something amazing? Let's get started! 🚀`);
     </div>
   );
 }
+
