@@ -21,9 +21,13 @@ The core headless editor library for developers who want complete control.
 
 **Installation:**
 ```bash
+# npm
 npm install @lyfie/luthor-headless
-# Install peer dependencies
 npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+
+# pnpm
+pnpm add @lyfie/luthor-headless
+pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
 ```
 
 ### 2. **@lyfie/luthor** - Batteries Included
@@ -39,8 +43,12 @@ Ready-to-use presets and configurations built on top of luthor-headless.
 
 **Installation:**
 ```bash
-npm install @lyfie/luthor-headless
-npm install @lyfie/luthor
+# npm
+npm install @lyfie/luthor-headless @lyfie/luthor
+
+# pnpm
+pnpm add @lyfie/luthor-headless @lyfie/luthor
+
 # That's it! All dependencies are included
 ```
 

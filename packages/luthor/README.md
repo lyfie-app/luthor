@@ -33,15 +33,18 @@ This package provides ready-to-use editor presets built on top of [@lyfie/luthor
 Install both the headless package and this preset package:
 
 ```bash
-npm install @lyfie/luthor-headless
-npm install @lyfie/luthor
+# npm
+npm install @lyfie/luthor-headless @lyfie/luthor
+
+# pnpm
+pnpm add @lyfie/luthor-headless @lyfie/luthor
 ```
 
 **That's it!** All required Lexical packages are automatically installed as dependencies of `@lyfie/luthor`.
 
 ### What Gets Installed
 
-When you install `@lyfie/luthor`, npm automatically installs:
+When you install `@lyfie/luthor`, your package manager (npm/pnpm) automatically installs:
 - `@lyfie/luthor-headless` (the core editor)
 - `lexical` (the Lexical framework)
 - All `@lexical/*` packages (code, html, link, list, markdown, react, rich-text, selection, table, utils)
@@ -529,14 +532,23 @@ If you're using luthor-headless and want to switch:
 
 **Before:**
 ```bash
+# npm
 npm install @lyfie/luthor-headless
 npm install lexical @lexical/react @lexical/html # ... many packages
+
+# pnpm
+pnpm add @lyfie/luthor-headless
+pnpm add lexical @lexical/react @lexical/html # ... many packages
 ```
 
 **After:**
 ```bash
-npm install @lyfie/luthor-headless
-npm install @lyfie/luthor
+# npm
+npm install @lyfie/luthor-headless @lyfie/luthor
+
+# pnpm
+pnpm add @lyfie/luthor-headless @lyfie/luthor
+
 # Remove individual @lexical/* packages if desired
 ```
 
