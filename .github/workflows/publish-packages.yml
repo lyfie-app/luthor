@@ -1,10 +1,6 @@
 name: Publish Packages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/**"
   workflow_dispatch:
     inputs:
       manual_target:

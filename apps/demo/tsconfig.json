@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@lyfie/luthor-headless": ["../../packages/headless/src"],
+      "@lyfie/luthor-headless/*": ["../../packages/headless/src/*"],
+      "@lyfie/luthor": ["../../packages/luthor/src"],
+      "@lyfie/luthor/*": ["../../packages/luthor/src/*"]
+    }
+  },
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

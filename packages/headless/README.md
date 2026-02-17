@@ -46,13 +46,21 @@ function MyEditor() {
 Luthor-Headless is designed to be lightweight with Lexical packages as **peer dependencies**.
 
 ```bash
+# npm
 npm install @lyfie/luthor-headless
+
+# pnpm
+pnpm add @lyfie/luthor-headless
 ```
 
 Install the required Lexical peer dependencies:
 
 ```bash
+# npm
 npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+
+# pnpm
+pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
 ```
 
 > **💡 Want a simpler setup?** Check out [@lyfie/luthor](../luthor/README.md) which bundles all Lexical dependencies for you.
@@ -60,13 +68,21 @@ npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list
 ### Basic Usage
 
 ```bash
+# npm
 npm install @lyfie/luthor-headless
+
+# pnpm
+pnpm add @lyfie/luthor-headless
 ```
 
 Install the Lexical peer dependencies:
 
 ```bash
-npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils
+# npm
+npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+
+# pnpm
+pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
 ```
 
 ```tsx
@@ -131,11 +147,13 @@ export default function App() {
 For maximum control and flexibility:
 
 ```bash
-# Install headless package
+# npm
 npm install @lyfie/luthor-headless
-
-# Manually install Lexical peer dependencies
 npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+
+# pnpm
+pnpm add @lyfie/luthor-headless
+pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
 ```
 
 **Use this when:**
@@ -149,9 +167,11 @@ npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list
 For a batteries-included experience:
 
 ```bash
-# Install both packages
-npm install @lyfie/luthor-headless
-npm install @lyfie/luthor
+# npm
+npm install @lyfie/luthor-headless @lyfie/luthor
+
+# pnpm
+pnpm add @lyfie/luthor-headless @lyfie/luthor
 
 # That's it! All Lexical dependencies included
 ```
