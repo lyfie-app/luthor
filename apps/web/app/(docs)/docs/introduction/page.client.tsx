@@ -220,7 +220,7 @@ Ready to try it? Pick your package manager above and let's build something amazi
 
         <div className="space-y-2">
           <h3 className="text-lg font-semibold">Install Luthor</h3>
-          <InstallCommand packages={["@lyfie/luthor"]} />
+          <InstallCommand packages={["@lyfie/luthor-headless"]} />
         </div>
 
         <div className="space-y-2">
@@ -363,3 +363,4 @@ Ready to try it? Pick your package manager above and let's build something amazi
     </div>
   );
 }
+

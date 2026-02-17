@@ -10,7 +10,7 @@ import {
   listExtension,
   linkExtension,
   RichText,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import "./basic-editor.css";
 
 // 1. Define your extensions (as const for type safety)
@@ -104,3 +104,4 @@ export function BasicEditorExample() {
     </Provider>
   );
 }
+

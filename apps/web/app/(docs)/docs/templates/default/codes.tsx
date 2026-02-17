@@ -56,7 +56,7 @@ function MyEditor() {
   tableExtension,
   codeExtension,
   // ... many more extensions
-} from '@lyfie/luthor'
+} from '@lyfie/luthor-headless'
 
 const extensions = [
   boldExtension,
@@ -78,7 +78,7 @@ const extensions = [
   },
   {
     id: "default-template-create-system",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
 
 // Define your extensions
 const extensions = [boldExtension, italicExtension] as const
@@ -166,7 +166,7 @@ type EditorStateQueries = ExtractStateQueries<typeof extensions>`,
   },
   {
     id: "default-template-command-palette",
-    code: `import { commandPaletteExtension } from '@lyfie/luthor'
+    code: `import { commandPaletteExtension } from '@lyfie/luthor-headless'
 
 // Add to extensions array
 const extensions = [
@@ -238,7 +238,7 @@ function MyEditor() {
   },
   {
     id: "default-template-markdown-import",
-    code: `import { markdownExtension } from '@lyfie/luthor'
+    code: `import { markdownExtension } from '@lyfie/luthor-headless'
 
 // Add to extensions
 const extensions = [
@@ -273,3 +273,4 @@ This is **bold** and *italic* text.
 ];
 
 export default DEFAULT_TEMPLATE_CODES;
+

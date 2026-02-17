@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { CommandPaletteItem } from "@lyfie/luthor/extensions/core";
+import type { CommandPaletteItem } from "@lyfie/luthor-headless/extensions/core";
 import { Search, Command } from "@/components/icons";
 
 interface CommandPaletteProps {
@@ -166,3 +166,4 @@ export function CommandPalette({
     </div>
   );
 }
+

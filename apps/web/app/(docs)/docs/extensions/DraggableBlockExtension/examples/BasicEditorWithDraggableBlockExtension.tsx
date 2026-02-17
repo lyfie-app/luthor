@@ -7,7 +7,7 @@ import {
   draggableBlockExtension,
   historyExtension,
   RichText,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import "@/app/(docs)/examples/basic-editor.css";
 
 // Draggable block configuration
@@ -93,3 +93,4 @@ export function BasicEditorWithDraggableBlockExtension() {
     </Provider>
   );
 }
+

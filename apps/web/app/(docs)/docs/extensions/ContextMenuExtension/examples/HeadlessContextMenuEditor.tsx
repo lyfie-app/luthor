@@ -7,7 +7,7 @@ import {
   contextMenuExtension,
   ContextMenuExtension,
   RichText,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import { useEffect } from "react";
 import "@/app/(docs)/examples/basic-editor.css";
 
@@ -99,3 +99,4 @@ function HeadlessContextMenuEditor() {
 }
 
 export default HeadlessContextMenuEditor;
+

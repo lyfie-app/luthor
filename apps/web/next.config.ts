@@ -9,7 +9,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/ui", "@lyfie/luthor"],
+  transpilePackages: ["@repo/ui", "@lyfie/luthor-headless"],
 
   images: {
     remotePatterns: [
@@ -23,3 +23,4 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+

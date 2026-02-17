@@ -3,8 +3,8 @@ import { RegisteredCodeSnippet } from "../../../lib/types";
 const DRAGGABLE_BLOCK_EXTENSION_CODES: RegisteredCodeSnippet[] = [
   {
     id: "draggable-block-import",
-    code: `import { draggableBlockExtension } from '@lyfie/luthor/extensions'
-import { DefaultTemplate } from '@lyfie/luthor/templates'`,
+    code: `import { draggableBlockExtension } from '@lyfie/luthor-headless/extensions'
+import { DefaultTemplate } from '@lyfie/luthor-headless/templates'`,
     language: "typescript",
     title: "Import DraggableBlockExtension",
     description: "Import the extension and template",
@@ -192,3 +192,4 @@ import { DefaultTemplate } from '@lyfie/luthor/templates'`,
 ];
 
 export default DRAGGABLE_BLOCK_EXTENSION_CODES;
+

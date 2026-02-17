@@ -3,7 +3,7 @@ import { RegisteredCodeSnippet } from "../../../lib/types";
 export const LINK_EXTENSION_CODES: RegisteredCodeSnippet[] = [
   {
     id: "link-extension-basic-usage",
-    code: `import { createEditorSystem, linkExtension } from '@lyfie/luthor'
+    code: `import { createEditorSystem, linkExtension } from '@lyfie/luthor-headless'
 
 const extensions = [linkExtension] as const
 const { Provider, useEditor } = createEditorSystem<typeof extensions>()
@@ -35,7 +35,7 @@ function MyEditor() {
   },
   {
     id: "link-extension-auto-link-text",
-    code: `import { linkExtension } from '@lyfie/luthor'
+    code: `import { linkExtension } from '@lyfie/luthor-headless'
 
 const extensions = [
   linkExtension.configure({
@@ -49,7 +49,7 @@ const extensions = [
   },
   {
     id: "link-extension-custom-validation",
-    code: `import { linkExtension } from '@lyfie/luthor'
+    code: `import { linkExtension } from '@lyfie/luthor-headless'
 
 const extensions = [
   linkExtension.configure({
@@ -156,3 +156,4 @@ const extensions = [
 ];
 
 export default LINK_EXTENSION_CODES;
+

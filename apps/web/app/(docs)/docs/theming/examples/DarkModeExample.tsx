@@ -8,8 +8,8 @@ import {
   italicExtension,
   underlineExtension,
   RichText,
-} from "@lyfie/luthor";
-import { LuthorTheme } from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
+import { LuthorTheme } from "@lyfie/luthor-headless";
 
 // Clean light theme
 const lightTheme: LuthorTheme = {
@@ -127,3 +127,4 @@ export function DarkModeExample() {
     </div>
   );
 }
+

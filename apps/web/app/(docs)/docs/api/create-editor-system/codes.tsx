@@ -3,8 +3,8 @@ import { RegisteredCodeSnippet } from "@/app/(docs)/lib/types";
 export const CREATE_EDITOR_SYSTEM_CODES: RegisteredCodeSnippet[] = [
   {
     id: "create-editor-system-basic-usage",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
-import { boldExtension, italicExtension } from '@lyfie/luthor'
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
+import { boldExtension, italicExtension } from '@lyfie/luthor-headless'
 
 // Define your extensions as a const array for type safety
 const extensions = [boldExtension, italicExtension] as const
@@ -26,7 +26,7 @@ function MyEditor() {
   },
   {
     id: "create-editor-system-with-config",
-    code: `import { createEditorSystem, defaultLuthorTheme } from '@lyfie/luthor'
+    code: `import { createEditorSystem, defaultLuthorTheme } from '@lyfie/luthor-headless'
 
 const extensions = [boldExtension, italicExtension] as const
 const { Provider, useEditor } = createEditorSystem<typeof extensions>()
@@ -194,7 +194,7 @@ function ContentEditor() {
   },
   {
     id: "create-editor-system-define-extensions",
-    code: `import { boldExtension, italicExtension, linkExtension } from '@lyfie/luthor'
+    code: `import { boldExtension, italicExtension, linkExtension } from '@lyfie/luthor-headless'
 
 const extensions = [boldExtension, italicExtension, linkExtension] as const`,
     language: "typescript",
@@ -203,7 +203,7 @@ const extensions = [boldExtension, italicExtension, linkExtension] as const`,
   },
   {
     id: "create-editor-system-create-system",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
 
 const { Provider, useEditor } = createEditorSystem<typeof extensions>()`,
     language: "typescript",
@@ -214,3 +214,4 @@ const { Provider, useEditor } = createEditorSystem<typeof extensions>()`,
 ];
 
 export default CREATE_EDITOR_SYSTEM_CODES;
+

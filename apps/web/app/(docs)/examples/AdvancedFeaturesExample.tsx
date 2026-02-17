@@ -35,7 +35,7 @@ import {
   blockFormatExtension,
   RichText,
   defaultLuthorTheme,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import {
   Bold,
   Italic,
@@ -317,3 +317,4 @@ export function AdvancedFeaturesExample() {
     </Provider>
   );
 }
+

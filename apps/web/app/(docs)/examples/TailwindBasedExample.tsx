@@ -13,8 +13,8 @@ import {
   linkExtension,
   historyExtension,
   RichText,
-} from "@lyfie/luthor";
-import { LuthorTheme } from "@lyfie/luthor/core";
+} from "@lyfie/luthor-headless";
+import { LuthorTheme } from "@lyfie/luthor-headless/core";
 
 // 1. Define your custom theme with type safety
 const tailwindTheme: LuthorTheme = {
@@ -246,3 +246,4 @@ export function TailwindBasedExample() {
     </Provider>
   );
 }
+

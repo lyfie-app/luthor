@@ -149,7 +149,7 @@ export function InstallationPageClient() {
                 Start with the main Luthor package that provides our type-safe
                 editor system.
               </CardDescription>
-              <InstallCommand packages={["@lyfie/luthor"]} />
+              <InstallCommand packages={["@lyfie/luthor-headless"]} />
             </CardContent>
           </Card>
 
@@ -280,3 +280,4 @@ export function InstallationPageClient() {
     </div>
   );
 }
+

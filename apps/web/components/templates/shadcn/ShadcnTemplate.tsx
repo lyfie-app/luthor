@@ -35,7 +35,7 @@ import {
   type ExtractCommands,
   type ExtractStateQueries,
   type BaseCommands,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalEditor } from "lexical";
@@ -1658,3 +1658,4 @@ export const ShadcnTemplate = forwardRef<ShadcnTemplateRef, ShadcnTemplateProps>
 );
 
 ShadcnTemplate.displayName = "ShadcnTemplate";
+

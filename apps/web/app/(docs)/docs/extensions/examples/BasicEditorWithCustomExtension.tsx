@@ -5,8 +5,8 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { LexicalEditor } from "lexical";
-import { createEditorSystem } from "@lyfie/luthor/core/createEditorSystem";
-import { RichText } from "@lyfie/luthor";
+import { createEditorSystem } from "@lyfie/luthor-headless/core/createEditorSystem";
+import { RichText } from "@lyfie/luthor-headless";
 import { TestExtension } from "./TestExtension";
 import "../../../examples/basic-editor.css"; // Reuse the basic editor CSS
 
@@ -71,3 +71,4 @@ export default function BasicEditorWithCustomExtension() {
     </LexicalComposer>
   );
 }
+

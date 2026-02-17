@@ -1,8 +1,8 @@
 import type {
   ExtractCommands,
   BaseCommands,
-} from "@lyfie/luthor/extensions/types";
-import type { CommandPaletteItem } from "@lyfie/luthor/extensions/core";
+} from "@lyfie/luthor-headless/extensions/types";
+import type { CommandPaletteItem } from "@lyfie/luthor-headless/extensions/core";
 
 // Import extensions from the Shadcn template
 import { extensions } from "./ShadcnTemplate";
@@ -416,3 +416,4 @@ export function registerKeyboardShortcuts(
     element.removeEventListener("keydown", handleKeyDown);
   };
 }
+

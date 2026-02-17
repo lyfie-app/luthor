@@ -4,8 +4,8 @@ import { RegisteredCodeSnippet } from "../../lib/types";
 export const INTRODUCTION_EXAMPLES: RegisteredCodeSnippet[] = [
   {
     id: "basic-import",
-    code: `import { createEditorSystem } from '@lyfie/luthor'
-import { DefaultTemplate } from '@lyfie/luthor/templates'`,
+    code: `import { createEditorSystem } from '@lyfie/luthor-headless'
+import { DefaultTemplate } from '@lyfie/luthor-headless/templates'`,
     language: "typescript",
     title: "Import Luthor",
     description: "Import the main components",
@@ -54,3 +54,4 @@ import { DefaultTemplate } from '@lyfie/luthor/templates'`,
 
 // Combine all examples for default export
 export default INTRODUCTION_EXAMPLES;
+

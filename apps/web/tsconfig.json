@@ -6,8 +6,8 @@
       "@/*": ["./*"],
       "@repo/ui": ["../../packages/ui/src"],
       "@repo/ui/*": ["../../packages/ui/src/*"],
-      "@lyfie/luthor": ["../../packages/editor/src"],
-      "@lyfie/luthor/*": ["../../packages/editor/src/*"]
+      "@lyfie/luthor-headless": ["../../packages/headless/src"],
+      "@lyfie/luthor-headless/*": ["../../packages/headless/src/*"]
     },
     "plugins": [
       {
@@ -24,3 +24,4 @@
   ],
   "exclude": ["node_modules"]
 }
+

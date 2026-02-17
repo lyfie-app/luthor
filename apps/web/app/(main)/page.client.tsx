@@ -59,7 +59,7 @@ Luthor is a modern, type-safe React framework built on top of Meta's Lexical tha
 ## 🏁 Quick Start
 
 \`\`\`bash
-npm install @lyfie/luthor lexical @lexical/react
+npm install @lyfie/luthor-headless lexical @lexical/react
 \`\`\`
 
 That's it! You're ready to build something amazing.`);
@@ -273,7 +273,7 @@ That's it! You're ready to build something amazing.`);
             <div className="space-y-6">
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Install Luthor</h3>
-                <InstallCommand packages={["@lyfie/luthor"]} />
+                <InstallCommand packages={["@lyfie/luthor-headless"]} />
               </div>
 
               <div className="space-y-3">
@@ -421,3 +421,4 @@ That's it! You're ready to build something amazing.`);
     </div>
   );
 }
+

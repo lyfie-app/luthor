@@ -10,7 +10,7 @@ import {
   TableExtension,
   historyExtension,
   RichText,
-} from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
 import "@/app/(docs)/examples/basic-editor.css";
 
 // Context menu configuration with table support
@@ -84,3 +84,4 @@ function BasicEditorWithContextMenu() {
 }
 
 export default BasicEditorWithContextMenu;
+

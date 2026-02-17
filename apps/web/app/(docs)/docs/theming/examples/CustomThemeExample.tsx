@@ -14,8 +14,8 @@ import {
   linkExtension,
   historyExtension,
   RichText,
-} from "@lyfie/luthor";
-import { LuthorTheme } from "@lyfie/luthor";
+} from "@lyfie/luthor-headless";
+import { LuthorTheme } from "@lyfie/luthor-headless";
 
 // Define a completely custom theme
 const customTheme: LuthorTheme = {
@@ -184,3 +184,4 @@ export function CustomThemeExample() {
     </div>
   );
 }
+
