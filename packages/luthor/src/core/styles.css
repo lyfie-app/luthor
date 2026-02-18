@@ -46,11 +46,13 @@
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	--luthor-theme-transition: 0.2s ease;
 	/* Default responsive sizing for plug-and-play usage */
 	width: 100%;
 	max-width: 100%;
 	min-height: 500px;
 	height: auto;
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition), box-shadow var(--luthor-theme-transition);
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper,
@@ -63,11 +65,13 @@
 .luthor-editor-header {
 	background-color: var(--luthor-muted);
 	border-bottom: 1px solid var(--luthor-border);
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-mode-tabs {
 	display: flex;
 	border-bottom: 1px solid var(--luthor-border);
+	transition: border-color var(--luthor-theme-transition), background-color var(--luthor-theme-transition);
 }
 
 .luthor-mode-tab {
@@ -103,6 +107,7 @@
 	overflow-x: auto;
 	overflow-y: hidden;
 	min-height: 48px;
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-toolbar-section {
@@ -116,6 +121,7 @@
 	border-right: 1px solid var(--luthor-border);
 	margin-right: 8px;
 	padding-right: 8px;
+	transition: border-color var(--luthor-theme-transition);
 }
 
 .luthor-toolbar-button {
@@ -491,6 +497,8 @@
 	min-height: 400px;
 	position: relative;
 	--luthor-drag-gutter-width: 56px;
+	background-color: var(--luthor-bg);
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-editor[data-mode="visual"] {
@@ -503,11 +511,15 @@
 	grid-column: 1;
 	grid-row: 1;
 	pointer-events: none;
+	background-color: var(--luthor-bg);
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-richtext-container {
 	position: relative;
 	flex: 1;
+	background-color: var(--luthor-bg);
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-editor[data-mode="visual"] .luthor-richtext-container {
@@ -524,7 +536,7 @@
 	line-height: 1.7;
 	font-size: 16px;
 	background-color: var(--luthor-bg);
-	transition: background-color 0.2s ease;
+	transition: background-color var(--luthor-theme-transition), color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
 
 .luthor-content-editable:focus {
@@ -541,12 +553,15 @@
 	font-size: 16px;
 	line-height: 1.7;
 	z-index: 1;
+	transition: color var(--luthor-theme-transition), background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
 
 .luthor-source-panel {
 	padding: 20px;
 	flex: 1;
 	overflow-y: auto;
+	background-color: var(--luthor-bg);
+	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
 .luthor-source-view {
@@ -560,7 +575,7 @@
 	background-color: var(--luthor-bg);
 	color: var(--luthor-fg);
 	border-radius: 0;
-	transition: background-color 0.2s ease;
+	transition: background-color var(--luthor-theme-transition), color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
 
 /* Command palette presentation */
