@@ -20,6 +20,10 @@ export {
   draggableBlockExtension,
   type DraggableConfig,
 } from "./DraggableBlockExtension";
+export {
+  EnterKeyBehaviorExtension,
+  enterKeyBehaviorExtension,
+} from "./EnterKeyBehaviorExtension";
 
 export type {
   ContextMenuItem,

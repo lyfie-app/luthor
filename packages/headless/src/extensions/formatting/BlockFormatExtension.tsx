@@ -144,28 +144,33 @@ export class BlockFormatExtension extends BaseExtension<
     const unregisterEnter = editor.registerCommand(
       KEY_ENTER_COMMAND,
       (event: KeyboardEvent | null) => {
-        // If Shift+Enter, let default behavior handle line breaks
-        if (event && event.shiftKey) {
-          return false;
-        }
+        let handled = false;
 
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
           const anchorNode = selection.anchor.getNode();
           const blockNode = this.getBlockNode(anchorNode);
 
-          // If we're in a heading or quote, handle the transition
-          if (
-            blockNode &&
-            ($isHeadingNode(blockNode) || $isQuoteNode(blockNode))
-          ) {
-            // Use the proper toggleParagraph command instead of manual insertion
-            this.toggleBlockFormat(editor, "p");
-            return true; // Prevent default behavior
+          if (!blockNode) {
+            return;
           }
+
+          // Heading behavior remains unchanged
+          if ($isHeadingNode(blockNode) && !event?.shiftKey) {
+            this.toggleBlockFormat(editor, "p");
+            handled = true;
+          }
+        });
+
+        if (handled) {
+          event?.preventDefault();
         }
 
-        return false; // Let default behavior handle other cases
+        return handled;
       },
       COMMAND_PRIORITY_EDITOR, // Highest priority to override other handlers
     );

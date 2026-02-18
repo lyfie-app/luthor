@@ -1,4 +1,8 @@
-import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
+import {
+  LexicalEditor,
+  $getSelection,
+  $isRangeSelection,
+} from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { BaseExtensionConfig } from "@lyfie/luthor-headless/extensions/types";
@@ -477,6 +481,8 @@ export class TableExtension extends BaseExtension<
   }
 
   register(editor: LexicalEditor): () => void {
+    let unregisterContextMenuProvider: (() => void) | undefined;
+
     // Register its markdown transformer with markdown extension
     const mdExtension = this.config.markdownExtension || markdownExtension;
     try {
@@ -517,7 +523,7 @@ export class TableExtension extends BaseExtension<
         const commands = contextMenuExt.getCommands(editor);
         commands.registerProvider(provider);
 
-        return () => {
+        unregisterContextMenuProvider = () => {
           const commands = contextMenuExt.getCommands(editor);
           if (commands) {
             commands.unregisterProvider('table');
@@ -526,7 +532,9 @@ export class TableExtension extends BaseExtension<
       }
     }
 
-    return () => {};
+    return () => {
+      unregisterContextMenuProvider?.();
+    };
   }
 
   getNodes(): any[] {

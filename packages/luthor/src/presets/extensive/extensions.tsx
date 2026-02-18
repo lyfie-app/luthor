@@ -23,6 +23,7 @@ import {
   codeIntelligenceExtension,
   codeFormatExtension,
   tabIndentExtension,
+  enterKeyBehaviorExtension,
 } from "@lyfie/luthor-headless";
 import type { ReactNode } from "react";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
@@ -325,6 +326,7 @@ export const extensiveExtensions = [
   codeIntelligenceExtension,
   codeFormatExtension,
   tabIndentExtension,
+  enterKeyBehaviorExtension,
   htmlEmbedExt,
   floatingToolbarExt,
   contextMenuExt,

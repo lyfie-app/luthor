@@ -131,7 +131,11 @@ export class HorizontalRuleExtension extends BaseExtension<
 
     const unregisterEnterCommand = editor.registerCommand(
       KEY_ENTER_COMMAND,
-      () => {
+      (event: KeyboardEvent | null) => {
+        if (event?.shiftKey) {
+          return false;
+        }
+
         let shouldHandle = false;
 
         editor.update(() => {
