@@ -1,4 +1,10 @@
-import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
+import {
+  COMMAND_PRIORITY_LOW,
+  KEY_TAB_COMMAND,
+  LexicalEditor,
+  $getSelection,
+  $isRangeSelection,
+} from "lexical";
 import { $setBlocksType } from "@lexical/selection";
 import {
   $createCodeNode,
@@ -68,7 +74,43 @@ export class CodeExtension extends BaseExtension<
    * @returns Cleanup function
    */
   register(editor: LexicalEditor): () => void {
-    return registerCodeHighlighting(editor, PrismTokenizer);
+    const unregisterCodeHighlighting = registerCodeHighlighting(editor, PrismTokenizer);
+
+    const unregisterTabCommand = editor.registerCommand<KeyboardEvent>(
+      KEY_TAB_COMMAND,
+      (event) => {
+        let handled = false;
+
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
+          const anchorNode = selection.anchor.getNode();
+          const block = this.getBlockNode(anchorNode);
+          if (!block) {
+            return;
+          }
+
+          handled = true;
+          selection.insertText("\t");
+        });
+
+        if (handled) {
+          event?.preventDefault();
+          return true;
+        }
+
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+
+    return () => {
+      unregisterCodeHighlighting();
+      unregisterTabCommand();
+    };
   }
 
   /**

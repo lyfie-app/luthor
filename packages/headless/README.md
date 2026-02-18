@@ -28,14 +28,14 @@ npm install lexical @lexical/code @lexical/html @lexical/link @lexical/list @lex
 pnpm add lexical @lexical/code @lexical/html @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
 ```
 
-Optional dependency (only for automatic language detection in code intelligence):
+Optional dependency (improves automatic language detection in code blocks):
 
 ```bash
 # npm
-npm install lowlight
+npm install highlight.js
 
 # pnpm
-pnpm add lowlight
+pnpm add highlight.js
 ```
 
 ## Quick Start

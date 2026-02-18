@@ -698,22 +698,52 @@
 	display: block;
 	padding: 12px;
 	margin: 12px 0;
+	line-height: 1.6;
+	overflow-x: auto;
+	max-width: min(100%, 880px);
+	width: 100%;
+	tab-size: 2;
+	white-space: pre-wrap;
+	overflow-wrap: normal;
+	word-break: normal;
 }
 
 .luthor-code-block--interactive {
 	position: relative;
-	padding-top: 40px;
+	margin-top: 40px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.luthor-codeblock-controls-layer {
+	position: fixed;
+	inset: 0;
+	pointer-events: none;
+	z-index: 25;
 }
 
 .luthor-codeblock-controls {
-	position: absolute;
-	top: 8px;
-	right: 8px;
+	position: fixed;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	z-index: 26;
+	pointer-events: auto;
+	margin: 0;
+	max-width: none;
+	padding: 8px 10px;
+	border: 1px solid var(--luthor-border);
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+	border-bottom: 1px solid var(--luthor-border);
+	background: var(--luthor-bg);
+}
+
+.luthor-codeblock-controls-left,
+.luthor-codeblock-controls-right {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	z-index: 2;
-	pointer-events: auto;
 }
 
 .luthor-codeblock-language,
@@ -735,12 +765,60 @@
 .luthor-codeblock-copy {
 	cursor: pointer;
 	font-weight: 600;
+	width: 26px;
+	height: 24px;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+}
+
+.luthor-codeblock-copy svg {
+	width: 14px;
+	height: 14px;
+	fill: currentColor;
+}
+
+.luthor-codeblock-copy::after {
+	content: attr(data-tooltip);
+	position: absolute;
+	top: -28px;
+	right: 0;
+	padding: 2px 6px;
+	font-size: 10px;
+	line-height: 1.2;
+	white-space: nowrap;
+	border-radius: 4px;
+	border: 1px solid var(--luthor-border);
+	background: var(--luthor-bg);
+	color: var(--luthor-fg);
+	opacity: 0;
+	pointer-events: none;
+	transform: translateY(4px);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.luthor-codeblock-copy:hover::after,
+.luthor-codeblock-copy:focus-visible::after {
+	opacity: 1;
+	transform: translateY(0);
 }
 
 .luthor-codeblock-copy:hover,
 .luthor-codeblock-language:hover {
 	border-color: var(--luthor-border-hover);
 	background: var(--luthor-muted);
+}
+
+.luthor-codeblock-copy.is-copied {
+	border-color: var(--luthor-border-hover);
+	background: var(--luthor-muted);
+}
+
+.luthor-codeblock-copy.is-copy-error {
+	border-color: var(--luthor-syntax-variable);
+	color: var(--luthor-syntax-variable);
 }
 
 .luthor-code-block[data-theme="lang-default"] {

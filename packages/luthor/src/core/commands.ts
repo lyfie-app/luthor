@@ -175,7 +175,7 @@ export function generateCommands(): CommandConfig[] {
       action: (commands) => {
         void commands.autoDetectCodeLanguage?.();
       },
-      keywords: ["code", "language", "auto", "detect", "lowlight"],
+      keywords: ["code", "language", "auto", "detect"],
       condition: supportsCodeLanguageCommands,
     },
     {
