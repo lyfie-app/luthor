@@ -24,9 +24,105 @@ import {
   codeFormatExtension,
   tabIndentExtension,
 } from "@lyfie/luthor-headless";
+import type { ReactNode } from "react";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
 
 export { setFloatingToolbarContext };
+
+function TableBubbleIcon({ children }: { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {children}
+    </svg>
+  );
+}
+
+const InsertRowAboveSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 11h17" />
+    <path d="M10.5 14.5h3" />
+    <path d="M12 2.8v4.4" />
+    <path d="M9.8 5h4.4" />
+  </TableBubbleIcon>
+);
+
+const InsertRowBelowSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 11h17" />
+    <path d="M10.5 8.5h3" />
+    <path d="M12 16.8v4.4" />
+    <path d="M9.8 19h4.4" />
+  </TableBubbleIcon>
+);
+
+const InsertColumnLeftSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M11.5 5v14" />
+    <path d="M7.5 10.5v3" />
+    <path d="M2.8 12h4.4" />
+    <path d="M5 9.8v4.4" />
+  </TableBubbleIcon>
+);
+
+const InsertColumnRightSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M12.5 5v14" />
+    <path d="M16.5 10.5v3" />
+    <path d="M16.8 12h4.4" />
+    <path d="M19 9.8v4.4" />
+  </TableBubbleIcon>
+);
+
+const DeleteRowSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 11h17" />
+    <path d="M9.8 14.8l4.4 4.4" />
+    <path d="M14.2 14.8l-4.4 4.4" />
+  </TableBubbleIcon>
+);
+
+const DeleteColumnSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M12 5v14" />
+    <path d="M14.8 9.8l4.4 4.4" />
+    <path d="M19.2 9.8l-4.4 4.4" />
+  </TableBubbleIcon>
+);
+
+const DeleteTableSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 10.5h17" />
+    <path d="M10.5 5v14" />
+    <path d="M14.8 9.8l4.4 4.4" />
+    <path d="M19.2 9.8l-4.4 4.4" />
+  </TableBubbleIcon>
+);
+
+const HeaderRowSvg = () => (
+  <TableBubbleIcon>
+    <rect x="3.5" y="5" width="17" height="14" rx="1.5" />
+    <path d="M3.5 10.5h17" />
+    <path d="M10.5 5v14" />
+    <path d="M3.5 8h17" />
+  </TableBubbleIcon>
+);
 
 const markdownExt = new MarkdownExtension();
 (markdownExt as any).config = {
@@ -49,6 +145,85 @@ const tableExt = new TableExtension();
   ...(tableExt as any).config,
   enableContextMenu: true,
   markdownExtension: markdownExt,
+  tableBubbleRenderer: ({ headersEnabled, setHeadersEnabled, actions }: any) => (
+    <>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Insert row above"
+        aria-label="Insert row above"
+        onClick={actions.insertRowAbove}
+      >
+        <InsertRowAboveSvg />
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Insert row below"
+        aria-label="Insert row below"
+        onClick={actions.insertRowBelow}
+      >
+        <InsertRowBelowSvg />
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Insert column left"
+        aria-label="Insert column left"
+        onClick={actions.insertColumnLeft}
+      >
+        <InsertColumnLeftSvg />
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Insert column right"
+        aria-label="Insert column right"
+        onClick={actions.insertColumnRight}
+      >
+        <InsertColumnRightSvg />
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Delete selected row"
+        aria-label="Delete selected row"
+        onClick={actions.deleteSelectedRow}
+      >
+        <DeleteRowSvg />
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon"
+        title="Delete selected column"
+        aria-label="Delete selected column"
+        onClick={actions.deleteSelectedColumn}
+      >
+        <DeleteColumnSvg />
+      </button>
+      <label className="luthor-table-bubble-checkbox" title="Use first row as table headers">
+        <button
+          type="button"
+          className={`luthor-table-bubble-button luthor-table-bubble-button-icon${headersEnabled ? " luthor-table-bubble-button-active" : ""}`}
+          title="Use first row as table headers"
+          aria-label="Use first row as table headers"
+          aria-pressed={headersEnabled}
+          onClick={() => setHeadersEnabled(!headersEnabled)}
+        >
+          <HeaderRowSvg />
+        </button>
+      </label>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-icon luthor-table-bubble-button-danger"
+        title="Delete table"
+        aria-label="Delete table"
+        onClick={actions.deleteTable}
+      >
+        <DeleteTableSvg />
+      </button>
+    </>
+  ),
 };
 
 const htmlEmbedExt = new HTMLEmbedExtension();

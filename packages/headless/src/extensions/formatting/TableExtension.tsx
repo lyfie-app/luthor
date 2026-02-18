@@ -57,6 +57,22 @@ export type TableConfig = BaseExtensionConfig & {
   contextMenuExtension?: typeof contextMenuExtension;
   /** Markdown extension used to register transformers */
   markdownExtension?: typeof markdownExtension;
+  /** Custom table bubble menu renderer */
+  tableBubbleRenderer?: (props: TableBubbleRenderProps) => ReactNode;
+};
+
+export type TableBubbleRenderProps = {
+  headersEnabled: boolean;
+  setHeadersEnabled: (enabled: boolean) => void;
+  actions: {
+    insertRowAbove: () => void;
+    insertRowBelow: () => void;
+    insertColumnLeft: () => void;
+    insertColumnRight: () => void;
+    deleteSelectedColumn: () => void;
+    deleteSelectedRow: () => void;
+    deleteTable: () => void;
+  };
 };
 
 /**
@@ -107,7 +123,91 @@ function getSelectedTableCell(): TableCellNode | null {
   return null;
 }
 
-function TableQuickActionsPlugin() {
+function DefaultTableBubbleMenu({
+  headersEnabled,
+  setHeadersEnabled,
+  actions,
+}: TableBubbleRenderProps) {
+  return (
+    <>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert row above"
+        aria-label="Insert row above"
+        onClick={actions.insertRowAbove}
+      >
+        Row ↑
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert row below"
+        aria-label="Insert row below"
+        onClick={actions.insertRowBelow}
+      >
+        Row ↓
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert column left"
+        aria-label="Insert column left"
+        onClick={actions.insertColumnLeft}
+      >
+        Col ←
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert column right"
+        aria-label="Insert column right"
+        onClick={actions.insertColumnRight}
+      >
+        Col →
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Delete selected column"
+        aria-label="Delete selected column"
+        onClick={actions.deleteSelectedColumn}
+      >
+        Del Col
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Delete selected row"
+        aria-label="Delete selected row"
+        onClick={actions.deleteSelectedRow}
+      >
+        Del Row
+      </button>
+      <label className="luthor-table-bubble-checkbox" title="Use first row as table headers">
+        <input
+          type="checkbox"
+          title="Use first row as table headers"
+          aria-label="Use first row as table headers"
+          checked={headersEnabled}
+          onChange={(event) => setHeadersEnabled(event.target.checked)}
+        />
+        Headers
+      </label>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-danger"
+        title="Delete table"
+        aria-label="Delete table"
+        onClick={actions.deleteTable}
+      >
+        Delete Table
+      </button>
+    </>
+  );
+}
+
+function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
   const { editor } = useEditor();
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -137,20 +237,11 @@ function TableQuickActionsPlugin() {
 
       rowNodes.forEach((rowNode, rowIndex) => {
         const rowCells = rowNode.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node));
-        rowCells.forEach((cell, colIndex) => {
-          const applyRowHeader = enabled && rowIndex === 0;
-          const applyColumnHeader = enabled && colIndex === 0;
-          let headerState = TableCellHeaderStates.NO_STATUS;
-
-          if (applyRowHeader && applyColumnHeader) {
-            headerState = TableCellHeaderStates.BOTH;
-          } else if (applyRowHeader) {
-            headerState = TableCellHeaderStates.ROW;
-          } else if (applyColumnHeader) {
-            headerState = TableCellHeaderStates.COLUMN;
-          }
-
-          cell.setHeaderStyles(headerState, TableCellHeaderStates.BOTH);
+        rowCells.forEach((cell) => {
+          const rowHeaderState = enabled && rowIndex === 0
+            ? TableCellHeaderStates.ROW
+            : TableCellHeaderStates.NO_STATUS;
+          cell.setHeaderStyles(rowHeaderState, TableCellHeaderStates.ROW);
         });
       });
     });
@@ -196,13 +287,8 @@ function TableQuickActionsPlugin() {
         const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
 
         const firstRowCells = rowNodes[0]?.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node)) || [];
-        const firstColumnCells = rowNodes
-          .map((rowNode) => rowNode.getChildren()[0])
-          .filter((node): node is TableCellNode => $isTableCellNode(node));
-
         const hasRowHeaders = firstRowCells.length > 0 && firstRowCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.ROW));
-        const hasColumnHeaders = firstColumnCells.length > 0 && firstColumnCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.COLUMN));
-        setHeadersEnabled(hasRowHeaders && hasColumnHeaders);
+        setHeadersEnabled(hasRowHeaders);
 
         const containerRect = container.getBoundingClientRect();
         const tableRect = tableElement.getBoundingClientRect();
@@ -239,6 +325,40 @@ function TableQuickActionsPlugin() {
     return null;
   }
 
+  const bubbleActions: TableBubbleRenderProps["actions"] = {
+    insertRowAbove: () => runWithSelectedTableCell(() => $insertTableRowAtSelection(false)),
+    insertRowBelow: () => runWithSelectedTableCell(() => $insertTableRowAtSelection(true)),
+    insertColumnLeft: () => runWithSelectedTableCell(() => $insertTableColumnAtSelection(false)),
+    insertColumnRight: () => runWithSelectedTableCell(() => $insertTableColumnAtSelection(true)),
+    deleteSelectedColumn: () => runWithSelectedTableCell(() => $deleteTableColumnAtSelection()),
+    deleteSelectedRow: () => runWithSelectedTableCell(() => $deleteTableRowAtSelection()),
+    deleteTable: () =>
+      runWithSelectedTableCell((selectedCell) => {
+        const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+        tableNode.remove();
+      }),
+  };
+
+  const bubbleContent = extension.config.tableBubbleRenderer
+    ? extension.config.tableBubbleRenderer({
+      headersEnabled,
+      setHeadersEnabled: (enabled) => {
+        setHeadersEnabled(enabled);
+        setTableHeaders(enabled);
+      },
+      actions: bubbleActions,
+    })
+    : (
+      <DefaultTableBubbleMenu
+        headersEnabled={headersEnabled}
+        setHeadersEnabled={(enabled) => {
+          setHeadersEnabled(enabled);
+          setTableHeaders(enabled);
+        }}
+        actions={bubbleActions}
+      />
+    );
+
   return createPortal(
     <div
       className="luthor-table-bubble-menu"
@@ -251,47 +371,7 @@ function TableQuickActionsPlugin() {
       }}
       onMouseDown={(event) => event.preventDefault()}
     >
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableRowAtSelection(false))}>
-        Row ↑
-      </button>
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableRowAtSelection(true))}>
-        Row ↓
-      </button>
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableColumnAtSelection(false))}>
-        Col ←
-      </button>
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableColumnAtSelection(true))}>
-        Col →
-      </button>
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $deleteTableColumnAtSelection())}>
-        Del Col
-      </button>
-      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $deleteTableRowAtSelection())}>
-        Del Row
-      </button>
-      <label className="luthor-table-bubble-checkbox">
-        <input
-          type="checkbox"
-          checked={headersEnabled}
-          onChange={(event) => {
-            setHeadersEnabled(event.target.checked);
-            setTableHeaders(event.target.checked);
-          }}
-        />
-        Headers
-      </label>
-      <button
-        type="button"
-        className="luthor-table-bubble-button luthor-table-bubble-button-danger"
-        onClick={() =>
-          runWithSelectedTableCell((selectedCell) => {
-            const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
-            tableNode.remove();
-          })
-        }
-      >
-        Delete Table
-      </button>
+      {bubbleContent}
     </div>,
     portalContainer,
   );
@@ -608,7 +688,7 @@ export class TableExtension extends BaseExtension<
   }
 
   getPlugins(): ReactNode[] {
-    return [<TablePlugin key="table-plugin" />, <TableQuickActionsPlugin key="table-quick-actions-plugin" />];
+    return [<TablePlugin key="table-plugin" />, <TableQuickActionsPlugin key="table-quick-actions-plugin" extension={this} />];
   }
 }
 

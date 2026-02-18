@@ -1169,7 +1169,8 @@
 }
 
 .luthor-table-bubble-button {
-	height: 28px;
+	height: 30px;
+	min-width: 30px;
 	padding: 0 10px;
 	display: inline-flex;
 	align-items: center;
@@ -1185,9 +1186,24 @@
 	transition: all 0.16s ease;
 }
 
+.luthor-table-bubble-button svg {
+	display: block;
+}
+
+.luthor-table-bubble-button-icon {
+	width: 30px;
+	padding: 0;
+}
+
 .luthor-table-bubble-button:hover {
 	border-color: var(--luthor-border-hover);
 	background: color-mix(in srgb, var(--luthor-muted) 58%, var(--luthor-accent) 42%);
+	color: var(--luthor-bg);
+}
+
+.luthor-table-bubble-button-active {
+	background: var(--luthor-accent);
+	border-color: var(--luthor-accent);
 	color: var(--luthor-bg);
 }
 
