@@ -7,6 +7,7 @@ import {
   $isRootOrShadowRoot,
   KEY_ENTER_COMMAND,
   COMMAND_PRIORITY_LOW,
+  $createParagraphNode,
 } from "lexical";
 import {
   INSERT_HORIZONTAL_RULE_COMMAND,
@@ -43,7 +44,7 @@ export const HORIZONTAL_RULE_TRANSFORMER = {
     const hrNode = $createHorizontalRuleNode();
     parentNode.replace(hrNode);
     if (!isImport) {
-      hrNode.selectNext();
+      focusNextEditableLine(hrNode);
     }
   },
   type: "element" as const,
@@ -54,6 +55,19 @@ const HORIZONTAL_RULE_SHORTCUT_TRANSFORMERS: Transformer[] = [
 ];
 
 const HORIZONTAL_RULE_ENTER_PATTERN = /^(?:---|___)$/;
+
+function focusNextEditableLine(hrNode: HorizontalRuleNode): void {
+  const nextSibling = hrNode.getNextSibling();
+
+  if (nextSibling && $isParagraphNode(nextSibling)) {
+    nextSibling.selectStart();
+    return;
+  }
+
+  const paragraphNode = $createParagraphNode();
+  hrNode.insertAfter(paragraphNode);
+  paragraphNode.selectStart();
+}
 
 /**
  * Commands exposed by the horizontal rule extension.
