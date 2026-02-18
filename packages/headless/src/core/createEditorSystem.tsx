@@ -9,20 +9,15 @@ import React, {
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
-  LexicalEditor,
   FORMAT_TEXT_COMMAND,
   PASTE_COMMAND,
   TextFormatType,
-  $getSelection,
-  $isRangeSelection,
-  COMMAND_PRIORITY_LOW,
 } from "lexical";
 import {
   EditorConfig,
   EditorContextType,
   Extension,
   ExtractCommands,
-  ExtractPlugins,
   ExtractStateQueries,
   BaseCommands,
 } from "@lyfie/luthor-headless/extensions/types";
@@ -77,8 +72,10 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
 
     // Lazy commands from extensions + base
     const baseCommands: BaseCommands = {
-      formatText: (format: TextFormatType, value?: boolean | string) =>
-        editor?.dispatchCommand(FORMAT_TEXT_COMMAND, format),
+      formatText: (format: TextFormatType, value?: boolean | string) => {
+        void value;
+        return editor?.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+      },
     };
     const extensionCommands = useMemo(
       () =>
@@ -219,9 +216,15 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
       },
       lexical: editor,
       extensionsAPI: {
-        add: (ext: Extension) => {}, // TODO: Implement dynamic add
-        remove: (name: string) => {},
-        reorder: (names: string[]) => {},
+        add: (ext: Extension) => {
+          void ext;
+        }, // TODO: Implement dynamic add
+        remove: (name: string) => {
+          void name;
+        },
+        reorder: (names: string[]) => {
+          void names;
+        },
       },
       plugins,
       hasExtension: (name: Exts[number]["name"]) =>

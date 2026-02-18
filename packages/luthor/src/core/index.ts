@@ -1,4 +1,5 @@
 export * from "./commands";
+export * from "./code-intelligence-extension";
 export * from "./command-palette";
 export * from "./extensions";
 export * from "./floating-toolbar";

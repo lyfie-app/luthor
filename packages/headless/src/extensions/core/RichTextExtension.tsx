@@ -76,14 +76,16 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
       <RichTextPlugin
         contentEditable={
           contentEditable || (
-            <ContentEditable
-              className={
-                classNames?.contentEditable ||
-                defaultLuthorTheme.richText?.contentEditable ||
-                "luthor-content-editable"
-              }
-              style={styles?.contentEditable}
-            />
+            <div style={{ display: "block" }}>
+              <ContentEditable
+                className={
+                  classNames?.contentEditable ||
+                  defaultLuthorTheme.richText?.contentEditable ||
+                  "luthor-content-editable"
+                }
+                style={styles?.contentEditable}
+              />
+            </div>
           )
         }
         placeholder={
