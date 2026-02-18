@@ -1,5 +1,3 @@
-/* Luthor ExtensiveEditor preset - Professional styling inspired by DefaultTemplate */
-
 /* Theme variables for layout consistency */
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="light"] {
   --luthor-bg: #ffffff;
@@ -12,6 +10,12 @@
   --luthor-shadow: rgba(0, 0, 0, 0.08);
   --luthor-muted: #f8fafc;
   --luthor-muted-fg: #64748b;
+	--luthor-syntax-comment: #64748b;
+	--luthor-syntax-keyword: #7c3aed;
+	--luthor-syntax-string: #0f766e;
+	--luthor-syntax-number: #b45309;
+	--luthor-syntax-function: #1d4ed8;
+	--luthor-syntax-variable: #be185d;
 }
 
 /* Dark theme variables */
@@ -26,6 +30,12 @@
   --luthor-shadow: rgba(0, 0, 0, 0.5);
   --luthor-muted: #171717;
   --luthor-muted-fg: #a3a3a3;
+	--luthor-syntax-comment: #94a3b8;
+	--luthor-syntax-keyword: #c084fc;
+	--luthor-syntax-string: #5eead4;
+	--luthor-syntax-number: #fbbf24;
+	--luthor-syntax-function: #60a5fa;
+	--luthor-syntax-variable: #f472b6;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper {
@@ -40,6 +50,13 @@
 	max-width: 100%;
 	min-height: 500px;
 	height: auto;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper,
+.luthor-preset-extensive.luthor-editor-wrapper *,
+.luthor-preset-extensive.luthor-editor-wrapper *::before,
+.luthor-preset-extensive.luthor-editor-wrapper *::after {
+	box-sizing: border-box;
 }
 
 .luthor-editor-header {
@@ -291,8 +308,6 @@
 .luthor-richtext-container {
 	position: relative;
 	flex: 1;
-	display: flex;
-	flex-direction: column;
 }
 
 .luthor-content-editable {
@@ -353,7 +368,7 @@
 	display: flex;
 	align-items: flex-start;
 	justify-content: center;
-	padding-top: 20vh;
+	padding: 20vh 16px 0;
 	z-index: 9999;
 }
 
@@ -362,8 +377,8 @@
 	border: 1px solid var(--luthor-border);
 	border-radius: 12px;
 	box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
-	width: 640px;
-	max-width: 90vw;
+	width: min(640px, 100%);
+	max-width: 100%;
 	max-height: 60vh;
 	display: flex;
 	flex-direction: column;
@@ -659,18 +674,253 @@
 }
 
 .luthor-text-code,
+.luthor-content-editable code,
+
 .luthor-code-block {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 	background-color: var(--luthor-muted);
 	border: 1px solid var(--luthor-border);
+	color: var(--luthor-syntax-string);
 	padding: 2px 6px;
 	border-radius: 4px;
+}
+
+.luthor-content-editable .luthor-text-code,
+.luthor-content-editable code,
+.luthor-content-editable code.luthor-text-code,
+.luthor-preset .luthor-content-editable code,
+.luthor-preset-extensive .luthor-content-editable code {
+	color: var(--luthor-syntax-string);
+	font-weight: 500;
 }
 
 .luthor-code-block {
 	display: block;
 	padding: 12px;
 	margin: 12px 0;
+}
+
+.luthor-code-block--interactive {
+	position: relative;
+	padding-top: 40px;
+}
+
+.luthor-codeblock-controls {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	z-index: 2;
+	pointer-events: auto;
+}
+
+.luthor-codeblock-language,
+.luthor-codeblock-copy {
+	font-size: 11px;
+	line-height: 1.2;
+	height: 24px;
+	border-radius: 6px;
+	border: 1px solid var(--luthor-border);
+	background: var(--luthor-bg);
+	color: var(--luthor-fg);
+	padding: 0 8px;
+}
+
+.luthor-codeblock-language {
+	min-width: 88px;
+}
+
+.luthor-codeblock-copy {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.luthor-codeblock-copy:hover,
+.luthor-codeblock-language:hover {
+	border-color: var(--luthor-border-hover);
+	background: var(--luthor-muted);
+}
+
+.luthor-code-block[data-theme="lang-default"] {
+	--luthor-syntax-keyword: #7c3aed;
+	--luthor-syntax-string: #0f766e;
+	--luthor-syntax-number: #b45309;
+	--luthor-syntax-function: #1d4ed8;
+	--luthor-syntax-variable: #be185d;
+}
+
+.luthor-code-block[data-theme="lang-javascript"] {
+	--luthor-syntax-keyword: #c026d3;
+	--luthor-syntax-string: #059669;
+	--luthor-syntax-number: #d97706;
+	--luthor-syntax-function: #2563eb;
+	--luthor-syntax-variable: #db2777;
+}
+
+.luthor-code-block[data-theme="lang-markup"] {
+	--luthor-syntax-keyword: #0e7490;
+	--luthor-syntax-string: #15803d;
+	--luthor-syntax-number: #a16207;
+	--luthor-syntax-function: #0369a1;
+	--luthor-syntax-variable: #be123c;
+}
+
+.luthor-code-block[data-theme="lang-styles"] {
+	--luthor-syntax-keyword: #7c2d12;
+	--luthor-syntax-string: #0f766e;
+	--luthor-syntax-number: #ca8a04;
+	--luthor-syntax-function: #1d4ed8;
+	--luthor-syntax-variable: #c026d3;
+}
+
+.luthor-code-block[data-theme="lang-python"] {
+	--luthor-syntax-keyword: #7c3aed;
+	--luthor-syntax-string: #047857;
+	--luthor-syntax-number: #b45309;
+	--luthor-syntax-function: #0f766e;
+	--luthor-syntax-variable: #be185d;
+}
+
+.luthor-code-block[data-theme="lang-shell"] {
+	--luthor-syntax-keyword: #0f766e;
+	--luthor-syntax-string: #15803d;
+	--luthor-syntax-number: #a16207;
+	--luthor-syntax-function: #1d4ed8;
+	--luthor-syntax-variable: #7c3aed;
+}
+
+.luthor-code-block[data-theme="lang-sql"] {
+	--luthor-syntax-keyword: #9333ea;
+	--luthor-syntax-string: #0f766e;
+	--luthor-syntax-number: #b45309;
+	--luthor-syntax-function: #1d4ed8;
+	--luthor-syntax-variable: #be185d;
+}
+
+.luthor-code-block[data-theme="lang-systems"] {
+	--luthor-syntax-keyword: #7c3aed;
+	--luthor-syntax-string: #0f766e;
+	--luthor-syntax-number: #c2410c;
+	--luthor-syntax-function: #1e40af;
+	--luthor-syntax-variable: #db2777;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-default"] {
+	--luthor-syntax-keyword: #c084fc;
+	--luthor-syntax-string: #5eead4;
+	--luthor-syntax-number: #fbbf24;
+	--luthor-syntax-function: #60a5fa;
+	--luthor-syntax-variable: #f472b6;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-javascript"] {
+	--luthor-syntax-keyword: #e879f9;
+	--luthor-syntax-string: #34d399;
+	--luthor-syntax-number: #f59e0b;
+	--luthor-syntax-function: #93c5fd;
+	--luthor-syntax-variable: #f472b6;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-markup"] {
+	--luthor-syntax-keyword: #67e8f9;
+	--luthor-syntax-string: #4ade80;
+	--luthor-syntax-number: #facc15;
+	--luthor-syntax-function: #7dd3fc;
+	--luthor-syntax-variable: #fb7185;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-styles"] {
+	--luthor-syntax-keyword: #fdba74;
+	--luthor-syntax-string: #5eead4;
+	--luthor-syntax-number: #facc15;
+	--luthor-syntax-function: #93c5fd;
+	--luthor-syntax-variable: #f0abfc;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-python"] {
+	--luthor-syntax-keyword: #c084fc;
+	--luthor-syntax-string: #34d399;
+	--luthor-syntax-number: #fbbf24;
+	--luthor-syntax-function: #67e8f9;
+	--luthor-syntax-variable: #f472b6;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-shell"] {
+	--luthor-syntax-keyword: #2dd4bf;
+	--luthor-syntax-string: #4ade80;
+	--luthor-syntax-number: #facc15;
+	--luthor-syntax-function: #93c5fd;
+	--luthor-syntax-variable: #c4b5fd;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-sql"] {
+	--luthor-syntax-keyword: #d8b4fe;
+	--luthor-syntax-string: #5eead4;
+	--luthor-syntax-number: #fbbf24;
+	--luthor-syntax-function: #93c5fd;
+	--luthor-syntax-variable: #f472b6;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-systems"] {
+	--luthor-syntax-keyword: #c084fc;
+	--luthor-syntax-string: #5eead4;
+	--luthor-syntax-number: #fb923c;
+	--luthor-syntax-function: #93c5fd;
+	--luthor-syntax-variable: #f472b6;
+}
+
+
+.luthor-code-comment,
+.luthor-code-prolog,
+.luthor-code-doctype,
+.luthor-code-cdata {
+	color: var(--luthor-syntax-comment);
+}
+
+.luthor-code-punctuation,
+.luthor-code-operator,
+.luthor-code-namespace {
+	color: var(--luthor-fg);
+}
+
+.luthor-code-property,
+.luthor-code-tag,
+.luthor-code-constant,
+.luthor-code-symbol,
+.luthor-code-deleted {
+	color: var(--luthor-syntax-variable);
+}
+
+.luthor-code-boolean,
+.luthor-code-number,
+.luthor-code-attr,
+.luthor-code-selector,
+.luthor-code-string,
+.luthor-code-char,
+.luthor-code-builtin,
+.luthor-code-inserted {
+	color: var(--luthor-syntax-string);
+}
+
+.luthor-code-function,
+.luthor-code-class,
+.luthor-code-class-name {
+	color: var(--luthor-syntax-function);
+	font-weight: 600;
+}
+
+.luthor-code-keyword,
+.luthor-code-atrule {
+	color: var(--luthor-syntax-keyword);
+	font-weight: 600;
+}
+
+.luthor-code-regex,
+.luthor-code-variable,
+.luthor-code-important {
+	color: var(--luthor-syntax-number);
 }
 
 .luthor-paragraph {
@@ -951,12 +1201,30 @@
 	height: 24px;
 	border-radius: 6px;
 	border: 1px solid var(--luthor-border);
-	background: var(--luthor-bg);
+	background: var(--luthor-muted);
 	color: var(--luthor-muted-fg);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.luthor-draggable-handle:hover,
+.luthor-draggable-up-button:hover,
+.luthor-draggable-down-button:hover {
+	background: var(--luthor-bg);
+	border-color: var(--luthor-border-hover);
+	color: var(--luthor-fg);
+}
+
+.luthor-draggable-handle:active,
+.luthor-draggable-up-button:active,
+.luthor-draggable-down-button:active,
+.luthor-draggable-handle-active {
+	background: var(--luthor-accent);
+	border-color: var(--luthor-accent);
+	color: var(--luthor-bg);
 }
 
 .luthor-draggable-button-stack {
@@ -964,6 +1232,10 @@
 	flex-direction: column;
 	gap: 6px;
 	align-items: center;
+	padding: 2px;
+	border-radius: 8px;
+	background: var(--luthor-bg);
+	border: 1px solid var(--luthor-border);
 }
 
 .luthor-draggable-drop-indicator {

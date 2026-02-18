@@ -19,6 +19,7 @@ import {
   blockFormatExtension,
   htmlExtension,
   codeExtension,
+  codeIntelligenceExtension,
   codeFormatExtension,
 } from "@lyfie/luthor-headless";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
@@ -115,6 +116,7 @@ export const extensiveExtensions = [
   htmlExtension,
   markdownExt,
   codeExtension,
+  codeIntelligenceExtension,
   codeFormatExtension,
   htmlEmbedExt,
   floatingToolbarExt,

@@ -40,7 +40,7 @@
   },
   "homepage": "https://github.com/lyfie-app/luthor#readme",
   "dependencies": {
-    "@lyfie/luthor-headless": "^2.0.1",
+    "@lyfie/luthor-headless": "workspace:*",
     "@lexical/code": "^0.40.0",
     "@lexical/html": "^0.40.0",
     "@lexical/link": "^0.40.0",

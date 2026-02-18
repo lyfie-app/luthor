@@ -300,7 +300,7 @@ function DraggableBlockPlugin({
       opacity: 0.5,
     },
     dropIndicator: {
-      backgroundColor: "#3b82f6",
+      backgroundColor: "var(--luthor-accent, #3b82f6)",
       borderRadius: "2px",
     },
     upButton: {

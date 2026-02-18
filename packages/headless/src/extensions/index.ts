@@ -34,6 +34,11 @@ export {
 export { ListExtension, listExtension } from "./formatting/ListExtension";
 export { CodeExtension, codeExtension } from "./formatting/CodeExtension";
 export {
+  CodeIntelligenceExtension,
+  codeIntelligenceExtension,
+  type CodeIntelligenceCommands,
+} from "./formatting/CodeIntelligenceExtension";
+export {
   CodeFormatExtension,
   codeFormatExtension,
 } from "./formatting/CodeFormatExtension";

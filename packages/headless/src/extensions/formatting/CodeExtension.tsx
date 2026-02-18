@@ -1,6 +1,13 @@
 import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
 import { $setBlocksType } from "@lexical/selection";
-import { $createCodeNode, $isCodeNode, CodeNode } from "@lexical/code";
+import {
+  $createCodeNode,
+  $isCodeNode,
+  CodeHighlightNode,
+  CodeNode,
+  PrismTokenizer,
+  registerCodeHighlighting,
+} from "@lexical/code";
 import { $createParagraphNode } from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
@@ -61,7 +68,7 @@ export class CodeExtension extends BaseExtension<
    * @returns Cleanup function
    */
   register(editor: LexicalEditor): () => void {
-    return () => {};
+    return registerCodeHighlighting(editor, PrismTokenizer);
   }
 
   /**
@@ -69,7 +76,7 @@ export class CodeExtension extends BaseExtension<
    * @returns Array of node classes
    */
   getNodes() {
-    return [CodeNode];
+    return [CodeNode, CodeHighlightNode];
   }
 
   /**

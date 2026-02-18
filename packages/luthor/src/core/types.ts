@@ -33,6 +33,10 @@ export interface CoreEditorCommands {
   toggleHeading: (heading: BlockHeadingLevel) => void;
   toggleQuote: () => void;
   toggleCodeBlock: () => void;
+  setCodeLanguage?: (language: string) => void;
+  autoDetectCodeLanguage?: () => Promise<string | null>;
+  getCurrentCodeLanguage?: () => Promise<string | null>;
+  getCodeLanguageOptions?: () => string[];
   toggleUnorderedList: () => void;
   toggleOrderedList: () => void;
   indentList: () => void;
