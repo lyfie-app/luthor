@@ -2,14 +2,20 @@
 
 Batteries-included presets and UI-ready editor experience built on top of `@lyfie/luthor-headless`.
 
+## Package Responsibility
+
+- `@lyfie/luthor-headless` owns all Lexical-derived editor features and extension internals.
+- `@lyfie/luthor` composes presets, UI, and ready-to-use editor experiences on top of headless.
+- `@lyfie/luthor` re-exports headless APIs via a namespace export so consumers can access core capabilities from one package.
+
 ## Installation
 
 ```bash
 # npm
-npm install @lyfie/luthor @lyfie/luthor-headless
+npm install @lyfie/luthor
 
 # pnpm
-pnpm add @lyfie/luthor @lyfie/luthor-headless
+pnpm add @lyfie/luthor
 ```
 
 `@lyfie/luthor` includes Lexical packages as dependencies, so you do not need to install `lexical` and `@lexical/*` separately when using this package.
@@ -23,6 +29,14 @@ import "@lyfie/luthor/styles.css";
 export function App() {
   return <ExtensiveEditor placeholder="Start writing..." />;
 }
+```
+
+### Accessing headless APIs through `@lyfie/luthor`
+
+```tsx
+import { headless } from "@lyfie/luthor";
+
+const { createEditorSystem, boldExtension } = headless;
 ```
 
 ## Exports

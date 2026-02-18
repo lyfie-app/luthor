@@ -2,6 +2,12 @@
 
 Type-safe, headless rich text editor system for React, built on Lexical.
 
+## Package Responsibility
+
+- `@lyfie/luthor-headless` contains all Lexical-derived logic and extension implementations.
+- It stays lightweight by keeping Lexical/React as peer dependencies.
+- Non-core integrations are optional and must not break editor behavior when absent.
+
 ## Installation
 
 ```bash
@@ -20,6 +26,16 @@ npm install lexical @lexical/code @lexical/html @lexical/link @lexical/list @lex
 
 # pnpm
 pnpm add lexical @lexical/code @lexical/html @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
+```
+
+Optional dependency (only for automatic language detection in code intelligence):
+
+```bash
+# npm
+npm install lowlight
+
+# pnpm
+pnpm add lowlight
 ```
 
 ## Quick Start
