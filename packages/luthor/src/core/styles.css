@@ -490,7 +490,7 @@
 	flex-direction: column;
 	min-height: 400px;
 	position: relative;
-	--luthor-drag-gutter-width: 36px;
+	--luthor-drag-gutter-width: 56px;
 }
 
 .luthor-editor[data-mode="visual"] {
@@ -1622,19 +1622,30 @@
 
 .luthor-draggable-handle,
 .luthor-draggable-up-button,
-.luthor-draggable-down-button {
+.luthor-draggable-down-button,
+.luthor-draggable-add-button {
 	width: 24px;
 	height: 24px;
-	border-radius: 6px;
-	border: 1px solid var(--luthor-border);
-	background: var(--luthor-muted);
+	border-radius: 0;
+	border: none;
+	background: transparent;
 	color: var(--luthor-muted-fg);
 	fill: currentColor;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: color 0.16s ease, transform 0.16s ease;
+	outline: none;
+}
+
+.luthor-draggable-add-button {
+	width: 20px;
+	height: 20px;
+	font-size: 14px;
+	line-height: 1;
+	font-weight: 500;
+	padding: 0;
 }
 
 .luthor-draggable-handle svg,
@@ -1648,19 +1659,20 @@
 
 .luthor-draggable-handle:hover,
 .luthor-draggable-up-button:hover,
-.luthor-draggable-down-button:hover {
-	background: var(--luthor-bg);
-	border-color: var(--luthor-border-hover);
+.luthor-draggable-down-button:hover,
+.luthor-draggable-add-button:hover {
 	color: var(--luthor-fg);
+	transform: scale(1.04);
 }
 
 .luthor-draggable-handle:active,
 .luthor-draggable-up-button:active,
 .luthor-draggable-down-button:active,
+.luthor-draggable-add-button:active,
 .luthor-draggable-handle-active {
-	background: var(--luthor-accent);
-	border-color: var(--luthor-accent);
-	color: var(--luthor-bg);
+	background: transparent;
+	color: var(--luthor-accent);
+	transform: scale(0.96);
 }
 
 .luthor-draggable-button-stack {
@@ -1668,10 +1680,9 @@
 	flex-direction: column;
 	gap: 6px;
 	align-items: center;
-	padding: 2px;
-	border-radius: 8px;
-	background: var(--luthor-bg);
-	border: 1px solid var(--luthor-border);
+	padding: 0;
+	border: none;
+	background: transparent;
 }
 
 .luthor-draggable-drop-indicator {
