@@ -104,6 +104,12 @@ export class EnterKeyBehaviorExtension extends BaseExtension<
         const previousIsEmpty = this.isEmptyQuoteLine(previousSibling);
 
         if (currentIsEmpty && previousIsEmpty) {
+          const trailingEmptyLine = currentQuoteLine;
+          const precedingEmptyLine = previousSibling;
+
+          trailingEmptyLine.remove();
+          precedingEmptyLine?.remove();
+
           const paragraphNode = $createParagraphNode();
           quoteNode.insertAfter(paragraphNode);
           paragraphNode.selectStart();
