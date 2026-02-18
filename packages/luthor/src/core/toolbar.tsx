@@ -114,43 +114,137 @@ function toHexColorForInput(color: string, fallback: string): string {
   return fallback;
 }
 
-type ComputedTypography = {
-  fontFamilyLabel: string;
-  fontSizeLabel: string;
-  lineHeightLabel: string;
+type SelectionTypographyValues = {
+  fontFamily: string;
+  fontSize: string;
+  lineHeight: string;
 };
 
-function getSelectionTypography(): ComputedTypography {
-  const fallback: ComputedTypography = {
-    fontFamilyLabel: "Default",
-    fontSizeLabel: "Default",
-    lineHeightLabel: "Default",
-  };
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, "");
+}
 
-  if (typeof window === "undefined") return fallback;
+function normalizeFontToken(value: string): string {
+  const firstFamily = value.split(",")[0] ?? "";
+  return normalizeToken(firstFamily.replace(/["']/g, ""));
+}
+
+function parsePixelValue(value: string): number | null {
+  const match = value.trim().toLowerCase().match(/^(-?\d*\.?\d+)px$/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function getSelectionTypographyValues(): SelectionTypographyValues | null {
+  if (typeof window === "undefined") return null;
 
   const selection = window.getSelection();
   const anchorNode = selection?.anchorNode;
-  if (!anchorNode) return fallback;
+  if (!anchorNode) return null;
 
   const element =
     anchorNode.nodeType === Node.ELEMENT_NODE
       ? (anchorNode as Element)
       : anchorNode.parentElement;
-  if (!element) return fallback;
+  if (!element) return null;
 
   const host = element.closest(".luthor-content-editable");
-  if (!host) return fallback;
+  if (!host) return null;
 
   const computed = window.getComputedStyle(element as HTMLElement);
-  const rawFontFamily = computed.fontFamily || "";
-  const primaryFont = rawFontFamily.split(",")[0]?.replace(/["']/g, "").trim();
-
   return {
-    fontFamilyLabel: primaryFont ? `Default (${primaryFont})` : "Default",
-    fontSizeLabel: computed.fontSize ? `Default (${computed.fontSize})` : "Default",
-    lineHeightLabel: computed.lineHeight ? `Default (${computed.lineHeight})` : "Default",
+    fontFamily: computed.fontFamily,
+    fontSize: computed.fontSize,
+    lineHeight: computed.lineHeight,
   };
+}
+
+function resolveFontFamilyOptionValue(
+  computedFontFamily: string | undefined,
+  options: readonly { value: string; fontFamily: string }[],
+): string | null {
+  if (!computedFontFamily) return null;
+  const normalized = normalizeFontToken(computedFontFamily);
+  if (!normalized) return null;
+
+  const match = options.find((option) => {
+    if (normalizeToken(option.value) === normalized) return true;
+    return normalizeFontToken(option.fontFamily) === normalized;
+  });
+
+  return match?.value ?? null;
+}
+
+function resolveFontSizeOptionValue(
+  computedFontSize: string | undefined,
+  options: readonly { value: string; fontSize: string }[],
+): string | null {
+  if (!computedFontSize) return null;
+
+  const normalized = normalizeToken(computedFontSize);
+  const directMatch = options.find((option) => {
+    if (normalizeToken(option.value) === normalized) return true;
+    return normalizeToken(option.fontSize) === normalized;
+  });
+  if (directMatch) return directMatch.value;
+
+  const targetPx = parsePixelValue(computedFontSize);
+  if (targetPx == null) return null;
+
+  let closest: { value: string; distance: number } | null = null;
+  for (const option of options) {
+    const optionPx = parsePixelValue(option.fontSize);
+    if (optionPx == null) continue;
+    const distance = Math.abs(optionPx - targetPx);
+    if (!closest || distance < closest.distance) {
+      closest = { value: option.value, distance };
+    }
+  }
+
+  return closest?.value ?? null;
+}
+
+function resolveLineHeightOptionValue(
+  computedLineHeight: string | undefined,
+  computedFontSize: string | undefined,
+  options: readonly { value: string; lineHeight: string }[],
+): string | null {
+  if (!computedLineHeight) return null;
+
+  const normalized = normalizeToken(computedLineHeight);
+  const directMatch = options.find((option) => {
+    if (normalizeToken(option.value) === normalized) return true;
+    return normalizeToken(option.lineHeight) === normalized;
+  });
+  if (directMatch) return directMatch.value;
+
+  const fontSizePx = computedFontSize ? parsePixelValue(computedFontSize) : null;
+  const lineHeightPx = parsePixelValue(computedLineHeight);
+
+  let targetRatio: number | null = null;
+  if (lineHeightPx != null && fontSizePx != null && fontSizePx > 0) {
+    targetRatio = lineHeightPx / fontSizePx;
+  } else {
+    const parsed = Number(computedLineHeight);
+    if (Number.isFinite(parsed)) {
+      targetRatio = parsed;
+    }
+  }
+
+  if (targetRatio == null) return null;
+
+  let closest: { value: string; distance: number } | null = null;
+  for (const option of options) {
+    const optionRatio = Number(option.lineHeight);
+    if (!Number.isFinite(optionRatio)) continue;
+    const distance = Math.abs(optionRatio - targetRatio);
+    if (!closest || distance < closest.distance) {
+      closest = { value: option.value, distance };
+    }
+  }
+
+  return closest?.value ?? null;
 }
 
 interface ColorPickerButtonProps {
@@ -487,8 +581,6 @@ export function Toolbar({
     includeHeaders: false,
   });
 
-  const computedTypography = useMemo(() => getSelectionTypography(), [activeStates]);
-
   useEffect(() => {
     if (!hasExtension("fontFamily") || typeof commands.getFontFamilyOptions !== "function") {
       return;
@@ -496,16 +588,21 @@ export function Toolbar({
 
     const options = commands.getFontFamilyOptions().map((option) => ({
       value: option.value,
-      label: option.value === "default" ? computedTypography.fontFamilyLabel : option.label,
+      label: option.label,
     }));
 
     if (options.length > 0) {
       setFontFamilyOptions(options);
     }
-  }, [commands, computedTypography.fontFamilyLabel, hasExtension]);
+  }, [commands, hasExtension]);
 
   useEffect(() => {
     if (!hasExtension("fontFamily") || typeof commands.getCurrentFontFamily !== "function") {
+      return;
+    }
+
+    const getFontFamilyOptions = commands.getFontFamilyOptions;
+    if (typeof getFontFamilyOptions !== "function") {
       return;
     }
 
@@ -513,7 +610,19 @@ export function Toolbar({
 
     void commands.getCurrentFontFamily().then((value) => {
       if (isCancelled) return;
-      setFontFamilyValue(value ?? "default");
+
+      if (value && value !== "default") {
+        setFontFamilyValue(value);
+        return;
+      }
+
+      const selectionTypography = getSelectionTypographyValues();
+      const resolvedValue = resolveFontFamilyOptionValue(
+        selectionTypography?.fontFamily,
+        getFontFamilyOptions(),
+      );
+
+      setFontFamilyValue(resolvedValue ?? "default");
     });
 
     return () => {
@@ -528,16 +637,21 @@ export function Toolbar({
 
     const options = commands.getFontSizeOptions().map((option) => ({
       value: option.value,
-      label: option.value === "default" ? computedTypography.fontSizeLabel : option.label,
+      label: option.label,
     }));
 
     if (options.length > 0) {
       setFontSizeOptions(options);
     }
-  }, [commands, computedTypography.fontSizeLabel, hasExtension]);
+  }, [commands, hasExtension]);
 
   useEffect(() => {
     if (!hasExtension("fontSize") || typeof commands.getCurrentFontSize !== "function") {
+      return;
+    }
+
+    const getFontSizeOptions = commands.getFontSizeOptions;
+    if (typeof getFontSizeOptions !== "function") {
       return;
     }
 
@@ -545,7 +659,19 @@ export function Toolbar({
 
     void commands.getCurrentFontSize().then((value) => {
       if (isCancelled) return;
-      setFontSizeValue(value ?? "default");
+
+      if (value && value !== "default") {
+        setFontSizeValue(value);
+        return;
+      }
+
+      const selectionTypography = getSelectionTypographyValues();
+      const resolvedValue = resolveFontSizeOptionValue(
+        selectionTypography?.fontSize,
+        getFontSizeOptions(),
+      );
+
+      setFontSizeValue(resolvedValue ?? "default");
     });
 
     return () => {
@@ -560,16 +686,21 @@ export function Toolbar({
 
     const options = commands.getLineHeightOptions().map((option) => ({
       value: option.value,
-      label: option.value === "default" ? computedTypography.lineHeightLabel : option.label,
+      label: option.label,
     }));
 
     if (options.length > 0) {
       setLineHeightOptions(options);
     }
-  }, [commands, computedTypography.lineHeightLabel, hasExtension]);
+  }, [commands, hasExtension]);
 
   useEffect(() => {
     if (!hasExtension("lineHeight") || typeof commands.getCurrentLineHeight !== "function") {
+      return;
+    }
+
+    const getLineHeightOptions = commands.getLineHeightOptions;
+    if (typeof getLineHeightOptions !== "function") {
       return;
     }
 
@@ -577,7 +708,20 @@ export function Toolbar({
 
     void commands.getCurrentLineHeight().then((value) => {
       if (isCancelled) return;
-      setLineHeightValue(value ?? "default");
+
+      if (value && value !== "default") {
+        setLineHeightValue(value);
+        return;
+      }
+
+      const selectionTypography = getSelectionTypographyValues();
+      const resolvedValue = resolveLineHeightOptionValue(
+        selectionTypography?.lineHeight,
+        selectionTypography?.fontSize,
+        getLineHeightOptions(),
+      );
+
+      setLineHeightValue(resolvedValue ?? "default");
     });
 
     return () => {

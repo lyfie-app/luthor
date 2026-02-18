@@ -376,6 +376,7 @@
 .luthor-select-trigger {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	gap: 6px;
 	padding: 8px 12px;
 	border: 1px solid var(--luthor-border);
@@ -385,9 +386,18 @@
 	cursor: pointer;
 	font-size: 14px;
 	min-width: 120px;
+	max-width: 180px;
 	height: 36px;
 	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.luthor-select-trigger span {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: left;
 }
 
 .luthor-select-trigger:hover {
