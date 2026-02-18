@@ -54,6 +54,14 @@ function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
   );
 }
 
+function supportsSubscript(commands: CoreEditorCommands): boolean {
+  return typeof commands.toggleSubscript === "function";
+}
+
+function supportsSuperscript(commands: CoreEditorCommands): boolean {
+  return typeof commands.toggleSuperscript === "function";
+}
+
 export function generateCommands(): CommandConfig[] {
   return [
     {
@@ -90,6 +98,24 @@ export function generateCommands(): CommandConfig[] {
       category: "Format",
       action: (commands) => commands.toggleStrikethrough(),
       keywords: ["strikethrough", "format"],
+    },
+    {
+      id: "format.subscript",
+      label: "Toggle Subscript",
+      description: "Format text as subscript",
+      category: "Format",
+      action: (commands) => commands.toggleSubscript?.(),
+      keywords: ["subscript", "format"],
+      condition: supportsSubscript,
+    },
+    {
+      id: "format.superscript",
+      label: "Toggle Superscript",
+      description: "Format text as superscript",
+      category: "Format",
+      action: (commands) => commands.toggleSuperscript?.(),
+      keywords: ["superscript", "format"],
+      condition: supportsSuperscript,
     },
     {
       id: "format.code",

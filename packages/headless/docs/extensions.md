@@ -110,6 +110,90 @@ activeStates.hasCustomFontFamily;
 
 `setFontFamily` only accepts configured `options`, so the font list stays controlled.
 
+### Font Size Extension
+
+```tsx
+import { fontSizeExtension } from "@lyfie/luthor-headless";
+
+const extensions = [fontSizeExtension] as const;
+
+commands.setFontSize("16");
+commands.clearFontSize();
+
+const current = await commands.getCurrentFontSize();
+const options = commands.getFontSizeOptions();
+activeStates.hasCustomFontSize;
+```
+
+`setFontSize` accepts only configured values from `options`.
+
+### Line Height Extension
+
+```tsx
+import { lineHeightExtension } from "@lyfie/luthor-headless";
+
+const extensions = [lineHeightExtension] as const;
+
+commands.setLineHeight("1.5");
+commands.clearLineHeight();
+
+const current = await commands.getCurrentLineHeight();
+const options = commands.getLineHeightOptions();
+activeStates.hasCustomLineHeight;
+```
+
+### Text Color Extension
+
+```tsx
+import { textColorExtension } from "@lyfie/luthor-headless";
+
+const extensions = [textColorExtension] as const;
+
+commands.setTextColor("red");
+commands.clearTextColor();
+
+const current = await commands.getCurrentTextColor();
+const options = commands.getTextColorOptions();
+activeStates.hasCustomTextColor;
+```
+
+### Text Highlight Extension
+
+```tsx
+import { textHighlightExtension } from "@lyfie/luthor-headless";
+
+const extensions = [textHighlightExtension] as const;
+
+commands.setTextHighlight("yellow");
+commands.clearTextHighlight();
+
+const current = await commands.getCurrentTextHighlight();
+const options = commands.getTextHighlightOptions();
+activeStates.hasTextHighlight;
+```
+
+### Subscript Extension
+
+```tsx
+import { subscriptExtension } from "@lyfie/luthor-headless";
+
+const extensions = [subscriptExtension] as const;
+
+commands.toggleSubscript();
+activeStates.subscript;
+```
+
+### Superscript Extension
+
+```tsx
+import { superscriptExtension } from "@lyfie/luthor-headless";
+
+const extensions = [superscriptExtension] as const;
+
+commands.toggleSuperscript();
+activeStates.superscript;
+```
+
 ### Link Extension
 
 ```tsx

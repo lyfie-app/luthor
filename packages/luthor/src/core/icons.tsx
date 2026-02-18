@@ -23,7 +23,9 @@ import {
   Quote,
   Redo2,
   Search,
+  Subscript,
   Strikethrough,
+  Superscript,
   Sun,
   Table,
   Type,
@@ -65,5 +67,7 @@ export const OutdentIcon = IndentDecrease;
 export const SunIcon = Sun;
 export const MoonIcon = Moon;
 export const SearchIcon = Search;
+export const SubscriptIcon = Subscript;
+export const SuperscriptIcon = Superscript;
 export const ChevronDownIcon = ChevronDown;
 export const CloseIcon = X;

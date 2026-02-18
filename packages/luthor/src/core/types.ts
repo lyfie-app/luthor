@@ -38,6 +38,40 @@ export interface CoreEditorCommands {
     fontFamily: string;
     cssImportUrl?: string;
   }[];
+  setFontSize?: (fontSizeValue: string) => void;
+  clearFontSize?: () => void;
+  getCurrentFontSize?: () => Promise<string | null>;
+  getFontSizeOptions?: () => readonly {
+    value: string;
+    label: string;
+    fontSize: string;
+  }[];
+  setLineHeight?: (lineHeightValue: string) => void;
+  clearLineHeight?: () => void;
+  getCurrentLineHeight?: () => Promise<string | null>;
+  getLineHeightOptions?: () => readonly {
+    value: string;
+    label: string;
+    lineHeight: string;
+  }[];
+  setTextColor?: (colorValue: string) => void;
+  clearTextColor?: () => void;
+  getCurrentTextColor?: () => Promise<string | null>;
+  getTextColorOptions?: () => readonly {
+    value: string;
+    label: string;
+    color: string;
+  }[];
+  setTextHighlight?: (highlightValue: string) => void;
+  clearTextHighlight?: () => void;
+  getCurrentTextHighlight?: () => Promise<string | null>;
+  getTextHighlightOptions?: () => readonly {
+    value: string;
+    label: string;
+    backgroundColor: string;
+  }[];
+  toggleSubscript?: () => void;
+  toggleSuperscript?: () => void;
   insertLink: () => void;
   removeLink: () => void;
   toggleParagraph: () => void;
@@ -79,6 +113,12 @@ export interface CoreEditorActiveStates {
   strikethrough?: boolean;
   code?: boolean;
   hasCustomFontFamily?: boolean;
+  hasCustomFontSize?: boolean;
+  hasCustomLineHeight?: boolean;
+  hasCustomTextColor?: boolean;
+  hasTextHighlight?: boolean;
+  subscript?: boolean;
+  superscript?: boolean;
   isLink?: boolean;
   isQuote?: boolean;
   isInCodeBlock?: boolean;

@@ -32,6 +32,38 @@ export {
   type FontCssLoadStrategy,
 } from "./formatting/FontFamilyExtension";
 export {
+  FontSizeExtension,
+  fontSizeExtension,
+  type FontSizeConfig,
+  type FontSizeOption,
+} from "./formatting/FontSizeExtension";
+export {
+  LineHeightExtension,
+  lineHeightExtension,
+  type LineHeightConfig,
+  type LineHeightOption,
+} from "./formatting/LineHeightExtension";
+export {
+  TextColorExtension,
+  textColorExtension,
+  type TextColorConfig,
+  type TextColorOption,
+} from "./formatting/TextColorExtension";
+export {
+  TextHighlightExtension,
+  textHighlightExtension,
+  type TextHighlightConfig,
+  type TextHighlightOption,
+} from "./formatting/TextHighlightExtension";
+export {
+  SubscriptExtension,
+  subscriptExtension,
+} from "./formatting/SubscriptExtension";
+export {
+  SuperscriptExtension,
+  superscriptExtension,
+} from "./formatting/SuperscriptExtension";
+export {
   TableExtension,
   tableExtension,
   type TableConfig,

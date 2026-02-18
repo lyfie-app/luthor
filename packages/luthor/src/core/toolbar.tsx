@@ -20,6 +20,8 @@ import {
   RedoIcon,
   UndoIcon,
   SunIcon,
+  SubscriptIcon,
+  SuperscriptIcon,
   TableIcon,
   TypeIcon,
   UnderlineIcon,
@@ -33,6 +35,11 @@ import {
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
 import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment } from "./types";
+
+type SelectOption = {
+  value: string;
+  label: string;
+};
 
 function useImageHandlers(commands: CoreEditorCommands, imageUploadHandler?: (file: File) => Promise<string>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +111,23 @@ export function Toolbar({
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [fontFamilyValue, setFontFamilyValue] = useState("default");
-  const [fontFamilyOptions, setFontFamilyOptions] = useState<Array<{ value: string; label: string }>>([
+  const [fontFamilyOptions, setFontFamilyOptions] = useState<SelectOption[]>([
+    { value: "default", label: "Default" },
+  ]);
+  const [fontSizeValue, setFontSizeValue] = useState("default");
+  const [fontSizeOptions, setFontSizeOptions] = useState<SelectOption[]>([
+    { value: "default", label: "Default" },
+  ]);
+  const [lineHeightValue, setLineHeightValue] = useState("default");
+  const [lineHeightOptions, setLineHeightOptions] = useState<SelectOption[]>([
+    { value: "default", label: "Default" },
+  ]);
+  const [textColorValue, setTextColorValue] = useState("default");
+  const [textColorOptions, setTextColorOptions] = useState<SelectOption[]>([
+    { value: "default", label: "Default" },
+  ]);
+  const [textHighlightValue, setTextHighlightValue] = useState("default");
+  const [textHighlightOptions, setTextHighlightOptions] = useState<SelectOption[]>([
     { value: "default", label: "Default" },
   ]);
   const [tableConfig, setTableConfig] = useState<InsertTableConfig>({
@@ -145,6 +168,134 @@ export function Toolbar({
     };
   }, [activeStates, commands, hasExtension]);
 
+  useEffect(() => {
+    if (!hasExtension("fontSize") || typeof commands.getFontSizeOptions !== "function") {
+      return;
+    }
+
+    const options = commands.getFontSizeOptions().map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
+
+    if (options.length > 0) {
+      setFontSizeOptions(options);
+    }
+  }, [commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("fontSize") || typeof commands.getCurrentFontSize !== "function") {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void commands.getCurrentFontSize().then((value) => {
+      if (isCancelled) return;
+      setFontSizeValue(value ?? "default");
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStates, commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("lineHeight") || typeof commands.getLineHeightOptions !== "function") {
+      return;
+    }
+
+    const options = commands.getLineHeightOptions().map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
+
+    if (options.length > 0) {
+      setLineHeightOptions(options);
+    }
+  }, [commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("lineHeight") || typeof commands.getCurrentLineHeight !== "function") {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void commands.getCurrentLineHeight().then((value) => {
+      if (isCancelled) return;
+      setLineHeightValue(value ?? "default");
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStates, commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("textColor") || typeof commands.getTextColorOptions !== "function") {
+      return;
+    }
+
+    const options = commands.getTextColorOptions().map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
+
+    if (options.length > 0) {
+      setTextColorOptions(options);
+    }
+  }, [commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("textColor") || typeof commands.getCurrentTextColor !== "function") {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void commands.getCurrentTextColor().then((value) => {
+      if (isCancelled) return;
+      setTextColorValue(value ?? "default");
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStates, commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("textHighlight") || typeof commands.getTextHighlightOptions !== "function") {
+      return;
+    }
+
+    const options = commands.getTextHighlightOptions().map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
+
+    if (options.length > 0) {
+      setTextHighlightOptions(options);
+    }
+  }, [commands, hasExtension]);
+
+  useEffect(() => {
+    if (!hasExtension("textHighlight") || typeof commands.getCurrentTextHighlight !== "function") {
+      return;
+    }
+
+    let isCancelled = false;
+
+    void commands.getCurrentTextHighlight().then((value) => {
+      if (isCancelled) return;
+      setTextHighlightValue(value ?? "default");
+    });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeStates, commands, hasExtension]);
+
   const blockFormatOptions = [
     { value: "p", label: "Paragraph" },
     { value: "h1", label: "Heading 1" },
@@ -178,6 +329,42 @@ export function Toolbar({
     setFontFamilyValue(value);
   };
 
+  const handleFontSizeChange = (value: string) => {
+    if (value === "default") {
+      commands.clearFontSize?.();
+    } else {
+      commands.setFontSize?.(value);
+    }
+    setFontSizeValue(value);
+  };
+
+  const handleLineHeightChange = (value: string) => {
+    if (value === "default") {
+      commands.clearLineHeight?.();
+    } else {
+      commands.setLineHeight?.(value);
+    }
+    setLineHeightValue(value);
+  };
+
+  const handleTextColorChange = (value: string) => {
+    if (value === "default") {
+      commands.clearTextColor?.();
+    } else {
+      commands.setTextColor?.(value);
+    }
+    setTextColorValue(value);
+  };
+
+  const handleTextHighlightChange = (value: string) => {
+    if (value === "default") {
+      commands.clearTextHighlight?.();
+    } else {
+      commands.setTextHighlight?.(value);
+    }
+    setTextHighlightValue(value);
+  };
+
   return (
     <>
       <div className={classNames?.toolbar ?? "luthor-toolbar"}>
@@ -188,6 +375,38 @@ export function Toolbar({
               onValueChange={handleFontFamilyChange}
               options={fontFamilyOptions}
               placeholder="Font"
+            />
+          )}
+          {hasExtension("fontSize") && (
+            <Select
+              value={fontSizeValue}
+              onValueChange={handleFontSizeChange}
+              options={fontSizeOptions}
+              placeholder="Size"
+            />
+          )}
+          {hasExtension("lineHeight") && (
+            <Select
+              value={lineHeightValue}
+              onValueChange={handleLineHeightChange}
+              options={lineHeightOptions}
+              placeholder="Line"
+            />
+          )}
+          {hasExtension("textColor") && (
+            <Select
+              value={textColorValue}
+              onValueChange={handleTextColorChange}
+              options={textColorOptions}
+              placeholder="Color"
+            />
+          )}
+          {hasExtension("textHighlight") && (
+            <Select
+              value={textHighlightValue}
+              onValueChange={handleTextHighlightChange}
+              options={textHighlightOptions}
+              placeholder="Highlight"
             />
           )}
           <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold (Ctrl+B)">
@@ -202,6 +421,16 @@ export function Toolbar({
           <IconButton onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
             <StrikethroughIcon size={16} />
           </IconButton>
+          {hasExtension("subscript") && (
+            <IconButton onClick={() => commands.toggleSubscript?.()} active={activeStates.subscript} title="Subscript">
+              <SubscriptIcon size={16} />
+            </IconButton>
+          )}
+          {hasExtension("superscript") && (
+            <IconButton onClick={() => commands.toggleSuperscript?.()} active={activeStates.superscript} title="Superscript">
+              <SuperscriptIcon size={16} />
+            </IconButton>
+          )}
           <IconButton onClick={() => commands.formatText("code")} active={activeStates.code} title="Inline Code">
             <CodeIcon size={16} />
           </IconButton>

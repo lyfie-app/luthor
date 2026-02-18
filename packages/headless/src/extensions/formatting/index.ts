@@ -19,6 +19,38 @@ export {
   type FontCssLoadStrategy,
 } from "./FontFamilyExtension";
 export {
+  FontSizeExtension,
+  fontSizeExtension,
+  type FontSizeConfig,
+  type FontSizeOption,
+} from "./FontSizeExtension";
+export {
+  LineHeightExtension,
+  lineHeightExtension,
+  type LineHeightConfig,
+  type LineHeightOption,
+} from "./LineHeightExtension";
+export {
+  TextColorExtension,
+  textColorExtension,
+  type TextColorConfig,
+  type TextColorOption,
+} from "./TextColorExtension";
+export {
+  TextHighlightExtension,
+  textHighlightExtension,
+  type TextHighlightConfig,
+  type TextHighlightOption,
+} from "./TextHighlightExtension";
+export {
+  SubscriptExtension,
+  subscriptExtension,
+} from "./SubscriptExtension";
+export {
+  SuperscriptExtension,
+  superscriptExtension,
+} from "./SuperscriptExtension";
+export {
   CodeFormatExtension,
   codeFormatExtension,
 } from "./CodeFormatExtension";

@@ -14,6 +14,12 @@ import {
   underlineExtension,
   strikethroughExtension,
   fontFamilyExtension,
+  fontSizeExtension,
+  lineHeightExtension,
+  textColorExtension,
+  textHighlightExtension,
+  subscriptExtension,
+  superscriptExtension,
   horizontalRuleExtension,
   listExtension,
   historyExtension,
@@ -288,6 +294,53 @@ const fontFamilyExt = fontFamilyExtension.configure({
   cssLoadStrategy: "on-demand",
 });
 
+const textColorExt = textColorExtension.configure({
+  options: [
+    { value: "default", label: "Default", color: "inherit" },
+    { value: "slate", label: "Slate", color: "#334155" },
+    { value: "red", label: "Red", color: "#dc2626" },
+    { value: "orange", label: "Orange", color: "#ea580c" },
+    { value: "green", label: "Green", color: "#16a34a" },
+    { value: "blue", label: "Blue", color: "#2563eb" },
+    { value: "purple", label: "Purple", color: "#7c3aed" },
+  ],
+});
+
+const textHighlightExt = textHighlightExtension.configure({
+  options: [
+    { value: "default", label: "Default", backgroundColor: "transparent" },
+    { value: "yellow", label: "Yellow", backgroundColor: "#fef08a" },
+    { value: "green", label: "Green", backgroundColor: "#bbf7d0" },
+    { value: "blue", label: "Blue", backgroundColor: "#bfdbfe" },
+    { value: "pink", label: "Pink", backgroundColor: "#fbcfe8" },
+    { value: "orange", label: "Orange", backgroundColor: "#fed7aa" },
+  ],
+});
+
+const fontSizeExt = fontSizeExtension.configure({
+  options: [
+    { value: "default", label: "Default", fontSize: "inherit" },
+    { value: "12", label: "12px", fontSize: "12px" },
+    { value: "14", label: "14px", fontSize: "14px" },
+    { value: "16", label: "16px", fontSize: "16px" },
+    { value: "18", label: "18px", fontSize: "18px" },
+    { value: "20", label: "20px", fontSize: "20px" },
+    { value: "24", label: "24px", fontSize: "24px" },
+    { value: "32", label: "32px", fontSize: "32px" },
+  ],
+});
+
+const lineHeightExt = lineHeightExtension.configure({
+  options: [
+    { value: "default", label: "Default", lineHeight: "normal" },
+    { value: "1", label: "1.0", lineHeight: "1" },
+    { value: "1.15", label: "1.15", lineHeight: "1.15" },
+    { value: "1.5", label: "1.5", lineHeight: "1.5" },
+    { value: "1.75", label: "1.75", lineHeight: "1.75" },
+    { value: "2", label: "2.0", lineHeight: "2" },
+  ],
+});
+
 const { extension: featureCardExtension } = createCustomNodeExtension({
   nodeType: "featureCard",
   defaultPayload: {
@@ -313,6 +366,12 @@ export const extensiveExtensions = [
   underlineExtension,
   strikethroughExtension,
   fontFamilyExt,
+  fontSizeExt,
+  lineHeightExt,
+  textColorExt,
+  textHighlightExt,
+  subscriptExtension,
+  superscriptExtension,
   linkExt,
   horizontalRuleExtension,
   tableExt,
