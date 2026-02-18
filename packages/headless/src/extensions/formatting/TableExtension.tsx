@@ -110,15 +110,11 @@ function getSelectedTableCell(): TableCellNode | null {
 function TableQuickActionsPlugin() {
   const { editor } = useEditor();
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
-  const [overlayState, setOverlayState] = useState<{
-    columnHandles: Array<{ x: number; y: number; columnIndex: number }>;
-    rowHandles: Array<{ x: number; y: number; rowIndex: number }>;
-  }>({
-    columnHandles: [],
-    rowHandles: [],
-  });
+  const [isVisible, setIsVisible] = useState(false);
+  const [headersEnabled, setHeadersEnabled] = useState(false);
+  const [bubblePosition, setBubblePosition] = useState<{ x: number; y: number } | null>(null);
 
-  const runWithTargetCellSelection = (rowIndex: number, columnIndex: number, action: () => void) => {
+  const runWithSelectedTableCell = (action: (cell: TableCellNode) => void) => {
     if (!editor) {
       return;
     }
@@ -129,43 +125,34 @@ function TableQuickActionsPlugin() {
         return;
       }
 
+      selectedCell.selectStart();
+      action(selectedCell);
+    });
+  };
+
+  const setTableHeaders = (enabled: boolean) => {
+    runWithSelectedTableCell((selectedCell) => {
       const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
-      const rowNode = tableNode.getChildren()[rowIndex];
-      if (!$isTableRowNode(rowNode)) {
-        return;
-      }
+      const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
 
-      const targetCell = rowNode.getChildren()[columnIndex];
-      if (!$isTableCellNode(targetCell)) {
-        return;
-      }
+      rowNodes.forEach((rowNode, rowIndex) => {
+        const rowCells = rowNode.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node));
+        rowCells.forEach((cell, colIndex) => {
+          const applyRowHeader = enabled && rowIndex === 0;
+          const applyColumnHeader = enabled && colIndex === 0;
+          let headerState = TableCellHeaderStates.NO_STATUS;
 
-      targetCell.selectStart();
-      action();
-    });
-  };
+          if (applyRowHeader && applyColumnHeader) {
+            headerState = TableCellHeaderStates.BOTH;
+          } else if (applyRowHeader) {
+            headerState = TableCellHeaderStates.ROW;
+          } else if (applyColumnHeader) {
+            headerState = TableCellHeaderStates.COLUMN;
+          }
 
-  const insertColumnAfter = (columnIndex: number) => {
-    runWithTargetCellSelection(0, columnIndex, () => {
-      $insertTableColumnAtSelection(true);
-    });
-  };
-
-  const deleteColumnAt = (columnIndex: number) => {
-    runWithTargetCellSelection(0, columnIndex, () => {
-      $deleteTableColumnAtSelection();
-    });
-  };
-
-  const insertRowAfter = (rowIndex: number) => {
-    runWithTargetCellSelection(rowIndex, 0, () => {
-      $insertTableRowAtSelection(true);
-    });
-  };
-
-  const deleteRowAt = (rowIndex: number) => {
-    runWithTargetCellSelection(rowIndex, 0, () => {
-      $deleteTableRowAtSelection();
+          cell.setHeaderStyles(headerState, TableCellHeaderStates.BOTH);
+        });
+      });
     });
   };
 
@@ -180,79 +167,62 @@ function TableQuickActionsPlugin() {
       || null;
     setPortalContainer(container);
 
-    const updateQuickActionsPosition = () => {
+    const updateBubbleState = () => {
       editor.getEditorState().read(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection) && !selection.isCollapsed()) {
+          setIsVisible(false);
+          setBubblePosition(null);
+          return;
+        }
+
         const selectedCell = getSelectedTableCell();
         if (!selectedCell) {
-          setOverlayState({ columnHandles: [], rowHandles: [] });
+          setIsVisible(false);
+          setBubblePosition(null);
           return;
         }
 
         const cellElement = editor.getElementByKey(selectedCell.getKey());
-        if (!cellElement) {
-          setOverlayState({ columnHandles: [], rowHandles: [] });
+        const tableElement = cellElement?.closest("table");
+        if (!tableElement || !container) {
+          setIsVisible(false);
+          setBubblePosition(null);
           return;
         }
 
-        const tableElement = cellElement.closest("table");
-        if (!tableElement || !container) {
-          setOverlayState({ columnHandles: [], rowHandles: [] });
-          return;
-        }
+        const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+        const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
+
+        const firstRowCells = rowNodes[0]?.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node)) || [];
+        const firstColumnCells = rowNodes
+          .map((rowNode) => rowNode.getChildren()[0])
+          .filter((node): node is TableCellNode => $isTableCellNode(node));
+
+        const hasRowHeaders = firstRowCells.length > 0 && firstRowCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.ROW));
+        const hasColumnHeaders = firstColumnCells.length > 0 && firstColumnCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.COLUMN));
+        setHeadersEnabled(hasRowHeaders && hasColumnHeaders);
 
         const containerRect = container.getBoundingClientRect();
-        const firstRow = tableElement.querySelector("tr");
-        const rowElements = Array.from(tableElement.querySelectorAll("tr"));
-        if (!firstRow || rowElements.length === 0) {
-          setOverlayState({ columnHandles: [], rowHandles: [] });
-          return;
-        }
+        const tableRect = tableElement.getBoundingClientRect();
 
-        const headerCells = Array.from(firstRow.children).filter(
-          (element): element is HTMLTableCellElement =>
-            element instanceof HTMLTableCellElement,
-        );
-
-        const columnHandles = headerCells.map((cell, index) => {
-          const cellRect = cell.getBoundingClientRect();
-          return {
-            x: cellRect.right - containerRect.left,
-            y: cellRect.top - containerRect.top - 12,
-            columnIndex: index,
-          };
+        setBubblePosition({
+          x: tableRect.left - containerRect.left + tableRect.width / 2,
+          y: tableRect.top - containerRect.top - 12,
         });
-
-        const rowHandles = rowElements
-          .map((row, index) => {
-            const firstCell = row.children[0];
-            if (!(firstCell instanceof HTMLTableCellElement)) {
-              return null;
-            }
-
-            const cellRect = firstCell.getBoundingClientRect();
-            return {
-              x: cellRect.left - containerRect.left - 12,
-              y: cellRect.bottom - containerRect.top,
-              rowIndex: index,
-            };
-          })
-          .filter((value): value is { x: number; y: number; rowIndex: number } => value !== null);
-
-        setOverlayState({
-          columnHandles,
-          rowHandles,
-        });
+        setIsVisible(true);
       });
     };
 
-    updateQuickActionsPosition();
+    updateBubbleState();
 
     const unregisterUpdate = editor.registerUpdateListener(() => {
-      updateQuickActionsPosition();
+      updateBubbleState();
     });
 
     const handleViewportChange = () => {
-      updateQuickActionsPosition();
+      updateBubbleState();
     };
 
     window.addEventListener("scroll", handleViewportChange, true);
@@ -265,79 +235,64 @@ function TableQuickActionsPlugin() {
     };
   }, [editor]);
 
-  if (!portalContainer || typeof document === "undefined") {
+  if (!portalContainer || !isVisible || !bubblePosition || typeof document === "undefined") {
     return null;
   }
 
   return createPortal(
-    <>
-      {overlayState.columnHandles.map((handle) => (
-        <div
-          key={`column-handle-${handle.columnIndex}`}
-          className="luthor-table-divider-controls luthor-table-divider-controls-column"
-          style={{
-            position: "absolute",
-            left: handle.x,
-            top: handle.y,
-            zIndex: 20,
+    <div
+      className="luthor-table-bubble-menu"
+      style={{
+        position: "absolute",
+        left: bubblePosition.x,
+        top: bubblePosition.y,
+        transform: "translate(-50%, -100%)",
+        zIndex: 30,
+      }}
+      onMouseDown={(event) => event.preventDefault()}
+    >
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableRowAtSelection(false))}>
+        Row ↑
+      </button>
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableRowAtSelection(true))}>
+        Row ↓
+      </button>
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableColumnAtSelection(false))}>
+        Col ←
+      </button>
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $insertTableColumnAtSelection(true))}>
+        Col →
+      </button>
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $deleteTableColumnAtSelection())}>
+        Del Col
+      </button>
+      <button type="button" className="luthor-table-bubble-button" onClick={() => runWithSelectedTableCell(() => $deleteTableRowAtSelection())}>
+        Del Row
+      </button>
+      <label className="luthor-table-bubble-checkbox">
+        <input
+          type="checkbox"
+          checked={headersEnabled}
+          onChange={(event) => {
+            setHeadersEnabled(event.target.checked);
+            setTableHeaders(event.target.checked);
           }}
-        >
-          <button
-            type="button"
-            className="luthor-table-divider-button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => insertColumnAfter(handle.columnIndex)}
-            title="Add column"
-            aria-label="Add column"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="luthor-table-divider-button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => deleteColumnAt(handle.columnIndex)}
-            title="Remove column"
-            aria-label="Remove column"
-          >
-            −
-          </button>
-        </div>
-      ))}
-      {overlayState.rowHandles.map((handle) => (
-        <div
-          key={`row-handle-${handle.rowIndex}`}
-          className="luthor-table-divider-controls luthor-table-divider-controls-row"
-          style={{
-            position: "absolute",
-            left: handle.x,
-            top: handle.y,
-            zIndex: 20,
-          }}
-        >
-          <button
-            type="button"
-            className="luthor-table-divider-button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => insertRowAfter(handle.rowIndex)}
-            title="Add row"
-            aria-label="Add row"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="luthor-table-divider-button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() => deleteRowAt(handle.rowIndex)}
-            title="Remove row"
-            aria-label="Remove row"
-          >
-            −
-          </button>
-        </div>
-      ))}
-    </>,
+        />
+        Headers
+      </label>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-danger"
+        onClick={() =>
+          runWithSelectedTableCell((selectedCell) => {
+            const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+            tableNode.remove();
+          })
+        }
+      >
+        Delete Table
+      </button>
+    </div>,
     portalContainer,
   );
 }
