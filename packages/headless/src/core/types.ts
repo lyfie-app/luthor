@@ -1,6 +1,6 @@
-import { LexicalEditor, TextFormatType, EditorThemeClasses } from "lexical";
+import { LexicalEditor } from "lexical";
 import { ReactNode, CSSProperties } from "react";
-import { Extension, ExtensionCategory } from "@lyfie/luthor-headless/extensions";
+import { Extension } from "@lyfie/luthor-headless/extensions";
 import { LuthorTheme } from "./theme";
 
 export type { Extension, ExtensionCategory } from "../extensions";

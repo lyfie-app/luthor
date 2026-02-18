@@ -23,7 +23,7 @@ const HEADLESS_FEATURE_GROUPS = [
   },
   {
     title: "Structure",
-    items: ["blockFormat", "list", "table", "horizontalRule", "codeFormat"],
+    items: ["blockFormat", "list", "table", "horizontalRule", "codeFormat", "codeIntelligence"],
   },
   {
     title: "Media",

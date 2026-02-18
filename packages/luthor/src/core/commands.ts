@@ -47,6 +47,13 @@ export type CommandConfig = {
   condition?: (commands: CoreEditorCommands) => boolean;
 };
 
+function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
+  return (
+    typeof commands.setCodeLanguage === "function" &&
+    typeof commands.autoDetectCodeLanguage === "function"
+  );
+}
+
 export function generateCommands(): CommandConfig[] {
   return [
     {
@@ -145,6 +152,31 @@ export function generateCommands(): CommandConfig[] {
       action: (commands) => commands.toggleCodeBlock(),
       shortcuts: [{ key: "`", ctrlKey: true, shiftKey: true }],
       keywords: ["code", "block"],
+    },
+    {
+      id: "block.code-language",
+      label: "Set Code Language",
+      description: "Set language for selected code block",
+      category: "Block",
+      action: (commands) => {
+        if (!commands.setCodeLanguage) return;
+        const language = prompt("Code language (e.g. ts, css, python):")?.trim();
+        if (!language) return;
+        commands.setCodeLanguage(language);
+      },
+      keywords: ["code", "language", "syntax"],
+      condition: supportsCodeLanguageCommands,
+    },
+    {
+      id: "block.code-language.auto",
+      label: "Auto-Detect Code Language",
+      description: "Detect language from selected code block",
+      category: "Block",
+      action: (commands) => {
+        void commands.autoDetectCodeLanguage?.();
+      },
+      keywords: ["code", "language", "auto", "detect"],
+      condition: supportsCodeLanguageCommands,
     },
     {
       id: "list.bullet",

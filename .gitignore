@@ -165,4 +165,6 @@ docs_repo_arch
 
 # turbo folder
 .turbo
-/.claude
+
+# claude folder
+.claude
