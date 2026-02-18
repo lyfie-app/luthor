@@ -285,6 +285,9 @@ function DraggableBlockPlugin({
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hoverFrameRef = useRef<number | null>(null);
   const queuedHoveredBlockRef = useRef<HTMLElement | null>(null);
+  const pointerFrameRef = useRef<number | null>(null);
+  const queuedPointerPageYRef = useRef<number | null>(null);
+  const [pointerPageY, setPointerPageY] = useState<number | null>(null);
 
   // Sync local isDragging to extension
   useEffect(() => {
@@ -486,6 +489,9 @@ function DraggableBlockPlugin({
       if (hoverFrameRef.current !== null) {
         window.cancelAnimationFrame(hoverFrameRef.current);
       }
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current);
+      }
     };
   }, [cleanupDragClasses]);
 
@@ -504,6 +510,27 @@ function DraggableBlockPlugin({
       hoverFrameRef.current = null;
       const queuedBlock = queuedHoveredBlockRef.current;
       setHoveredBlock((prev) => (prev === queuedBlock ? prev : queuedBlock));
+    });
+  }, []);
+
+  const queuePointerPageY = useCallback((nextPointerPageY: number) => {
+    queuedPointerPageYRef.current = nextPointerPageY;
+
+    if (pointerFrameRef.current !== null) {
+      return;
+    }
+
+    pointerFrameRef.current = window.requestAnimationFrame(() => {
+      pointerFrameRef.current = null;
+      const queuedPointer = queuedPointerPageYRef.current;
+      if (queuedPointer == null) {
+        return;
+      }
+      setPointerPageY((prev) =>
+        prev != null && Math.abs(prev - queuedPointer) < 0.5
+          ? prev
+          : queuedPointer,
+      );
     });
   }, []);
 
@@ -527,6 +554,7 @@ function DraggableBlockPlugin({
       if (!editorElement) return;
 
       const target = e.target as HTMLElement;
+      queuePointerPageY(e.clientY + window.scrollY);
 
       // Check if over handle area or handle itself
       const isOverHandle =
@@ -600,8 +628,12 @@ function DraggableBlockPlugin({
         window.cancelAnimationFrame(hoverFrameRef.current);
         hoverFrameRef.current = null;
       }
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current);
+        pointerFrameRef.current = null;
+      }
     };
-  }, [editor, isDragging, queueHoveredBlock]);
+  }, [editor, isDragging, queueHoveredBlock, queuePointerPageY]);
 
   // Drag start handler for handle
   const handleDragStart = useCallback(
@@ -1268,7 +1300,42 @@ function DraggableBlockPlugin({
         : rect.left +
           window.scrollX +
           (draggableConfig?.offsetLeft || config.offsetLeft || -40);
-  const pageTop = rect.top + window.scrollY;
+
+  const showMoveButtons =
+    (draggableConfig?.showMoveButtons ?? config.showMoveButtons) !== false;
+  const showUpControl =
+    showMoveButtons &&
+    (draggableConfig?.showUpButton ?? config.showUpButton) !== false;
+  const showDownControl =
+    showMoveButtons &&
+    (draggableConfig?.showDownButton ?? config.showDownButton) !== false;
+
+  const iconSize = 24;
+  const verticalControlGap = 4;
+  const handleCenterOffset =
+    (showUpControl ? iconSize + verticalControlGap : 0) + iconSize / 2;
+  const bottomReserve = showDownControl ? iconSize + verticalControlGap : 0;
+
+  const blockTopPage = rect.top + window.scrollY;
+  const blockBottomPage = rect.bottom + window.scrollY;
+  const fallbackPointerPageY = blockTopPage + rect.height / 2;
+  const desiredPointerPageY = pointerPageY ?? fallbackPointerPageY;
+  const minHandleCenterPageY = blockTopPage + iconSize / 2;
+  const maxHandleCenterPageY = blockBottomPage - iconSize / 2;
+  const clampedHandleCenterPageY = Math.min(
+    maxHandleCenterPageY,
+    Math.max(minHandleCenterPageY, desiredPointerPageY),
+  );
+
+  const minStackTopPage = blockTopPage;
+  const maxStackTopPage = Math.max(
+    minStackTopPage,
+    blockBottomPage - (handleCenterOffset + iconSize / 2 + bottomReserve),
+  );
+  const pageTop = Math.min(
+    maxStackTopPage,
+    Math.max(minStackTopPage, clampedHandleCenterPageY - handleCenterOffset),
+  );
 
   const anchorRect = anchorElem.getBoundingClientRect();
   const anchorOffsetLeft =
