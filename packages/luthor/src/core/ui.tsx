@@ -44,8 +44,7 @@ export function Button({
   type?: "button" | "submit" | "reset";
   className?: string;
 }) {
-  const baseClass =
-    variant === "primary" ? "luthor-button-primary" : "luthor-button-secondary";
+  const baseClass = variant === "primary" ? "luthor-button-primary" : "luthor-button-secondary";
   return (
     <button type={type} onClick={onClick} className={`${baseClass}${className ? ` ${className}` : ""}`}>
       {children}
@@ -108,11 +107,7 @@ export function Select({
 
   return (
     <div className="luthor-select" ref={selectRef}>
-      <button
-        className={`luthor-select-trigger ${isOpen ? "open" : ""}`}
-        onClick={() => setIsOpen(!isOpen)}
-        type="button"
-      >
+      <button className={`luthor-select-trigger ${isOpen ? "open" : ""}`} onClick={() => setIsOpen(!isOpen)} type="button">
         <span>{selectedOption?.label || placeholder}</span>
         <ChevronDownIcon size={14} />
       </button>

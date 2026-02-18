@@ -8,6 +8,12 @@ This index groups every README used by contributors so you can quickly jump to i
 - `@lyfie/luthor` npm README: [../../packages/luthor/README.md](../../packages/luthor/README.md)
 - `@lyfie/luthor-headless` npm README: [../../packages/headless/README.md](../../packages/headless/README.md)
 
+## Luthor Package Deep Docs
+
+- Luthor docs index: [../readmes/packages/luthor-docs/README.md](../readmes/packages/luthor-docs/README.md)
+- Architecture map: [../readmes/packages/luthor-docs/architecture-map.md](../readmes/packages/luthor-docs/architecture-map.md)
+- Customization guide: [../readmes/packages/luthor-docs/customization-guide.md](../readmes/packages/luthor-docs/customization-guide.md)
+
 ## Workspace READMEs
 
 - Demo app README: [../readmes/apps/demo-readme.md](../readmes/apps/demo-readme.md)

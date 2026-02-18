@@ -42,6 +42,7 @@ From `src/presets/index.ts`, this package exports:
 ## Package Links
 
 - Headless core package docs: [../headless/README.md](../headless/README.md)
+- Package architecture docs: [../../documentation/readmes/packages/luthor-docs/README.md](../../documentation/readmes/packages/luthor-docs/README.md)
 - Monorepo root docs: [../../README.md](../../README.md)
 - Central docs index: [../../documentation/documentation-hub.md](../../documentation/documentation-hub.md)
 - Developer README map: [../../documentation/developer_notes/readme-map.md](../../documentation/developer_notes/readme-map.md)

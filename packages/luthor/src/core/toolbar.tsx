@@ -31,22 +31,10 @@ import {
   StrikethroughIcon,
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
-import type { EditorCommands } from "../commands";
-import { extensiveImageExtension } from "../extensions";
+import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment } from "./types";
 
-export type EditorStateQueries = Record<string, any>;
-
-type TableConfig = {
-  rows?: number;
-  columns?: number;
-  includeHeaders?: boolean;
-};
-
-function useImageHandlers(commands: EditorCommands) {
+function useImageHandlers(commands: CoreEditorCommands, imageUploadHandler?: (file: File) => Promise<string>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageConfig = (extensiveImageExtension as any).config as {
-    uploadHandler?: (file: File) => Promise<string>;
-  };
 
   const handlers = useMemo(
     () => ({
@@ -58,13 +46,13 @@ function useImageHandlers(commands: EditorCommands) {
         commands.insertImage({ src, alt, caption });
       },
       insertFromFile: () => fileInputRef.current?.click(),
-      handleUpload: async (e: ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
+      handleUpload: async (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (!file) return;
         let src: string;
-        if (imageConfig.uploadHandler) {
+        if (imageUploadHandler) {
           try {
-            src = await imageConfig.uploadHandler(file);
+            src = await imageUploadHandler(file);
           } catch {
             alert("Failed to upload image");
             return;
@@ -73,9 +61,9 @@ function useImageHandlers(commands: EditorCommands) {
           src = URL.createObjectURL(file);
         }
         commands.insertImage({ src, alt: file.name, file });
-        e.target.value = "";
+        event.target.value = "";
       },
-      setAlignment: (alignment: "left" | "center" | "right" | "none") => {
+      setAlignment: (alignment: ImageAlignment) => {
         commands.setImageAlignment(alignment);
       },
       setCaption: () => {
@@ -83,10 +71,21 @@ function useImageHandlers(commands: EditorCommands) {
         commands.setImageCaption(newCaption);
       },
     }),
-    [commands, imageConfig],
+    [commands, imageUploadHandler],
   );
 
   return { handlers, fileInputRef };
+}
+
+export interface ToolbarProps {
+  commands: CoreEditorCommands;
+  hasExtension: (name: string) => boolean;
+  activeStates: CoreEditorActiveStates;
+  isDark: boolean;
+  toggleTheme: () => void;
+  onCommandPaletteOpen: () => void;
+  imageUploadHandler?: (file: File) => Promise<string>;
+  classNames?: CoreToolbarClassNames;
 }
 
 export function Toolbar({
@@ -96,19 +95,14 @@ export function Toolbar({
   isDark,
   toggleTheme,
   onCommandPaletteOpen,
-}: {
-  commands: EditorCommands;
-  hasExtension: (name: string) => boolean;
-  activeStates: EditorStateQueries;
-  isDark: boolean;
-  toggleTheme: () => void;
-  onCommandPaletteOpen: () => void;
-}) {
-  const { handlers, fileInputRef } = useImageHandlers(commands);
+  imageUploadHandler,
+  classNames,
+}: ToolbarProps) {
+  const { handlers, fileInputRef } = useImageHandlers(commands, imageUploadHandler);
   const [showImageDropdown, setShowImageDropdown] = useState(false);
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
-  const [tableConfig, setTableConfig] = useState<TableConfig>({
+  const [tableConfig, setTableConfig] = useState<InsertTableConfig>({
     rows: 3,
     columns: 3,
     includeHeaders: false,
@@ -140,8 +134,8 @@ export function Toolbar({
 
   return (
     <>
-      <div className="luthor-toolbar">
-        <div className="luthor-toolbar-section">
+      <div className={classNames?.toolbar ?? "luthor-toolbar"}>
+        <div className={classNames?.section ?? "luthor-toolbar-section"}>
           <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold (Ctrl+B)">
             <BoldIcon size={16} />
           </IconButton>
@@ -167,7 +161,7 @@ export function Toolbar({
         </div>
 
         {hasExtension("blockFormat") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <Select value={currentBlockFormat} onValueChange={handleBlockFormatChange} options={blockFormatOptions} placeholder="Format" />
             <IconButton onClick={() => commands.toggleQuote()} active={activeStates.isQuote} title="Quote">
               <QuoteIcon size={16} />
@@ -181,7 +175,7 @@ export function Toolbar({
         )}
 
         {hasExtension("list") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
               <ListIcon size={16} />
             </IconButton>
@@ -202,7 +196,7 @@ export function Toolbar({
         )}
 
         {hasExtension("horizontalRule") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <IconButton onClick={() => commands.insertHorizontalRule()} title="Insert Horizontal Rule">
               <MinusIcon size={16} />
             </IconButton>
@@ -210,7 +204,7 @@ export function Toolbar({
         )}
 
         {hasExtension("table") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <IconButton onClick={() => setShowTableDialog(true)} title="Insert Table">
               <TableIcon size={16} />
             </IconButton>
@@ -218,7 +212,7 @@ export function Toolbar({
         )}
 
         {hasExtension("image") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <Dropdown
               trigger={
                 <button className={`luthor-toolbar-button ${activeStates.imageSelected ? "active" : ""}`} title="Insert Image">
@@ -270,7 +264,7 @@ export function Toolbar({
         )}
 
         {hasExtension("htmlEmbed") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <IconButton onClick={() => commands.insertHTMLEmbed()} active={activeStates.isHTMLEmbedSelected} title="Insert HTML Embed">
               <FileCodeIcon size={16} />
             </IconButton>
@@ -283,7 +277,7 @@ export function Toolbar({
         )}
 
         {hasExtension("history") && (
-          <div className="luthor-toolbar-section">
+          <div className={classNames?.section ?? "luthor-toolbar-section"}>
             <IconButton onClick={() => commands.undo()} disabled={!activeStates.canUndo} title="Undo (Ctrl+Z)">
               <UndoIcon size={16} />
             </IconButton>
@@ -293,13 +287,13 @@ export function Toolbar({
           </div>
         )}
 
-        <div className="luthor-toolbar-section">
+        <div className={classNames?.section ?? "luthor-toolbar-section"}>
           <IconButton onClick={onCommandPaletteOpen} title="Command Palette (Ctrl+Shift+P)">
             <CommandIcon size={16} />
           </IconButton>
         </div>
 
-        <div className="luthor-toolbar-section">
+        <div className={classNames?.section ?? "luthor-toolbar-section"}>
           <IconButton onClick={toggleTheme} title={isDark ? "Light Mode" : "Dark Mode"}>
             {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
           </IconButton>
@@ -316,7 +310,7 @@ export function Toolbar({
               min="1"
               max="20"
               value={tableConfig.rows}
-              onChange={(e) => setTableConfig((prev) => ({ ...prev, rows: parseInt(e.target.value) || 1 }))}
+              onChange={(event) => setTableConfig((prev) => ({ ...prev, rows: parseInt(event.target.value) || 1 }))}
               className="luthor-input"
             />
           </div>
@@ -328,7 +322,7 @@ export function Toolbar({
               min="1"
               max="20"
               value={tableConfig.columns}
-              onChange={(e) => setTableConfig((prev) => ({ ...prev, columns: parseInt(e.target.value) || 1 }))}
+              onChange={(event) => setTableConfig((prev) => ({ ...prev, columns: parseInt(event.target.value) || 1 }))}
               className="luthor-input"
             />
           </div>
@@ -337,7 +331,7 @@ export function Toolbar({
               <input
                 type="checkbox"
                 checked={tableConfig.includeHeaders || false}
-                onChange={(e) => setTableConfig((prev) => ({ ...prev, includeHeaders: e.target.checked }))}
+                onChange={(event) => setTableConfig((prev) => ({ ...prev, includeHeaders: event.target.checked }))}
                 className="luthor-checkbox"
               />
               Include headers

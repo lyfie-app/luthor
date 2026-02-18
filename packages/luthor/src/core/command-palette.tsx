@@ -45,24 +45,24 @@ export function CommandPalette({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (!isOpen) return;
 
-      switch (e.key) {
+      switch (event.key) {
         case "Escape":
-          e.preventDefault();
+          event.preventDefault();
           onClose();
           break;
         case "ArrowDown":
-          e.preventDefault();
+          event.preventDefault();
           setSelectedIndex((prev) => Math.min(prev + 1, flatCommands.length - 1));
           break;
         case "ArrowUp":
-          e.preventDefault();
+          event.preventDefault();
           setSelectedIndex((prev) => Math.max(prev - 1, 0));
           break;
         case "Enter":
-          e.preventDefault();
+          event.preventDefault();
           if (flatCommands[selectedIndex]) {
             flatCommands[selectedIndex].action();
             onClose();
@@ -79,7 +79,7 @@ export function CommandPalette({
 
   return (
     <div className="luthor-command-palette-overlay" onClick={onClose}>
-      <div className="luthor-command-palette" onClick={(e) => e.stopPropagation()}>
+      <div className="luthor-command-palette" onClick={(event) => event.stopPropagation()}>
         <div className="luthor-command-palette-header">
           <SearchIcon size={16} className="luthor-command-palette-icon" />
           <input
@@ -87,7 +87,7 @@ export function CommandPalette({
             type="text"
             placeholder="Type a command or search..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(event) => setQuery(event.target.value)}
             className="luthor-command-palette-input"
           />
           <kbd className="luthor-command-palette-kbd">ESC</kbd>
@@ -105,9 +105,7 @@ export function CommandPalette({
                   return (
                     <div
                       key={cmd.id}
-                      className={`luthor-command-palette-item ${
-                        globalIndex === selectedIndex ? "selected" : ""
-                      }`}
+                      className={`luthor-command-palette-item ${globalIndex === selectedIndex ? "selected" : ""}`}
                       onClick={() => {
                         cmd.action();
                         onClose();
@@ -116,13 +114,9 @@ export function CommandPalette({
                     >
                       <div className="luthor-command-palette-item-content">
                         <div className="luthor-command-palette-item-title">{cmd.label}</div>
-                        {cmd.description && (
-                          <div className="luthor-command-palette-item-description">{cmd.description}</div>
-                        )}
+                        {cmd.description && <div className="luthor-command-palette-item-description">{cmd.description}</div>}
                       </div>
-                      {cmd.shortcut && (
-                        <kbd className="luthor-command-palette-item-shortcut">{cmd.shortcut}</kbd>
-                      )}
+                      {cmd.shortcut && <kbd className="luthor-command-palette-item-shortcut">{cmd.shortcut}</kbd>}
                     </div>
                   );
                 })}

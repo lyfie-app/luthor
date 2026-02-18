@@ -21,6 +21,9 @@ This folder is the centralized home for all README-style documentation.
   - [../packages/headless/docs/troubleshooting.md](../packages/headless/docs/troubleshooting.md)
   - [../packages/headless/docs/architecture.md](../packages/headless/docs/architecture.md)
 - Preset package npm README: [../packages/luthor/README.md](../packages/luthor/README.md)
+- Preset package architecture docs:
+  - [readmes/packages/luthor-docs/architecture-map.md](readmes/packages/luthor-docs/architecture-map.md)
+  - [readmes/packages/luthor-docs/customization-guide.md](readmes/packages/luthor-docs/customization-guide.md)
 
 ## App and Tooling Documentation
 

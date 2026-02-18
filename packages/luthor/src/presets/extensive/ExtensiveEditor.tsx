@@ -1,15 +1,11 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
-import { commandsToCommandPaletteItems, registerKeyboardShortcuts } from "./commands";
-import { Toolbar } from "./components/Toolbar";
-import { CommandPalette } from "./components/CommandPalette";
+import { CommandPalette, commandsToCommandPaletteItems, ModeTabs, registerKeyboardShortcuts, SourceView, Toolbar, type CoreEditorCommands } from "../../core";
 import type { CommandPaletteExtension } from "@lyfie/luthor-headless";
 import "./styles.css";
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
-
-type EditorCommands = Record<string, any>;
 
 export type ExtensiveEditorMode = "visual" | "html" | "markdown";
 
@@ -18,48 +14,6 @@ export interface ExtensiveEditorRef {
   injectHTML: (content: string) => void;
   getMarkdown: () => string;
   getHTML: () => string;
-}
-
-function ModeTabs({
-  mode,
-  onModeChange,
-}: {
-  mode: ExtensiveEditorMode;
-  onModeChange: (mode: ExtensiveEditorMode) => void;
-}) {
-  return (
-    <div className="luthor-mode-tabs">
-      <button className={`luthor-mode-tab ${mode === "visual" ? "active" : ""}`} onClick={() => onModeChange("visual")}>
-        Visual
-      </button>
-      <button className={`luthor-mode-tab ${mode === "html" ? "active" : ""}`} onClick={() => onModeChange("html")}>
-        HTML
-      </button>
-      <button className={`luthor-mode-tab ${mode === "markdown" ? "active" : ""}`} onClick={() => onModeChange("markdown")}>
-        Markdown
-      </button>
-    </div>
-  );
-}
-
-function SourceView({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-}) {
-  return (
-    <textarea
-      className="luthor-source-view"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      spellCheck={false}
-    />
-  );
 }
 
 function ExtensiveEditorContent({
@@ -78,11 +32,11 @@ function ExtensiveEditorContent({
     isOpen: false,
     commands: [] as ReturnType<typeof commandsToCommandPaletteItems>,
   });
-  const commandsRef = useRef<EditorCommands>(commands);
+  const commandsRef = useRef<CoreEditorCommands>(commands as CoreEditorCommands);
   const readyRef = useRef(false);
 
   useEffect(() => {
-    commandsRef.current = commands;
+    commandsRef.current = commands as CoreEditorCommands;
   }, [commands]);
 
   useEffect(() => {
@@ -118,10 +72,11 @@ function ExtensiveEditorContent({
   useEffect(() => {
     if (!editor || !commands) return;
 
-    const paletteItems = commandsToCommandPaletteItems(commands);
-    paletteItems.forEach((cmd) => commands.registerCommand(cmd));
+    const commandApi = commands as CoreEditorCommands;
+    const paletteItems = commandsToCommandPaletteItems(commandApi);
+    paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
 
-    const unregisterShortcuts = registerKeyboardShortcuts(commands, document.body);
+    const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body);
 
     if (!readyRef.current) {
       readyRef.current = true;
@@ -130,7 +85,7 @@ function ExtensiveEditorContent({
 
     return () => {
       unregisterShortcuts();
-      paletteItems.forEach((cmd) => commands.unregisterCommand(cmd.id));
+      paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
     };
   }, [editor, commands, methods, onReady]);
 
@@ -179,12 +134,13 @@ function ExtensiveEditorContent({
         <ModeTabs mode={mode} onModeChange={handleModeChange} />
         {mode === "visual" && (
           <Toolbar
-            commands={commands}
+            commands={commands as CoreEditorCommands}
             hasExtension={(name: string) => hasExtension(name as any)}
             activeStates={activeStates}
             isDark={isDark}
             toggleTheme={toggleTheme}
             onCommandPaletteOpen={() => commands.showCommandPalette()}
+            imageUploadHandler={(file) => ((extensiveExtensions.find((ext: any) => ext.name === "image") as any)?.config?.uploadHandler?.(file) ?? Promise.resolve(URL.createObjectURL(file)))}
           />
         )}
       </div>

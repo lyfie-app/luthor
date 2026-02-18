@@ -4,7 +4,6 @@ import {
   TableExtension,
   HTMLEmbedExtension,
   ImageExtension,
-  FloatingToolbarExtension,
   ContextMenuExtension,
   CommandPaletteExtension,
   DraggableBlockExtension,
@@ -21,7 +20,9 @@ import {
   codeExtension,
   codeFormatExtension,
 } from "@lyfie/luthor-headless";
-import { FloatingToolbar } from "./components/FloatingToolbar";
+import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
+
+export { setFloatingToolbarContext };
 
 const markdownExt = new MarkdownExtension();
 (markdownExt as any).config = {
@@ -52,40 +53,7 @@ const htmlEmbedExt = new HTMLEmbedExtension();
   markdownExtension: markdownExt,
 };
 
-type FloatingToolbarContext = {
-  commands: any;
-  activeStates: any;
-  editorTheme: "light" | "dark";
-};
-
-const floatingToolbarContext: FloatingToolbarContext = {
-  commands: {},
-  activeStates: {},
-  editorTheme: "light",
-};
-
-export function setFloatingToolbarContext(
-  commands: any,
-  activeStates: any,
-  editorTheme: "light" | "dark",
-) {
-  floatingToolbarContext.commands = commands;
-  floatingToolbarContext.activeStates = activeStates;
-  floatingToolbarContext.editorTheme = editorTheme;
-}
-
-const floatingToolbarExt = new FloatingToolbarExtension();
-(floatingToolbarExt as any).config = {
-  ...(floatingToolbarExt as any).config,
-  render: (props: any) => (
-    <FloatingToolbar
-      {...props}
-      editorTheme={floatingToolbarContext.editorTheme}
-    />
-  ),
-  getCommands: () => floatingToolbarContext.commands,
-  getActiveStates: () => floatingToolbarContext.activeStates,
-};
+const floatingToolbarExt = createFloatingToolbarExtension();
 
 const contextMenuExt = new ContextMenuExtension();
 (contextMenuExt as any).config = {

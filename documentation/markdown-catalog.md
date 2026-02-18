@@ -25,6 +25,9 @@ Current Markdown inventory for this repository.
 ## Packages: Luthor
 
 - [../packages/luthor/README.md](../packages/luthor/README.md)
+- [readmes/packages/luthor-docs/README.md](readmes/packages/luthor-docs/README.md)
+- [readmes/packages/luthor-docs/architecture-map.md](readmes/packages/luthor-docs/architecture-map.md)
+- [readmes/packages/luthor-docs/customization-guide.md](readmes/packages/luthor-docs/customization-guide.md)
 - [readmes/presets/blog-preset-readme.md](readmes/presets/blog-preset-readme.md)
 - [readmes/presets/chat-preset-readme.md](readmes/presets/chat-preset-readme.md)
 - [readmes/presets/classic-preset-readme.md](readmes/presets/classic-preset-readme.md)

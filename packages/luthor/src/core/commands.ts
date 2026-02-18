@@ -1,6 +1,5 @@
 import type { CommandPaletteItem } from "@lyfie/luthor-headless";
-
-export type EditorCommands = Record<string, any>;
+import type { CoreEditorCommands } from "./types";
 
 export type KeyboardShortcut = {
   key: string;
@@ -16,10 +15,10 @@ export type CommandConfig = {
   label: string;
   description?: string;
   category: string;
-  action: (commands: EditorCommands) => void;
+  action: (commands: CoreEditorCommands) => void;
   shortcuts?: KeyboardShortcut[];
   keywords?: string[];
-  condition?: (commands: EditorCommands) => boolean;
+  condition?: (commands: CoreEditorCommands) => boolean;
 };
 
 export function generateCommands(): CommandConfig[] {
@@ -228,17 +227,15 @@ export function generateCommands(): CommandConfig[] {
   ];
 }
 
-export function commandsToCommandPaletteItems(
-  commands: EditorCommands,
-): CommandPaletteItem[] {
-  return generateCommands().map((cmd) => ({
-    id: cmd.id,
-    label: cmd.label,
-    description: cmd.description,
-    category: cmd.category,
-    action: () => cmd.action(commands),
-    keywords: cmd.keywords,
-    shortcut: cmd.shortcuts?.[0] ? formatShortcut(cmd.shortcuts[0]) : undefined,
+export function commandsToCommandPaletteItems(commands: CoreEditorCommands): CommandPaletteItem[] {
+  return generateCommands().map((command) => ({
+    id: command.id,
+    label: command.label,
+    description: command.description,
+    category: command.category,
+    action: () => command.action(commands),
+    keywords: command.keywords,
+    shortcut: command.shortcuts?.[0] ? formatShortcut(command.shortcuts[0]) : undefined,
   }));
 }
 
@@ -252,10 +249,7 @@ function formatShortcut(shortcut: KeyboardShortcut): string {
   return parts.join("+");
 }
 
-export function registerKeyboardShortcuts(
-  commands: EditorCommands,
-  element: HTMLElement = document.body,
-): () => void {
+export function registerKeyboardShortcuts(commands: CoreEditorCommands, element: HTMLElement = document.body): () => void {
   const commandConfigs = generateCommands();
 
   const handleKeyDown = (event: KeyboardEvent) => {

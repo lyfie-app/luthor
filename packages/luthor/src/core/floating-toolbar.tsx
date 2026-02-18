@@ -15,16 +15,31 @@ import {
   UnlinkIcon,
 } from "./icons";
 import { IconButton } from "./ui";
+import type { CoreEditorActiveStates, CoreEditorCommands, CoreTheme } from "./types";
 
-export function FloatingToolbar(props: any) {
-  const {
-    isVisible,
-    selectionRect,
-    commands,
-    activeStates,
-    editorTheme = "light",
-    hide,
-  } = props;
+type FloatingSelectionRect = {
+  y: number;
+  x: number;
+  positionFromRight?: boolean;
+};
+
+export interface FloatingToolbarProps {
+  isVisible: boolean;
+  selectionRect?: FloatingSelectionRect;
+  commands: CoreEditorCommands;
+  activeStates: CoreEditorActiveStates;
+  editorTheme?: CoreTheme;
+  hide?: () => void;
+}
+
+export function FloatingToolbar({
+  isVisible,
+  selectionRect,
+  commands,
+  activeStates,
+  editorTheme = "light",
+  hide,
+}: FloatingToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,40 +72,20 @@ export function FloatingToolbar(props: any) {
     pointerEvents: "auto",
   };
 
-  if (activeStates?.imageSelected) {
+  if (activeStates.imageSelected) {
     return (
-      <div
-        className="luthor-floating-toolbar"
-        data-theme={editorTheme}
-        ref={toolbarRef}
-        style={style}
-      >
-        <IconButton
-          onClick={() => commands.setImageAlignment("left")}
-          active={activeStates.isImageAlignedLeft}
-          title="Align Left"
-        >
+      <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
+        <IconButton onClick={() => commands.setImageAlignment("left")} active={activeStates.isImageAlignedLeft} title="Align Left">
           <AlignLeftIcon size={14} />
         </IconButton>
-        <IconButton
-          onClick={() => commands.setImageAlignment("center")}
-          active={activeStates.isImageAlignedCenter}
-          title="Align Center"
-        >
+        <IconButton onClick={() => commands.setImageAlignment("center")} active={activeStates.isImageAlignedCenter} title="Align Center">
           <AlignCenterIcon size={14} />
         </IconButton>
-        <IconButton
-          onClick={() => commands.setImageAlignment("right")}
-          active={activeStates.isImageAlignedRight}
-          title="Align Right"
-        >
+        <IconButton onClick={() => commands.setImageAlignment("right")} active={activeStates.isImageAlignedRight} title="Align Right">
           <AlignRightIcon size={14} />
         </IconButton>
         <div className="luthor-floating-toolbar-separator" />
-        <IconButton
-          onClick={() => commands.setImageCaption(prompt("Enter caption:") || "")}
-          title="Edit Caption"
-        >
+        <IconButton onClick={() => commands.setImageCaption(prompt("Enter caption:") || "")} title="Edit Caption">
           <QuoteIcon size={14} />
         </IconButton>
       </div>
@@ -98,12 +93,7 @@ export function FloatingToolbar(props: any) {
   }
 
   return (
-    <div
-      className="luthor-floating-toolbar"
-      data-theme={editorTheme}
-      ref={toolbarRef}
-      style={style}
-    >
+    <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
       <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold">
         <BoldIcon size={14} />
       </IconButton>
@@ -113,11 +103,7 @@ export function FloatingToolbar(props: any) {
       <IconButton onClick={() => commands.toggleUnderline()} active={activeStates.underline} title="Underline">
         <UnderlineIcon size={14} />
       </IconButton>
-      <IconButton
-        onClick={() => commands.toggleStrikethrough()}
-        active={activeStates.strikethrough}
-        title="Strikethrough"
-      >
+      <IconButton onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
         <StrikethroughIcon size={14} />
       </IconButton>
       <div className="luthor-floating-toolbar-separator" />
@@ -135,18 +121,10 @@ export function FloatingToolbar(props: any) {
         {activeStates.isLink ? <UnlinkIcon size={14} /> : <LinkIcon size={14} />}
       </IconButton>
       <div className="luthor-floating-toolbar-separator" />
-      <IconButton
-        onClick={() => commands.toggleUnorderedList()}
-        active={activeStates.unorderedList}
-        title="Bullet List"
-      >
+      <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
         <ListIcon size={14} />
       </IconButton>
-      <IconButton
-        onClick={() => commands.toggleOrderedList()}
-        active={activeStates.orderedList}
-        title="Numbered List"
-      >
+      <IconButton onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
         <ListOrderedIcon size={14} />
       </IconButton>
     </div>
