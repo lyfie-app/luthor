@@ -45,6 +45,7 @@
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+	position: relative;
 	/* Default responsive sizing for plug-and-play usage */
 	width: 100%;
 	max-width: 100%;
@@ -1152,6 +1153,47 @@
 
 .luthor-preset-extensive table td[data-lexical-table-cell-selection] {
 	background-color: rgba(59, 130, 246, 0.1);
+}
+
+.luthor-table-divider-controls {
+	display: flex;
+	gap: 4px;
+	pointer-events: auto;
+	transform: translate(-50%, -50%);
+}
+
+.luthor-table-divider-controls-column {
+	flex-direction: row;
+}
+
+.luthor-table-divider-controls-row {
+	flex-direction: column;
+}
+
+.luthor-table-divider-button {
+	width: 20px;
+	height: 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border-radius: 999px;
+	border: 1px solid var(--luthor-border);
+	background: var(--luthor-bg);
+	color: var(--luthor-fg);
+	font-size: 13px;
+	font-weight: 700;
+	line-height: 1;
+	cursor: pointer;
+	box-shadow: 0 4px 10px var(--luthor-shadow);
+	transition: all 0.16s ease;
+}
+
+.luthor-table-divider-button:hover {
+	background: var(--luthor-accent);
+	color: var(--luthor-bg);
+	border-color: var(--luthor-accent);
+	transform: scale(1.06);
 }
 
 .luthor-context-menu {

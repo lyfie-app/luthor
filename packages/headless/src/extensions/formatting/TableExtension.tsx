@@ -2,17 +2,26 @@ import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { BaseExtensionConfig } from "@lyfie/luthor-headless/extensions/types";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { markdownExtension } from "../export/MarkdownExtension";
+import { useBaseEditor as useEditor } from "../../core/createEditorSystem";
 import {
   TableNode,
   TableRowNode,
   TableCellNode,
+  TableCellHeaderStates,
   $createTableNodeWithDimensions,
   $isTableNode,
   $isTableRowNode,
   $isTableCellNode,
+  $findCellNode,
+  $getTableNodeFromLexicalNodeOrThrow,
+  $getTableRowIndexFromTableCellNode,
+  $getTableColumnIndexFromTableCellNode,
+  $mergeCells,
+  $unmergeCell,
 } from "@lexical/table";
 import {
   INSERT_TABLE_COMMAND,
@@ -59,6 +68,10 @@ export type TableCommands = {
   insertRowBelow: () => void;
   insertColumnLeft: () => void;
   insertColumnRight: () => void;
+  toggleRowHeader: () => void;
+  toggleColumnHeader: () => void;
+  mergeSelectedCells: () => void;
+  unmergeSelectedCell: () => void;
   deleteRow: () => void;
   deleteColumn: () => void;
   deleteTable: () => void;
@@ -72,6 +85,262 @@ export type TableStateQueries = {
   isTableSelected: () => Promise<boolean>;
   isInTableCell: () => Promise<boolean>;
 };
+
+function getSelectedTableCell(): TableCellNode | null {
+  const selection = $getSelection();
+
+  if ($isTableSelection(selection)) {
+    const selectedCell = selection.getNodes().find((node) => $isTableCellNode(node));
+    if ($isTableCellNode(selectedCell)) {
+      return selectedCell;
+    }
+  }
+
+  if ($isRangeSelection(selection)) {
+    const anchorNode = selection.anchor.getNode();
+    const cellNode = $findCellNode(anchorNode);
+    if ($isTableCellNode(cellNode)) {
+      return cellNode;
+    }
+  }
+
+  return null;
+}
+
+function TableQuickActionsPlugin() {
+  const { editor } = useEditor();
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [overlayState, setOverlayState] = useState<{
+    columnHandles: Array<{ x: number; y: number; columnIndex: number }>;
+    rowHandles: Array<{ x: number; y: number; rowIndex: number }>;
+  }>({
+    columnHandles: [],
+    rowHandles: [],
+  });
+
+  const runWithTargetCellSelection = (rowIndex: number, columnIndex: number, action: () => void) => {
+    if (!editor) {
+      return;
+    }
+
+    editor.update(() => {
+      const selectedCell = getSelectedTableCell();
+      if (!selectedCell) {
+        return;
+      }
+
+      const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+      const rowNode = tableNode.getChildren()[rowIndex];
+      if (!$isTableRowNode(rowNode)) {
+        return;
+      }
+
+      const targetCell = rowNode.getChildren()[columnIndex];
+      if (!$isTableCellNode(targetCell)) {
+        return;
+      }
+
+      targetCell.selectStart();
+      action();
+    });
+  };
+
+  const insertColumnAfter = (columnIndex: number) => {
+    runWithTargetCellSelection(0, columnIndex, () => {
+      $insertTableColumnAtSelection(true);
+    });
+  };
+
+  const deleteColumnAt = (columnIndex: number) => {
+    runWithTargetCellSelection(0, columnIndex, () => {
+      $deleteTableColumnAtSelection();
+    });
+  };
+
+  const insertRowAfter = (rowIndex: number) => {
+    runWithTargetCellSelection(rowIndex, 0, () => {
+      $insertTableRowAtSelection(true);
+    });
+  };
+
+  const deleteRowAt = (rowIndex: number) => {
+    runWithTargetCellSelection(rowIndex, 0, () => {
+      $deleteTableRowAtSelection();
+    });
+  };
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const rootElement = editor.getRootElement();
+    const container = (rootElement?.closest(".luthor-editor-wrapper") as HTMLElement | null)
+      || rootElement?.parentElement
+      || null;
+    setPortalContainer(container);
+
+    const updateQuickActionsPosition = () => {
+      editor.getEditorState().read(() => {
+        const selectedCell = getSelectedTableCell();
+        if (!selectedCell) {
+          setOverlayState({ columnHandles: [], rowHandles: [] });
+          return;
+        }
+
+        const cellElement = editor.getElementByKey(selectedCell.getKey());
+        if (!cellElement) {
+          setOverlayState({ columnHandles: [], rowHandles: [] });
+          return;
+        }
+
+        const tableElement = cellElement.closest("table");
+        if (!tableElement || !container) {
+          setOverlayState({ columnHandles: [], rowHandles: [] });
+          return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const firstRow = tableElement.querySelector("tr");
+        const rowElements = Array.from(tableElement.querySelectorAll("tr"));
+        if (!firstRow || rowElements.length === 0) {
+          setOverlayState({ columnHandles: [], rowHandles: [] });
+          return;
+        }
+
+        const headerCells = Array.from(firstRow.children).filter(
+          (element): element is HTMLTableCellElement =>
+            element instanceof HTMLTableCellElement,
+        );
+
+        const columnHandles = headerCells.map((cell, index) => {
+          const cellRect = cell.getBoundingClientRect();
+          return {
+            x: cellRect.right - containerRect.left,
+            y: cellRect.top - containerRect.top - 12,
+            columnIndex: index,
+          };
+        });
+
+        const rowHandles = rowElements
+          .map((row, index) => {
+            const firstCell = row.children[0];
+            if (!(firstCell instanceof HTMLTableCellElement)) {
+              return null;
+            }
+
+            const cellRect = firstCell.getBoundingClientRect();
+            return {
+              x: cellRect.left - containerRect.left - 12,
+              y: cellRect.bottom - containerRect.top,
+              rowIndex: index,
+            };
+          })
+          .filter((value): value is { x: number; y: number; rowIndex: number } => value !== null);
+
+        setOverlayState({
+          columnHandles,
+          rowHandles,
+        });
+      });
+    };
+
+    updateQuickActionsPosition();
+
+    const unregisterUpdate = editor.registerUpdateListener(() => {
+      updateQuickActionsPosition();
+    });
+
+    const handleViewportChange = () => {
+      updateQuickActionsPosition();
+    };
+
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
+
+    return () => {
+      unregisterUpdate();
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [editor]);
+
+  if (!portalContainer || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(
+    <>
+      {overlayState.columnHandles.map((handle) => (
+        <div
+          key={`column-handle-${handle.columnIndex}`}
+          className="luthor-table-divider-controls luthor-table-divider-controls-column"
+          style={{
+            position: "absolute",
+            left: handle.x,
+            top: handle.y,
+            zIndex: 20,
+          }}
+        >
+          <button
+            type="button"
+            className="luthor-table-divider-button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => insertColumnAfter(handle.columnIndex)}
+            title="Add column"
+            aria-label="Add column"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="luthor-table-divider-button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => deleteColumnAt(handle.columnIndex)}
+            title="Remove column"
+            aria-label="Remove column"
+          >
+            −
+          </button>
+        </div>
+      ))}
+      {overlayState.rowHandles.map((handle) => (
+        <div
+          key={`row-handle-${handle.rowIndex}`}
+          className="luthor-table-divider-controls luthor-table-divider-controls-row"
+          style={{
+            position: "absolute",
+            left: handle.x,
+            top: handle.y,
+            zIndex: 20,
+          }}
+        >
+          <button
+            type="button"
+            className="luthor-table-divider-button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => insertRowAfter(handle.rowIndex)}
+            title="Add row"
+            aria-label="Add row"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="luthor-table-divider-button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => deleteRowAt(handle.rowIndex)}
+            title="Remove row"
+            aria-label="Remove row"
+          >
+            −
+          </button>
+        </div>
+      ))}
+    </>,
+    portalContainer,
+  );
+}
 
 /**
  * Table extension for table operations in the editor.
@@ -110,6 +379,32 @@ export class TableExtension extends BaseExtension<
     {
       label: "Insert Column Right",
       action: () => commands.insertColumnRight(),
+    },
+    {
+      separator: true,
+      label: "",
+      action: () => {},
+    },
+    {
+      label: "Toggle Row Header",
+      action: () => commands.toggleRowHeader(),
+    },
+    {
+      label: "Toggle Column Header",
+      action: () => commands.toggleColumnHeader(),
+    },
+    {
+      label: "Merge Cells",
+      action: () => commands.mergeSelectedCells(),
+    },
+    {
+      label: "Split Cell",
+      action: () => commands.unmergeSelectedCell(),
+    },
+    {
+      separator: true,
+      label: "",
+      action: () => {},
     },
     {
       label: "Delete Row",
@@ -236,6 +531,72 @@ export class TableExtension extends BaseExtension<
           $insertTableColumnAtSelection(true); // true = insert right
         });
       },
+      toggleRowHeader: () => {
+        editor.update(() => {
+          const activeCell = getSelectedTableCell();
+          if (!activeCell) {
+            return;
+          }
+
+          const tableNode = $getTableNodeFromLexicalNodeOrThrow(activeCell);
+          const rowIndex = $getTableRowIndexFromTableCellNode(activeCell);
+          const rowNode = tableNode.getChildren()[rowIndex];
+          if (!$isTableRowNode(rowNode)) {
+            return;
+          }
+
+          const rowCells = rowNode.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node));
+          const enableHeader = !rowCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.ROW));
+          const nextHeaderState = enableHeader ? TableCellHeaderStates.ROW : TableCellHeaderStates.NO_STATUS;
+
+          rowCells.forEach((cell) => {
+            cell.setHeaderStyles(nextHeaderState, TableCellHeaderStates.ROW);
+          });
+        });
+      },
+      toggleColumnHeader: () => {
+        editor.update(() => {
+          const activeCell = getSelectedTableCell();
+          if (!activeCell) {
+            return;
+          }
+
+          const tableNode = $getTableNodeFromLexicalNodeOrThrow(activeCell);
+          const columnIndex = $getTableColumnIndexFromTableCellNode(activeCell);
+          const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
+
+          const columnCells = rowNodes
+            .map((rowNode) => rowNode.getChildren()[columnIndex])
+            .filter((node): node is TableCellNode => $isTableCellNode(node));
+
+          const enableHeader = !columnCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.COLUMN));
+          const nextHeaderState = enableHeader ? TableCellHeaderStates.COLUMN : TableCellHeaderStates.NO_STATUS;
+
+          columnCells.forEach((cell) => {
+            cell.setHeaderStyles(nextHeaderState, TableCellHeaderStates.COLUMN);
+          });
+        });
+      },
+      mergeSelectedCells: () => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isTableSelection(selection)) {
+            return;
+          }
+
+          const cellNodes = selection.getNodes().filter((node): node is TableCellNode => $isTableCellNode(node));
+          if (cellNodes.length < 2) {
+            return;
+          }
+
+          $mergeCells(cellNodes);
+        });
+      },
+      unmergeSelectedCell: () => {
+        editor.update(() => {
+          $unmergeCell();
+        });
+      },
       deleteRow: () => {
         editor.update(() => {
           $deleteTableRowAtSelection();
@@ -292,7 +653,7 @@ export class TableExtension extends BaseExtension<
   }
 
   getPlugins(): ReactNode[] {
-    return [<TablePlugin key="table-plugin" />];
+    return [<TablePlugin key="table-plugin" />, <TableQuickActionsPlugin key="table-quick-actions-plugin" />];
   }
 }
 

@@ -210,6 +210,36 @@ commands.insertHorizontalRule();
 Markdown shortcuts for horizontal rules are supported when markdown shortcuts are enabled in your stack.
 Supported shortcut inputs: `---`, `___`.
 
+### Table Extension
+
+```tsx
+import { tableExtension } from "@lyfie/luthor-headless";
+
+const extensions = [tableExtension] as const;
+
+commands.insertTable({ rows: 3, columns: 3, includeHeaders: false });
+
+commands.insertRowAbove();
+commands.insertRowBelow();
+commands.insertColumnLeft();
+commands.insertColumnRight();
+
+commands.toggleRowHeader();
+commands.toggleColumnHeader();
+
+commands.mergeSelectedCells();
+commands.unmergeSelectedCell();
+
+commands.deleteRow();
+commands.deleteColumn();
+commands.deleteTable();
+
+activeStates.isTableSelected;
+activeStates.isInTableCell;
+```
+
+`toggleRowHeader` and `toggleColumnHeader` update headers after insertion, so table headers are not limited to initial `includeHeaders` setup.
+
 ## Media Extensions
 
 ### Image Extension
