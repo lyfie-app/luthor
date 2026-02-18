@@ -81,6 +81,10 @@ export {
   type RichTextConfig,
   type RichTextComponentProps,
 } from "./core/RichTextExtension";
+export {
+  TabIndentExtension,
+  tabIndentExtension,
+} from "./core/TabIndentExtension";
 export * from "./core";
 
 // Base classes and types

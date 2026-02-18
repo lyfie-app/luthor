@@ -21,6 +21,7 @@ import {
   codeExtension,
   codeIntelligenceExtension,
   codeFormatExtension,
+  tabIndentExtension,
 } from "@lyfie/luthor-headless";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
 
@@ -118,6 +119,7 @@ export const extensiveExtensions = [
   codeExtension,
   codeIntelligenceExtension,
   codeFormatExtension,
+  tabIndentExtension,
   htmlEmbedExt,
   floatingToolbarExt,
   contextMenuExt,

@@ -12,6 +12,10 @@ export {
 } from "./CommandPaletteExtension";
 export { richTextExtension, type RichTextConfig } from "./RichTextExtension";
 export {
+  TabIndentExtension,
+  tabIndentExtension,
+} from "./TabIndentExtension";
+export {
   DraggableBlockExtension,
   draggableBlockExtension,
   type DraggableConfig,
