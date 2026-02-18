@@ -10,6 +10,32 @@ export type KeyboardShortcut = {
   preventDefault?: boolean;
 };
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+
+  if (target.closest('[contenteditable="true"]')) return true;
+
+  const tagName = target.tagName.toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select";
+}
+
+function isNativeLexicalShortcutConflict(event: KeyboardEvent, shortcut: KeyboardShortcut): boolean {
+  if (!isEditableTarget(event.target)) return false;
+
+  const shortcutKey = shortcut.key.toLowerCase();
+  const usesPrimaryModifier = !!shortcut.ctrlKey || !!shortcut.metaKey;
+
+  if (!usesPrimaryModifier || shortcut.altKey) return false;
+
+  const isBoldItalicUnderline = shortcutKey === "b" || shortcutKey === "i" || shortcutKey === "u";
+  const isLink = shortcutKey === "k";
+  const isUndoRedo =
+    shortcutKey === "z" ||
+    shortcutKey === "y";
+
+  return isBoldItalicUnderline || isLink || isUndoRedo;
+}
+
 export type CommandConfig = {
   id: string;
   label: string;
@@ -257,6 +283,10 @@ export function registerKeyboardShortcuts(commands: CoreEditorCommands, element:
       if (!config.shortcuts) continue;
 
       for (const shortcut of config.shortcuts) {
+        if (isNativeLexicalShortcutConflict(event, shortcut)) {
+          continue;
+        }
+
         if (
           event.key.toLowerCase() === shortcut.key.toLowerCase() &&
           !!event.ctrlKey === !!shortcut.ctrlKey &&
