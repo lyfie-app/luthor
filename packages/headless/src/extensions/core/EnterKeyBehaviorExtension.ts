@@ -1,7 +1,6 @@
 import {
   $createParagraphNode,
   $getSelection,
-  $isParagraphNode,
   $isRangeSelection,
   LexicalEditor,
 } from "lexical";
@@ -88,16 +87,21 @@ export class EnterKeyBehaviorExtension extends BaseExtension<
           return;
         }
 
-        const currentParagraph = this.findParagraphNode(anchorNode);
-        if (!currentParagraph || currentParagraph.getParent() !== quoteNode) {
+        const currentQuoteLine =
+          this.findDirectQuoteChild(anchorNode, quoteNode) ||
+          quoteNode.getLastChild();
+
+        if (!currentQuoteLine) {
+          const nextQuoteParagraph = $createParagraphNode();
+          quoteNode.append(nextQuoteParagraph);
+          nextQuoteParagraph.selectStart();
+          handled = true;
           return;
         }
 
-        const currentIsEmpty = currentParagraph.getTextContent().trim() === "";
-        const previousSibling = currentParagraph.getPreviousSibling();
-        const previousIsEmpty =
-          $isParagraphNode(previousSibling) &&
-          previousSibling.getTextContent().trim() === "";
+        const currentIsEmpty = this.isEmptyQuoteLine(currentQuoteLine);
+        const previousSibling = currentQuoteLine.getPreviousSibling();
+        const previousIsEmpty = this.isEmptyQuoteLine(previousSibling);
 
         if (currentIsEmpty && previousIsEmpty) {
           const paragraphNode = $createParagraphNode();
@@ -108,7 +112,7 @@ export class EnterKeyBehaviorExtension extends BaseExtension<
         }
 
         const nextQuoteParagraph = $createParagraphNode();
-        currentParagraph.insertAfter(nextQuoteParagraph);
+        currentQuoteLine.insertAfter(nextQuoteParagraph);
         nextQuoteParagraph.selectStart();
         handled = true;
       });
@@ -165,15 +169,24 @@ export class EnterKeyBehaviorExtension extends BaseExtension<
     return null;
   }
 
-  private findParagraphNode(node: any) {
+  private findDirectQuoteChild(node: any, quoteNode: any) {
     let current = node;
-    while (current) {
-      if ($isParagraphNode(current)) {
-        return current;
-      }
+    while (current && current.getParent && current.getParent() !== quoteNode) {
       current = current.getParent();
     }
+
+    if (current?.getParent && current.getParent() === quoteNode) {
+      return current;
+    }
+
     return null;
+  }
+
+  private isEmptyQuoteLine(node: any): boolean {
+    if (!node) {
+      return false;
+    }
+    return node.getTextContent().trim() === "";
   }
 }
 
