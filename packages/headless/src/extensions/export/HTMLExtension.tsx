@@ -2,8 +2,17 @@ import { LexicalEditor } from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { ReactNode } from "react";
-import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
-import { $getRoot, $createParagraphNode } from "lexical";
+import { $generateHtmlFromNodes } from "@lexical/html";
+import {
+  $createParagraphNode,
+  $getRoot,
+  type SerializedEditorState,
+  type SerializedLexicalNode,
+} from "lexical";
+import {
+  appendEnhancedHTMLMetadata,
+  importHTMLWithCodeSupport,
+} from "../../utils/EnhancedHTMLConvertor";
 
 /**
  * Commands exposed by the HTML extension.
@@ -92,51 +101,34 @@ export class HTMLExtension extends BaseExtension<
     return {
       exportToHTML: () => {
         return editor.getEditorState().read(() => {
-          return $generateHtmlFromNodes(editor);
+          const html = $generateHtmlFromNodes(editor);
+          return appendEnhancedHTMLMetadata(html, editor.getEditorState().toJSON());
         });
       },
 
       importFromHTML: (html: string, opts?: { preventFocus?: boolean }) => {
-        return new Promise((resolve) => {
-          editor.update(
-            () => {
-              try {
-                const root = $getRoot();
-                root.clear();
-
-                if (html.trim()) {
-                  // Parse HTML properly to avoid wrapper issues
-                  const parser = new DOMParser();
-                  const doc = parser.parseFromString(html, "text/html");
-
-                  // Generate nodes from the body to avoid extra wrappers
-                  const nodes = $generateNodesFromDOM(editor, doc);
-
-                  // Insert nodes directly to root
-                  if (nodes && nodes.length > 0) {
-                    nodes.forEach((node: any) => {
-                      if (node) {
-                        root.append(node);
-                      }
-                    });
-                  } else {
-                    root.append($createParagraphNode());
-                  }
-                } else {
-                  root.append($createParagraphNode());
-                }
-                if (!opts?.preventFocus) {
-                  $getRoot().selectEnd(); // Reset selection to avoid stale references
-                }
-              } catch (error) {
-                console.error("Error importing HTML:", error);
-                const root = $getRoot();
-                root.clear();
-                root.append($createParagraphNode());
+        return importHTMLWithCodeSupport(
+          html,
+          editor,
+          {
+            fromJSON: (json: unknown) => {
+              if (typeof json === "string" || (typeof json === "object" && json !== null)) {
+                editor.setEditorState(
+                  editor.parseEditorState(
+                    json as string | SerializedEditorState<SerializedLexicalNode>,
+                  ),
+                );
               }
             },
-            { discrete: true, onUpdate: resolve },
-          );
+          },
+          opts,
+        ).catch((error) => {
+          console.error("Error importing HTML:", error);
+          editor.update(() => {
+            const root = $getRoot();
+            root.clear();
+            root.append($createParagraphNode());
+          });
         });
       },
     };

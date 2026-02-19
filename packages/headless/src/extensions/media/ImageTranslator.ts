@@ -77,38 +77,22 @@ export class ImageTranslator {
               return null;
             }
             const img = domNode;
-
-            // Extract alignment from various possible sources
-            let alignment: "left" | "center" | "right" | "none" = "none";
-
-            // Check style attribute
-            const computedStyle = img.style;
-            if (computedStyle.textAlign) {
-              alignment = computedStyle.textAlign as any;
-            } else if (computedStyle.float) {
-              alignment =
-                computedStyle.float === "left"
-                  ? "left"
-                  : computedStyle.float === "right"
-                    ? "right"
-                    : "none";
-            }
-
-            // Check class names for alignment
-            if (img.classList.contains("align-left")) alignment = "left";
-            else if (img.classList.contains("align-center"))
-              alignment = "center";
-            else if (img.classList.contains("align-right")) alignment = "right";
+            const figure = img.closest("figure") as HTMLElement | null;
+            const alignment = this.resolveAlignment(img, figure);
 
             // Extract caption from figure/figcaption if present
             let caption: string | undefined;
-            const figure = img.closest("figure");
             if (figure) {
               const figcaption = figure.querySelector("figcaption");
               if (figcaption) {
                 caption = figcaption.textContent || undefined;
               }
             }
+
+            const widthAttr = img.getAttribute("width");
+            const heightAttr = img.getAttribute("height");
+            const width = widthAttr ? Number(widthAttr) : undefined;
+            const height = heightAttr ? Number(heightAttr) : undefined;
 
             try {
               const node = $createImageNode(
@@ -118,6 +102,8 @@ export class ImageTranslator {
                 alignment,
                 img.className || undefined,
                 this.extractStyleObject(img),
+                Number.isFinite(width) ? width : undefined,
+                Number.isFinite(height) ? height : undefined,
               );
 
               return { node };
@@ -149,15 +135,23 @@ export class ImageTranslator {
 
             const figcaption = figure.querySelector("figcaption");
             const caption = figcaption?.textContent || undefined;
+            const alignment = this.resolveAlignment(img, figure);
+
+            const widthAttr = img.getAttribute("width");
+            const heightAttr = img.getAttribute("height");
+            const width = widthAttr ? Number(widthAttr) : undefined;
+            const height = heightAttr ? Number(heightAttr) : undefined;
 
             try {
               const node = $createImageNode(
                 img.src,
                 img.alt || "",
                 caption,
-                "center", // Figures are typically centered
-                figure.className || undefined,
-                this.extractStyleObject(figure),
+                alignment,
+                img.className || undefined,
+                this.extractStyleObject(img),
+                Number.isFinite(width) ? width : undefined,
+                Number.isFinite(height) ? height : undefined,
               );
 
               return { node };
@@ -348,6 +342,34 @@ export class ImageTranslator {
     } catch {
       return undefined;
     }
+  }
+
+  private static resolveAlignment(
+    img: HTMLElement,
+    container?: HTMLElement | null,
+  ): "left" | "center" | "right" | "none" {
+    const elements = [img, container].filter(Boolean) as HTMLElement[];
+
+    for (const element of elements) {
+      if (element.classList.contains("align-left")) return "left";
+      if (element.classList.contains("align-center")) return "center";
+      if (element.classList.contains("align-right")) return "right";
+    }
+
+    const dataAlign = container?.getAttribute("data-align");
+    if (dataAlign === "left" || dataAlign === "center" || dataAlign === "right") {
+      return dataAlign;
+    }
+
+    for (const element of elements) {
+      if (element.style.textAlign === "left") return "left";
+      if (element.style.textAlign === "center") return "center";
+      if (element.style.textAlign === "right") return "right";
+      if (element.style.float === "left") return "left";
+      if (element.style.float === "right") return "right";
+    }
+
+    return "none";
   }
 
   /**
