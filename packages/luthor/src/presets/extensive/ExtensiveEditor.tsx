@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { createEditorSystem, RichText, lexicalNodesToEnhancedMarkdown, enhancedMarkdownToLexicalJSON } from "@lyfie/luthor-headless";
+import { createEditorSystem, RichText, lexicalNodesToEnhancedMarkdown, enhancedMarkdownToLexicalJSON, importHTMLWithCodeSupport } from "@lyfie/luthor-headless";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
 import {
   CommandPalette,
@@ -59,6 +59,21 @@ function importFromEnhancedMarkdown(markdown: string, importApi: any): void {
     importApi.fromJSON(lexicalJson);
   } catch (error) {
     console.error("Error parsing enhanced markdown:", error);
+    throw error;
+  }
+}
+
+/**
+ * Helper function to import from enhanced HTML
+ * Reconstructs Lexical JSON from HTML with proper handling of code blocks
+ * This preserves all code and inline code formatting
+ */
+async function importFromEnhancedHTML(html: string, editor: any, importApi: any): Promise<void> {
+  try {
+    // Use the enhanced HTML importer that properly handles code blocks
+    await importHTMLWithCodeSupport(html, editor, importApi);
+  } catch (error) {
+    console.error("Error parsing enhanced HTML:", error);
     throw error;
   }
 }
@@ -132,8 +147,9 @@ function ExtensiveEditorContent({
       injectHTML: (value: string) => {
         setTimeout(() => {
           if (editor) {
-            editor.update(() => {
-              commandsRef.current.importFromHTML(value, { preventFocus: true });
+            // Use enhanced HTML importer that properly handles code blocks
+            importFromEnhancedHTML(value, editor, importApi).catch((error) => {
+              console.error("Failed to inject HTML:", error);
             });
           }
         }, 100);
@@ -214,7 +230,7 @@ function ExtensiveEditorContent({
   useEffect(() => {
     if (!editor || !exportApi) return;
 
-    const unsubscribe = editor.registerUpdateListener(({ editorState }: any) => {
+    const unsubscribe = editor.registerUpdateListener(() => {
       // When visual editor changes, mark all cached formats as stale
       // This prevents stale cache but doesn't do any actual export work
       editorChangeCountRef.current += 1;
@@ -241,7 +257,8 @@ function ExtensiveEditorContent({
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
       if (mode === "html" && newMode !== "html" && hasExtension("html")) {
-        await commands.importFromHTML(content.html);
+        // Use enhanced HTML importer that properly handles code blocks and inline code
+        await importFromEnhancedHTML(content.html, editor, importApi);
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
       if (mode === "jsonb" && newMode !== "jsonb") {

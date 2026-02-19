@@ -1,12 +1,6 @@
 import './App.css'
 import {
-  ChatEditor,
-  EmailEditor,
   ExtensiveEditor,
-  HtmlVisualEditor,
-  MarkdownVisualEditor,
-  NotionEditor,
-  ThemedEditor,
   extensiveExtensions,
 } from "@lyfie/luthor";
 import type { ExtensiveEditorRef } from "@lyfie/luthor";
@@ -25,33 +19,12 @@ import {
 } from "./data/demoContent";
 
 type DemoTheme = "light" | "dark";
-type DemoPresetId = "chat" | "email" | "markdownVisual" | "htmlVisual" | "themed" | "notion" | "extensive";
 
 const THEME_STORAGE_KEY = "luthor-demo-theme";
 
-const PRESET_OPTIONS: { id: DemoPresetId; label: string }[] = [
-  { id: "chat", label: "Chat" },
-  { id: "email", label: "Email" },
-  { id: "extensive", label: "Extensive" },
-  { id: "markdownVisual", label: "Markdown / Visual" },
-  { id: "htmlVisual", label: "HTML / Visual" },
-  { id: "themed", label: "Themed" },
-  { id: "notion", label: "Notion" },
-];
-
-const PRESET_DEMO_MARKDOWN: Record<DemoPresetId, string> = {
-  chat: EXTENSIVE_DEMO_MARKDOWN,
-  email: EXTENSIVE_DEMO_MARKDOWN,
-  extensive: EXTENSIVE_DEMO_MARKDOWN,
-  markdownVisual: EXTENSIVE_DEMO_MARKDOWN,
-  htmlVisual: EXTENSIVE_DEMO_MARKDOWN,
-  themed: EXTENSIVE_DEMO_MARKDOWN,
-  notion: EXTENSIVE_DEMO_MARKDOWN,
-};
-
 type PersistedJournalPayload = {
   schemaVersion: 1;
-  preset: DemoPresetId;
+  preset: "extensive";
   theme: DemoTheme;
   savedAt: string;
   extensions: string[];
@@ -84,14 +57,8 @@ function titleFromExtensionKey(key: string): string {
 
 function App() {
   const editorRef = React.useRef<ExtensiveEditorRef>(null);
-  const pendingDocumentRef = React.useRef<{
-    jsonb: string;
-    markdown: string;
-  } | null>(null);
 
   const [theme, setTheme] = React.useState<DemoTheme>(() => getInitialTheme());
-  const [selectedPreset, setSelectedPreset] = React.useState<DemoPresetId>("chat");
-  const [editorInstanceKey, setEditorInstanceKey] = React.useState(0);
   const [copiedState, setCopiedState] = React.useState<"idle" | "done" | "error">("idle");
   const [payloadEditorValue, setPayloadEditorValue] = React.useState("");
   const [persistenceStatus, setPersistenceStatus] = React.useState(
@@ -135,21 +102,9 @@ function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
-  const selectedPresetLabel = React.useMemo(
-    () => PRESET_OPTIONS.find((option) => option.id === selectedPreset)?.label ?? "Preset",
-    [selectedPreset],
-  );
-
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    if (pendingDocumentRef.current?.jsonb) {
-      methods.injectJSONB(pendingDocumentRef.current.jsonb);
-      pendingDocumentRef.current = null;
-      return;
-    }
-
-    const markdown = PRESET_DEMO_MARKDOWN[selectedPreset] ?? EXTENSIVE_DEMO_MARKDOWN;
-    methods.injectMarkdown(markdown);
-  }, [selectedPreset]);
+    methods.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
+  }, []);
 
   const handleLoadDemoContent = React.useCallback(() => {
     const editor = editorRef.current;
@@ -157,9 +112,9 @@ function App() {
       return;
     }
 
-    editor.injectMarkdown(PRESET_DEMO_MARKDOWN[selectedPreset] ?? EXTENSIVE_DEMO_MARKDOWN);
+    editor.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
     setPersistenceStatus("Loaded demo markdown content.");
-  }, [selectedPreset]);
+  }, []);
 
   const handleLoadJournalScenario = React.useCallback(() => {
     const editor = editorRef.current;
@@ -180,7 +135,7 @@ function App() {
 
     const payload: PersistedJournalPayload = {
       schemaVersion: 1,
-      preset: selectedPreset,
+      preset: "extensive",
       theme,
       savedAt: new Date().toISOString(),
       extensions: extensionNames,
@@ -192,7 +147,7 @@ function App() {
 
     setPayloadEditorValue(JSON.stringify(payload, null, 2));
     setPersistenceStatus("Saved editor state as JSONB-ready payload.");
-  }, [extensionNames, selectedPreset, theme]);
+  }, [extensionNames, theme]);
 
   const handleRestorePayload = React.useCallback(() => {
     const editor = editorRef.current;
@@ -238,19 +193,6 @@ function App() {
     }
   }, [payloadEditorValue]);
 
-  const handlePresetChange = React.useCallback((preset: DemoPresetId) => {
-    const editor = editorRef.current;
-    if (editor) {
-      pendingDocumentRef.current = {
-        jsonb: editor.getJSONB(),
-        markdown: editor.getMarkdown(),
-      };
-    }
-
-    setSelectedPreset(preset);
-    setEditorInstanceKey((currentKey) => currentKey + 1);
-  }, []);
-
   const handleCopyMarkdown = React.useCallback(async () => {
     try {
       const markdown = editorRef.current?.getMarkdown();
@@ -281,10 +223,6 @@ function App() {
           theme={theme}
           onToggleTheme={handleThemeToggle}
           onLoadDemoContent={handleLoadDemoContent}
-          selectedPreset={selectedPreset}
-          selectedPresetLabel={selectedPresetLabel}
-          presetOptions={PRESET_OPTIONS}
-          onPresetChange={handlePresetChange}
         />
 
         <ShowcaseHero
@@ -313,69 +251,12 @@ function App() {
         />
 
         <EditorPlayground>
-          {selectedPreset === "chat" && (
-            <ChatEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "email" && (
-            <EmailEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "extensive" && (
-            <ExtensiveEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "markdownVisual" && (
-            <MarkdownVisualEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "htmlVisual" && (
-            <HtmlVisualEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "themed" && (
-            <ThemedEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
-          {selectedPreset === "notion" && (
-            <NotionEditor
-              key={editorInstanceKey}
-              ref={editorRef}
-              onReady={handleEditorReady}
-              initialTheme={theme}
-              showDefaultContent={false}
-            />
-          )}
+          <ExtensiveEditor
+            ref={editorRef}
+            onReady={handleEditorReady}
+            initialTheme={theme}
+            showDefaultContent={false}
+          />
         </EditorPlayground>
       </main>
     </div>

@@ -33,10 +33,5 @@ This folder is the centralized home for all README-style documentation.
 
 ## Preset Documentation
 
-- Chat preset: [readmes/presets/chat-preset-readme.md](readmes/presets/chat-preset-readme.md)
-- Email preset: [readmes/presets/email-preset-readme.md](readmes/presets/email-preset-readme.md)
-- HTML / Visual preset: [readmes/presets/html-visual-preset-readme.md](readmes/presets/html-visual-preset-readme.md)
 - Extensive preset: [readmes/presets/extensive-preset-readme.md](readmes/presets/extensive-preset-readme.md)
-- Markdown / Visual preset: [readmes/presets/markdown-visual-preset-readme.md](readmes/presets/markdown-visual-preset-readme.md)
-- Notion preset: [readmes/presets/notion-preset-readme.md](readmes/presets/notion-preset-readme.md)
-- Themed preset: [readmes/presets/themed-preset-readme.md](readmes/presets/themed-preset-readme.md)
+- Future preset authoring notes: [readmes/presets/README.md](readmes/presets/README.md)

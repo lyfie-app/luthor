@@ -48,6 +48,13 @@ export {
   ENHANCED_MARKDOWN_TRANSFORMERS,
 } from './EnhancedMarkdownTransformers';
 
+export {
+  preprocessHTMLForCodeBlocks,
+  postprocessCodeBlocks,
+  enhancedHTMLToLexicalJSON,
+  importHTMLWithCodeSupport,
+} from './EnhancedHTMLConvertor';
+
 // Convenience namespace for clarity
 export const EnhancedMarkdownConvertor = {
   serializeBlockMetadata: require('./EnhancedMarkdownConvertor').serializeBlockMetadata,

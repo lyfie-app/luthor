@@ -28,17 +28,8 @@ Current Markdown inventory for this repository.
 - [readmes/packages/luthor-docs/README.md](readmes/packages/luthor-docs/README.md)
 - [readmes/packages/luthor-docs/architecture-map.md](readmes/packages/luthor-docs/architecture-map.md)
 - [readmes/packages/luthor-docs/customization-guide.md](readmes/packages/luthor-docs/customization-guide.md)
-- [readmes/presets/blog-preset-readme.md](readmes/presets/blog-preset-readme.md)
-- [readmes/presets/chat-preset-readme.md](readmes/presets/chat-preset-readme.md)
-- [readmes/presets/classic-preset-readme.md](readmes/presets/classic-preset-readme.md)
-- [readmes/presets/cms-preset-readme.md](readmes/presets/cms-preset-readme.md)
-- [readmes/presets/code-preset-readme.md](readmes/presets/code-preset-readme.md)
-- [readmes/presets/default-preset-readme.md](readmes/presets/default-preset-readme.md)
-- [readmes/presets/docs-preset-readme.md](readmes/presets/docs-preset-readme.md)
-- [readmes/presets/email-preset-readme.md](readmes/presets/email-preset-readme.md)
 - [readmes/presets/extensive-preset-readme.md](readmes/presets/extensive-preset-readme.md)
-- [readmes/presets/markdown-preset-readme.md](readmes/presets/markdown-preset-readme.md)
-- [readmes/presets/minimal-preset-readme.md](readmes/presets/minimal-preset-readme.md)
+- [readmes/presets/README.md](readmes/presets/README.md)
 
 ## Packages: Tooling
 

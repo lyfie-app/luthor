@@ -67,15 +67,15 @@ Use Tab / Shift+Tab to validate indentation behavior in and out of code blocks.
 
 ## 5) Media Blocks
 
-### Image (preset visible)
+### Image
 
 ![Default filler image](https://picsum.photos/1200/640)
 
-### Iframe Embed (preset visible)
+### Iframe Embed
 
 Use "Load Journal Scenario" in the JSONB persistence panel to load a real iframe embed component.
 
-### YouTube Embed (preset visible)
+### YouTube Embed
 
 Use "Load Journal Scenario" in the JSONB persistence panel to load a real YouTube embed component.
 

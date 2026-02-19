@@ -22,17 +22,8 @@ This index groups every README used by contributors so you can quickly jump to i
 
 ## Preset READMEs (`@lyfie/luthor` source)
 
-- Blog preset: [../readmes/presets/blog-preset-readme.md](../readmes/presets/blog-preset-readme.md)
-- Chat preset: [../readmes/presets/chat-preset-readme.md](../readmes/presets/chat-preset-readme.md)
-- Classic preset: [../readmes/presets/classic-preset-readme.md](../readmes/presets/classic-preset-readme.md)
-- CMS preset: [../readmes/presets/cms-preset-readme.md](../readmes/presets/cms-preset-readme.md)
-- Code preset: [../readmes/presets/code-preset-readme.md](../readmes/presets/code-preset-readme.md)
-- Default preset: [../readmes/presets/default-preset-readme.md](../readmes/presets/default-preset-readme.md)
-- Docs preset: [../readmes/presets/docs-preset-readme.md](../readmes/presets/docs-preset-readme.md)
-- Email preset: [../readmes/presets/email-preset-readme.md](../readmes/presets/email-preset-readme.md)
 - Extensive preset: [../readmes/presets/extensive-preset-readme.md](../readmes/presets/extensive-preset-readme.md)
-- Markdown preset: [../readmes/presets/markdown-preset-readme.md](../readmes/presets/markdown-preset-readme.md)
-- Minimal preset: [../readmes/presets/minimal-preset-readme.md](../readmes/presets/minimal-preset-readme.md)
+- Future preset authoring notes: [../readmes/presets/README.md](../readmes/presets/README.md)
 
 ## Additional Markdown Resources
 

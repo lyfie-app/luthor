@@ -13,7 +13,7 @@ export function ShowcaseHero({ extensionCount, totalFeatureGroups, densestGroupT
         <span> production-ready foundation.</span>
       </h1>
       <p>
-        This demo mirrors a premium product-site feel while exposing every key capability in the extensive preset. Use the
+        This demo mirrors a premium product-site feel while exposing every key capability in the Extensive Editor baseline. Use the
         controls and the live canvas below to validate UX, output quality, and extension coverage in one place.
       </p>
 

@@ -32,7 +32,7 @@ src/
       extensions.tsx
       ExtensiveEditor.tsx
       styles.css  (compat shim importing ../../core/styles.css)
-    ...other presets
+    # future presets can be added here (chat, email, themed, etc.)
 ```
 
 ## Relationship Model

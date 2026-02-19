@@ -43,9 +43,9 @@ const { createEditorSystem, boldExtension } = headless;
 
 From `src/presets/index.ts`, this package exports:
 
-- Presets: `chatPreset`, `emailPreset`, `markdownVisualPreset`, `htmlVisualPreset`, `themedPreset`, `notionPreset`, `extensivePreset`
+- Presets: `extensivePreset`
 - Registry: `presetRegistry`
-- Preset editors: `ChatEditor`, `EmailEditor`, `MarkdownVisualEditor`, `HtmlVisualEditor`, `ThemedEditor`, `NotionEditor`, `ExtensiveEditor`
+- Preset editors: `ExtensiveEditor`
 - Shared extensions: `extensiveExtensions`
 - Helpers: `createPresetEditorConfig`
 
