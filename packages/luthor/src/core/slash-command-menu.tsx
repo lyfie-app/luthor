@@ -97,7 +97,16 @@ export function SlashCommandMenu({
   }
 
   return (
-    <div className="luthor-slash-menu" style={{ left: position.x, top: position.y }}>
+    <div
+      className="luthor-slash-menu"
+      style={{ left: position.x, top: position.y }}
+      onPointerDown={(event) => {
+        event.stopPropagation();
+      }}
+      onMouseDown={(event) => {
+        event.stopPropagation();
+      }}
+    >
       <div className="luthor-slash-menu-header">
         <span className="luthor-slash-menu-title">Insert block</span>
         <span className="luthor-slash-menu-query">/{query}</span>
@@ -121,6 +130,11 @@ export function SlashCommandMenu({
                     onMouseEnter={() => setSelectedIndex(globalIndex)}
                     onMouseDown={(event) => {
                       event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
                       onExecute(command.id);
                     }}
                   >

@@ -387,6 +387,7 @@ function IframeEmbedComponent({
       <div
         ref={shellRef}
         className={`luthor-media-embed-shell${isSelected ? " is-selected" : ""}${isResizing ? " is-resizing" : ""}`}
+        data-luthor-selection-anchor="true"
         style={{ width: localWidth, maxWidth: "100%" }}
         onClick={selectNode}
       >

@@ -85,18 +85,42 @@ export class SlashCommandExtension extends BaseExtension<
 
     document.addEventListener("keydown", handleEscape);
 
-    const handlePointerDown = () => {
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".luthor-slash-menu")) {
+        return;
+      }
+
       if (this.isOpen) {
         this.closeSlashMenu();
       }
     };
 
+    const handleViewportChange = () => {
+      if (!this.isOpen || !this.activeMatch) {
+        return;
+      }
+
+      const position = this.getCaretPosition();
+      if (!position) {
+        this.closeSlashMenu();
+        return;
+      }
+
+      this.position = position;
+      this.notifyListeners();
+    };
+
     document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
 
     return () => {
       unregisterUpdate();
       document.removeEventListener("keydown", handleEscape);
       document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
       this.activeMatch = null;
       this.isOpen = false;
       this.query = "";

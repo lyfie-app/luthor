@@ -230,6 +230,14 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
   );
   const [selection, setSelection] = useState<RangeSelection | null>(null);
 
+  const getSelectionAnchorRect = (element: HTMLElement): DOMRect => {
+    const anchorElement = element.querySelector<HTMLElement>(
+      '[data-luthor-selection-anchor="true"]',
+    );
+
+    return (anchorElement ?? element).getBoundingClientRect();
+  };
+
   /* Debounce utility for delaying function execution */
   const debounce = <T extends (...args: any[]) => any>(
     func: T,
@@ -267,8 +275,18 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
           : domRect.top + scrollY - offset.y;
     }
 
+    const activeStates = config.getActiveStates?.() as
+      | {
+          isIframeEmbedSelected?: boolean;
+          isYouTubeEmbedSelected?: boolean;
+        }
+      | undefined;
+    const isEmbedSelection =
+      !!activeStates?.isIframeEmbedSelected ||
+      !!activeStates?.isYouTubeEmbedSelected;
+
     /* Toolbar dimensions (configurable with defaults) */
-    const toolbarWidth = config.toolbarDimensions?.width || 300;
+    const toolbarWidth = config.toolbarDimensions?.width || (isEmbedSelection ? 132 : 300);
     const toolbarHeight = config.toolbarDimensions?.height || 40;
     const margin = 10; // Minimum margin from viewport edges
 
@@ -360,7 +378,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
               const key = node.getKey();
               const domElement = editor.getElementByKey(key);
               if (domElement) {
-                newRect = domElement.getBoundingClientRect();
+                newRect = getSelectionAnchorRect(domElement);
               }
             }
           }

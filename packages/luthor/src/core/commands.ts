@@ -414,10 +414,29 @@ export function commandsToCommandPaletteItems(commands: CoreEditorCommands): Com
 }
 
 export function commandsToSlashCommandItems(commands: CoreEditorCommands): SlashCommandItem[] {
-  const allowedCategories = new Set(["Block", "Insert", "List"]);
+  const creatableBlockCommandIds = new Set([
+    "block.heading1",
+    "block.heading2",
+    "block.heading3",
+    "block.paragraph",
+    "block.quote",
+    "block.codeblock",
+  ]);
+
+  const isCreatableSlashCommand = (command: CommandConfig): boolean => {
+    if (command.category === "Insert" || command.category === "List") {
+      return true;
+    }
+
+    if (command.category === "Block") {
+      return creatableBlockCommandIds.has(command.id);
+    }
+
+    return false;
+  };
 
   return generateCommands()
-    .filter((command) => allowedCategories.has(command.category))
+    .filter(isCreatableSlashCommand)
     .map((command) => ({
       id: command.id,
       label: command.label,
