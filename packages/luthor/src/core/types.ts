@@ -111,6 +111,10 @@ export interface CoreEditorCommands {
   exportToHTML: () => string;
   registerCommand: (command: Record<string, unknown>) => void;
   unregisterCommand: (commandId: string) => void;
+  registerSlashCommand?: (command: Record<string, unknown>) => void;
+  unregisterSlashCommand?: (commandId: string) => void;
+  closeSlashMenu?: () => void;
+  executeSlashCommand?: (commandId: string) => boolean;
 }
 
 export interface CoreEditorActiveStates {

@@ -739,6 +739,123 @@
 	font-size: 14px;
 }
 
+.luthor-slash-menu {
+	position: fixed;
+	z-index: 10000;
+	background: var(--luthor-bg);
+	border: 1px solid var(--luthor-border);
+	border-radius: 10px;
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
+	width: min(420px, calc(100vw - 24px));
+	max-height: min(55vh, 420px);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.luthor-slash-menu-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-bottom: 1px solid var(--luthor-border);
+	background: var(--luthor-muted);
+}
+
+.luthor-slash-menu-title {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--luthor-muted-fg);
+	text-transform: uppercase;
+	letter-spacing: 0.4px;
+}
+
+.luthor-slash-menu-query {
+	font-size: 12px;
+	font-family: monospace;
+	color: var(--luthor-muted-fg);
+	background: var(--luthor-bg);
+	border: 1px solid var(--luthor-border);
+	padding: 1px 6px;
+	border-radius: 4px;
+}
+
+.luthor-slash-menu-list {
+	overflow-y: auto;
+	padding: 8px 0;
+}
+
+.luthor-slash-menu-group {
+	margin-bottom: 6px;
+}
+
+.luthor-slash-menu-group-title {
+	padding: 6px 12px 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--luthor-muted-fg);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.luthor-slash-menu-item {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border: none;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+	color: var(--luthor-fg);
+	transition: background-color 0.12s;
+}
+
+.luthor-slash-menu-item:hover,
+.luthor-slash-menu-item.selected {
+	background: var(--luthor-muted);
+}
+
+.luthor-slash-menu-item-content {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+}
+
+.luthor-slash-menu-item-title {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--luthor-fg);
+}
+
+.luthor-slash-menu-item-description {
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--luthor-muted-fg);
+}
+
+.luthor-slash-menu-item-shortcut {
+	background: var(--luthor-muted);
+	border: 1px solid var(--luthor-border);
+	border-radius: 4px;
+	padding: 2px 6px;
+	font-size: 10px;
+	font-family: monospace;
+	color: var(--luthor-muted-fg);
+	flex-shrink: 0;
+}
+
+.luthor-slash-menu-empty {
+	padding: 20px 12px;
+	font-size: 13px;
+	color: var(--luthor-muted-fg);
+	text-align: center;
+}
+
 .luthor-dialog-overlay {
 	position: fixed;
 	inset: 0;

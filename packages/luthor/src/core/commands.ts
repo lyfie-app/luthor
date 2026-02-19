@@ -1,4 +1,4 @@
-import type { CommandPaletteItem } from "@lyfie/luthor-headless";
+import type { CommandPaletteItem, SlashCommandItem } from "@lyfie/luthor-headless";
 import type { CoreEditorCommands } from "./types";
 
 export type KeyboardShortcut = {
@@ -411,6 +411,22 @@ export function commandsToCommandPaletteItems(commands: CoreEditorCommands): Com
     keywords: command.keywords,
     shortcut: command.shortcuts?.[0] ? formatShortcut(command.shortcuts[0]) : undefined,
   }));
+}
+
+export function commandsToSlashCommandItems(commands: CoreEditorCommands): SlashCommandItem[] {
+  const allowedCategories = new Set(["Block", "Insert", "List"]);
+
+  return generateCommands()
+    .filter((command) => allowedCategories.has(command.category))
+    .map((command) => ({
+      id: command.id,
+      label: command.label,
+      description: command.description,
+      category: command.category,
+      action: () => command.action(commands),
+      keywords: command.keywords,
+      shortcut: command.shortcuts?.[0] ? formatShortcut(command.shortcuts[0]) : undefined,
+    }));
 }
 
 function formatShortcut(shortcut: KeyboardShortcut): string {
