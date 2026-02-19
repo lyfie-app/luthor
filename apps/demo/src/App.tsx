@@ -1,4 +1,3 @@
-import './App.css'
 import {
   ExtensiveEditor,
   extensiveExtensions,
@@ -17,15 +16,14 @@ import {
   EXTENSIVE_DEMO_MARKDOWN,
   JOURNAL_SCENARIO_JSONB,
 } from "./data/demoContent";
-
-type DemoTheme = "light" | "dark";
-
-const THEME_STORAGE_KEY = "luthor-demo-theme";
+import { PACKAGE_DEFINITIONS, REPOSITORY_URL } from "./data/siteContent";
+import { useDemoTheme } from "./hooks/useDemoTheme";
+import { usePackageStats } from "./hooks/usePackageStats";
 
 type PersistedJournalPayload = {
   schemaVersion: 1;
   preset: "extensive";
-  theme: DemoTheme;
+  theme: "light" | "dark";
   savedAt: string;
   extensions: string[];
   content: {
@@ -33,19 +31,6 @@ type PersistedJournalPayload = {
     markdown: string;
   };
 };
-
-function getInitialTheme(): DemoTheme {
-  if (typeof window === "undefined") {
-    return "light";
-  }
-
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
-  }
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
 
 function titleFromExtensionKey(key: string): string {
   return key
@@ -57,8 +42,9 @@ function titleFromExtensionKey(key: string): string {
 
 function App() {
   const editorRef = React.useRef<ExtensiveEditorRef>(null);
+  const { theme, toggleTheme } = useDemoTheme();
+  const { totalWeeklyDownloads } = usePackageStats();
 
-  const [theme, setTheme] = React.useState<DemoTheme>(() => getInitialTheme());
   const [copiedState, setCopiedState] = React.useState<"idle" | "done" | "error">("idle");
   const [payloadEditorValue, setPayloadEditorValue] = React.useState("");
   const [persistenceStatus, setPersistenceStatus] = React.useState(
@@ -95,12 +81,6 @@ function App() {
     (largest, group) => (group.items.length > largest.count ? { title: group.title, count: group.items.length } : largest),
     { title: "N/A", count: 0 },
   );
-
-  React.useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
 
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
     methods.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
@@ -210,10 +190,6 @@ function App() {
     window.setTimeout(() => setCopiedState("idle"), 1400);
   }, []);
 
-  const handleThemeToggle = React.useCallback(() => {
-    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
-  }, []);
-
   const copyButtonLabel = copiedState === "done" ? "Copied" : copiedState === "error" ? "Copy failed" : "Copy Markdown";
 
   return (
@@ -221,14 +197,42 @@ function App() {
       <main className="demo-page">
         <DemoTopBar
           theme={theme}
-          onToggleTheme={handleThemeToggle}
+          onToggleTheme={toggleTheme}
           onLoadDemoContent={handleLoadDemoContent}
+          repositoryUrl={REPOSITORY_URL}
+          luthorNpmUrl={PACKAGE_DEFINITIONS[0].npmUrl}
+          headlessNpmUrl={PACKAGE_DEFINITIONS[1].npmUrl}
         />
+
+        <section className="feature-panel editor-spotlight" aria-label="Extensive editor live demo">
+          <div className="feature-panel__top">
+            <div>
+              <p className="demo-kicker">Live Demo</p>
+              <h2>Extensive Editor, front and center</h2>
+              <p>
+                The website opens directly on the flagship Extensive Editor so developers can instantly validate UX quality,
+                formatting depth, and real-world content workflows.
+              </p>
+            </div>
+          </div>
+
+          <EditorPlayground>
+            <ExtensiveEditor
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          </EditorPlayground>
+        </section>
 
         <ShowcaseHero
           extensionCount={extensionNames.length}
           totalFeatureGroups={totalFeatureGroups}
           densestGroupTitle={densestGroup.title}
+          totalWeeklyDownloads={totalWeeklyDownloads}
+          installUrl={PACKAGE_DEFINITIONS[0].npmUrl}
+          repositoryUrl={REPOSITORY_URL}
         />
 
         <FeatureCoveragePanel
@@ -249,18 +253,9 @@ function App() {
           onCopyPayload={handleCopyPayload}
           onPayloadChange={setPayloadEditorValue}
         />
-
-        <EditorPlayground>
-          <ExtensiveEditor
-            ref={editorRef}
-            onReady={handleEditorReady}
-            initialTheme={theme}
-            showDefaultContent={false}
-          />
-        </EditorPlayground>
       </main>
     </div>
   );
 }
 
-export default App
+export default App;

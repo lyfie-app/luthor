@@ -1,10 +1,10 @@
 .hero-panel {
-  padding: 26px;
+  padding: 24px;
 }
 
 .hero-panel h1 {
   margin: 10px 0 0;
-  font-size: clamp(30px, 3.2vw, 48px);
+  font-size: clamp(34px, 3.3vw, 52px);
   line-height: 1.05;
   letter-spacing: -0.02em;
   max-width: 22ch;
@@ -18,14 +18,21 @@
   margin: 14px 0 0;
   max-width: 78ch;
   color: var(--text-muted);
-  font-size: 15px;
+  font-size: 16px;
   line-height: 1.65;
+}
+
+.hero-cta {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .hero-stats {
   margin-top: 20px;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
 }
 
@@ -53,6 +60,10 @@
 @media (max-width: 920px) {
   .hero-stats {
     grid-template-columns: 1fr;
+  }
+
+  .hero-cta .demo-button {
+    flex: 1;
   }
 }
 

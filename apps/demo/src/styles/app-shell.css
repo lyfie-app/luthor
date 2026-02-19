@@ -13,6 +13,7 @@
   --shadow-soft: 0 12px 34px rgba(15, 23, 42, 0.07);
   --shadow-card: 0 8px 22px rgba(15, 23, 42, 0.05);
   box-sizing: border-box;
+  font-size: 17px;
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
@@ -33,19 +34,19 @@
 }
 
 .app-shell[data-theme="dark"] {
-  --surface: #05070c;
-  --surface-elevated: #0b1220;
-  --surface-muted: #101a2b;
+  --surface: #02050b;
+  --surface-elevated: #070d18;
+  --surface-muted: #0b1424;
   --text: #e2e8f0;
-  --text-muted: #9fb0c7;
-  --border: #1d2c40;
+  --text-muted: #95a7bf;
+  --border: #1b2a40;
   --primary: #e2e8f0;
   --primary-hover: #f8fafc;
   --chip-bg: #0f172a;
-  --hero-glow-a: rgba(37, 99, 235, 0.24);
-  --hero-glow-b: rgba(124, 58, 237, 0.2);
-  --shadow-soft: 0 12px 34px rgba(2, 6, 23, 0.45);
-  --shadow-card: 0 8px 24px rgba(2, 6, 23, 0.4);
+  --hero-glow-a: rgba(39, 95, 229, 0.28);
+  --hero-glow-b: rgba(129, 70, 229, 0.24);
+  --shadow-soft: 0 14px 40px rgba(1, 7, 20, 0.6);
+  --shadow-card: 0 10px 28px rgba(1, 7, 20, 0.5);
 }
 
 .demo-page {
@@ -54,26 +55,30 @@
   margin-inline: auto;
   padding: 0;
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .demo-topbar,
 .hero-panel,
 .feature-panel {
-  border: 1px solid var(--border);
-  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 55%, transparent);
+  background: color-mix(in srgb, var(--surface-elevated) 82%, transparent);
   border-radius: 18px;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 8px 22px rgba(5, 10, 24, 0.18);
 }
 
 .demo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   border: 1px solid var(--border);
   background: var(--primary);
   color: var(--surface-elevated);
   border-radius: 12px;
-  height: 36px;
+  height: 38px;
   padding: 0 13px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;

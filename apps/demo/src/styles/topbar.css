@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 12px 14px;
   backdrop-filter: blur(12px);
 }
 
@@ -35,7 +35,62 @@
 .demo-brand strong {
   display: block;
   margin-top: 4px;
-  font-size: 14px;
+  font-size: 15px;
+}
+
+.demo-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-muted) 68%, transparent);
+}
+
+.demo-nav a {
+  text-decoration: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 7px 10px;
+  border-radius: 9px;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.demo-nav a:hover {
+  background: var(--surface-elevated);
+  color: var(--text);
+}
+
+.demo-nav a:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  outline-offset: 1px;
+}
+
+.demo-nav__link {
+  position: relative;
+}
+
+.demo-nav__link::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 4px;
+  height: 1px;
+  background: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.demo-nav__link--active {
+  color: var(--text) !important;
+  background: color-mix(in srgb, var(--surface-elevated) 76%, transparent);
+}
+
+.demo-nav__link--active::after {
+  background: color-mix(in srgb, var(--primary) 70%, transparent);
 }
 
 .demo-topbar__actions,
@@ -44,6 +99,31 @@
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.demo-icon-button {
+  gap: 6px;
+}
+
+.demo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-icon--npm {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
+  border-radius: 6px;
+  padding: 1px 4px;
+  line-height: 1.2;
+}
+
+.demo-theme-button {
+  width: 38px;
+  padding: 0;
 }
 
 .demo-select-wrap {
@@ -89,6 +169,11 @@
   .demo-topbar {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .demo-nav {
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   .demo-topbar__actions,
