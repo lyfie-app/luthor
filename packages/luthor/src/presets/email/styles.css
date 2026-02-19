@@ -1,11 +1,15 @@
-@import "../../core/preset-base.css";
+@import "../extensive/styles.css";
 
-.luthor-preset-email {
-	--luthor-preset-content-padding: 16px;
-	--luthor-preset-content-min-height: 200px;
-	--luthor-preset-accent: #0369a1;
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-email {
+	min-height: 460px;
+	max-width: 960px;
 }
 
-.luthor-preset-email .luthor-content-editable {
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-email .luthor-content-editable {
 	font-family: Arial, Helvetica, sans-serif;
+	line-height: 1.65;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-email .luthor-source-view {
+	font-size: 0.9rem;
 }

@@ -5,11 +5,14 @@ export function ModeTabs({
   mode,
   onModeChange,
   labels,
+  availableModes,
 }: {
   mode: CoreEditorMode;
   onModeChange: (mode: CoreEditorMode) => void;
   labels?: Partial<Record<CoreEditorMode, string>>;
+  availableModes?: readonly CoreEditorMode[];
 }) {
+  const modes = availableModes ?? ["visual", "html", "markdown"];
   const tabLabels: Record<CoreEditorMode, string> = {
     visual: labels?.visual ?? "Visual",
     html: labels?.html ?? "HTML",
@@ -18,15 +21,21 @@ export function ModeTabs({
 
   return (
     <div className="luthor-mode-tabs">
-      <button className={`luthor-mode-tab ${mode === "visual" ? "active" : ""}`} onClick={() => onModeChange("visual")}>
-        {tabLabels.visual}
-      </button>
-      <button className={`luthor-mode-tab ${mode === "html" ? "active" : ""}`} onClick={() => onModeChange("html")}>
-        {tabLabels.html}
-      </button>
-      <button className={`luthor-mode-tab ${mode === "markdown" ? "active" : ""}`} onClick={() => onModeChange("markdown")}>
-        {tabLabels.markdown}
-      </button>
+      {modes.includes("visual") && (
+        <button className={`luthor-mode-tab ${mode === "visual" ? "active" : ""}`} onClick={() => onModeChange("visual")}>
+          {tabLabels.visual}
+        </button>
+      )}
+      {modes.includes("html") && (
+        <button className={`luthor-mode-tab ${mode === "html" ? "active" : ""}`} onClick={() => onModeChange("html")}>
+          {tabLabels.html}
+        </button>
+      )}
+      {modes.includes("markdown") && (
+        <button className={`luthor-mode-tab ${mode === "markdown" ? "active" : ""}`} onClick={() => onModeChange("markdown")}>
+          {tabLabels.markdown}
+        </button>
+      )}
     </div>
   );
 }

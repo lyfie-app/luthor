@@ -1,13 +1,16 @@
-@import "../../core/preset-base.css";
+@import "../extensive/styles.css";
 
-.luthor-preset-chat {
-	--luthor-preset-bg: #f8fafc;
-	--luthor-preset-content-padding: 10px 12px;
-	--luthor-preset-content-min-height: 92px;
-	--luthor-preset-radius: 14px;
-	--luthor-preset-accent: #0ea5e9;
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-chat {
+	min-height: 300px;
+	border-radius: 18px;
 }
 
-.luthor-preset-chat .luthor-content-editable {
-	font-size: 14px;
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-chat .luthor-toolbar {
+	padding: 6px;
+	min-height: 44px;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-chat .luthor-content-editable {
+	font-size: 0.95rem;
+	line-height: 1.55;
 }

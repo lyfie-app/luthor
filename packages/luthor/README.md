@@ -43,9 +43,10 @@ const { createEditorSystem, boldExtension } = headless;
 
 From `src/presets/index.ts`, this package exports:
 
-- Presets: `minimalPreset`, `classicPreset`, `docsPreset`, `blogPreset`, `cmsPreset`, `chatPreset`, `emailPreset`, `markdownPreset`, `codePreset`, `defaultPreset`, `extensivePreset`
+- Presets: `chatPreset`, `emailPreset`, `markdownVisualPreset`, `htmlVisualPreset`, `themedPreset`, `notionPreset`, `extensivePreset`
 - Registry: `presetRegistry`
-- Extensive package UI: `ExtensiveEditor`, `extensiveExtensions`
+- Preset editors: `ChatEditor`, `EmailEditor`, `MarkdownVisualEditor`, `HtmlVisualEditor`, `ThemedEditor`, `NotionEditor`, `ExtensiveEditor`
+- Shared extensions: `extensiveExtensions`
 - Helpers: `createPresetEditorConfig`
 
 ## React Peer Dependencies

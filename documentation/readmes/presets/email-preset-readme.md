@@ -1,39 +1,34 @@
 # Email preset
 
-Preset focused on email-friendly authoring and markup constraints.
+Email drafting preset tuned for visual editing with HTML source mode.
 
 ## Export
 
 - `emailPreset` from `@lyfie/luthor`
+- `EmailEditor` from `@lyfie/luthor`
 - Source export: `src/presets/email/index.ts`
 
 ## Preset metadata
 
 - `id`: `email`
 - `label`: `Email`
-- `description`: `Email safe markup with stricter rules.`
+- `description`: `Email drafting surface focused on visual and HTML source workflows.`
 - `css`: `email/styles.css`
 - `default placeholder`: `Write an email...`
+- `components.Editor`: `EmailEditor`
 
 ## Default toolbar
 
-`bold`, `italic`, `link`, `button`, `table`
+Same as extensive preset (`extensiveToolbar`).
 
 ## Usage
 
 ```tsx
-import { emailPreset } from "@lyfie/luthor";
-import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
+import { EmailEditor } from "@lyfie/luthor";
+import "@lyfie/luthor/styles.css";
 
-const extensions = (emailPreset.extensions ?? []) as const;
-const { Provider } = createEditorSystem<typeof extensions>();
-
-export function EmailEditor() {
-  return (
-    <Provider extensions={extensions}>
-      <RichText placeholder={emailPreset.config?.placeholder} />
-    </Provider>
-  );
+export function EmailComposer() {
+  return <EmailEditor placeholder="Write an email..." />;
 }
 ```
 

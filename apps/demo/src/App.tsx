@@ -1,5 +1,13 @@
 import './App.css'
-import { ExtensiveEditor, extensiveExtensions } from "@lyfie/luthor";
+import {
+  ChatEditor,
+  EmailEditor,
+  HtmlVisualEditor,
+  MarkdownVisualEditor,
+  NotionEditor,
+  ThemedEditor,
+  extensiveExtensions,
+} from "@lyfie/luthor";
 import type { ExtensiveEditorRef } from "@lyfie/luthor";
 import React from "react";
 import "@lyfie/luthor/styles.css";
@@ -14,8 +22,27 @@ import {
 } from "./data/demoContent";
 
 type DemoTheme = "light" | "dark";
+type DemoPresetId = "chat" | "email" | "markdownVisual" | "htmlVisual" | "themed" | "notion";
 
 const THEME_STORAGE_KEY = "luthor-demo-theme";
+
+const PRESET_OPTIONS: { id: DemoPresetId; label: string }[] = [
+  { id: "chat", label: "Chat" },
+  { id: "email", label: "Email" },
+  { id: "markdownVisual", label: "Markdown / Visual" },
+  { id: "htmlVisual", label: "HTML / Visual" },
+  { id: "themed", label: "Themed" },
+  { id: "notion", label: "Notion" },
+];
+
+const PRESET_DEMO_MARKDOWN: Record<DemoPresetId, string> = {
+  chat: `# Chat Composer Demo\n\nUse this preset for conversation-first input with compact formatting.\n\n- Quick messages and responses\n- Mentions, links, and lightweight structure\n- Seamless visual/markdown switching`,
+  email: `# Email Composer Demo\n\nDraft email-ready content with visual editing and HTML source support.\n\n- Subject-ready copy blocks\n- CTA links and media-ready layout\n- Easy source cleanup in HTML mode`,
+  markdownVisual: `# Markdown / Visual Demo\n\nStart in markdown mode and round-trip into visual editing.\n\n## Why it works\n- Predictable markdown output\n- Visual QA for final formatting\n- Fast import/export iteration`,
+  htmlVisual: `# HTML / Visual Demo\n\nStart in HTML mode and verify rendering instantly in visual mode.\n\n- Source-first authoring\n- Visual validation pass\n- Export-ready markup workflows`,
+  themed: `# Themed Preset Demo\n\nThis preset is tuned for easy runtime theming via CSS variables.\n\n- Brand your editor surface\n- Override accent and muted tokens\n- Keep full feature parity`,
+  notion: `# Notion-Style Demo\n\nUse slash commands, spacious layout, and block-first flow.\n\n- Type / to insert content blocks\n- Document-oriented writing rhythm\n- Full rich-text and embed tooling`,
+};
 
 function getInitialTheme(): DemoTheme {
   if (typeof window === "undefined") {
@@ -43,6 +70,7 @@ function App() {
   const pendingMarkdownRef = React.useRef<string | null>(null);
 
   const [theme, setTheme] = React.useState<DemoTheme>(() => getInitialTheme());
+  const [selectedPreset, setSelectedPreset] = React.useState<DemoPresetId>("chat");
   const [editorInstanceKey, setEditorInstanceKey] = React.useState(0);
   const [copiedState, setCopiedState] = React.useState<"idle" | "done" | "error">("idle");
 
@@ -83,14 +111,25 @@ function App() {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
 
+  const selectedPresetLabel = React.useMemo(
+    () => PRESET_OPTIONS.find((option) => option.id === selectedPreset)?.label ?? "Preset",
+    [selectedPreset],
+  );
+
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    const markdown = pendingMarkdownRef.current ?? EXTENSIVE_DEMO_MARKDOWN;
+    const markdown = pendingMarkdownRef.current ?? PRESET_DEMO_MARKDOWN[selectedPreset] ?? EXTENSIVE_DEMO_MARKDOWN;
     methods.injectMarkdown(markdown);
     pendingMarkdownRef.current = null;
-  }, []);
+  }, [selectedPreset]);
 
   const handleLoadDemoContent = React.useCallback(() => {
-    editorRef.current?.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
+    editorRef.current?.injectMarkdown(PRESET_DEMO_MARKDOWN[selectedPreset] ?? EXTENSIVE_DEMO_MARKDOWN);
+  }, [selectedPreset]);
+
+  const handlePresetChange = React.useCallback((preset: DemoPresetId) => {
+    pendingMarkdownRef.current = editorRef.current?.getMarkdown() ?? PRESET_DEMO_MARKDOWN[preset] ?? EXTENSIVE_DEMO_MARKDOWN;
+    setSelectedPreset(preset);
+    setEditorInstanceKey((currentKey) => currentKey + 1);
   }, []);
 
   const handleCopyMarkdown = React.useCallback(async () => {
@@ -111,10 +150,10 @@ function App() {
   }, []);
 
   const handleThemeToggle = React.useCallback(() => {
-    pendingMarkdownRef.current = editorRef.current?.getMarkdown() ?? EXTENSIVE_DEMO_MARKDOWN;
+    pendingMarkdownRef.current = editorRef.current?.getMarkdown() ?? PRESET_DEMO_MARKDOWN[selectedPreset] ?? EXTENSIVE_DEMO_MARKDOWN;
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
     setEditorInstanceKey((currentKey) => currentKey + 1);
-  }, []);
+  }, [selectedPreset]);
 
   const copyButtonLabel = copiedState === "done" ? "Copied" : copiedState === "error" ? "Copy failed" : "Copy Markdown";
 
@@ -125,6 +164,10 @@ function App() {
           theme={theme}
           onToggleTheme={handleThemeToggle}
           onLoadDemoContent={handleLoadDemoContent}
+          selectedPreset={selectedPreset}
+          selectedPresetLabel={selectedPresetLabel}
+          presetOptions={PRESET_OPTIONS}
+          onPresetChange={handlePresetChange}
         />
 
         <ShowcaseHero
@@ -143,13 +186,60 @@ function App() {
         />
 
         <EditorPlayground>
-          <ExtensiveEditor
-            key={editorInstanceKey}
-            ref={editorRef}
-            onReady={handleEditorReady}
-            initialTheme={theme}
-            showDefaultContent={false}
-          />
+          {selectedPreset === "chat" && (
+            <ChatEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
+          {selectedPreset === "email" && (
+            <EmailEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
+          {selectedPreset === "markdownVisual" && (
+            <MarkdownVisualEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
+          {selectedPreset === "htmlVisual" && (
+            <HtmlVisualEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
+          {selectedPreset === "themed" && (
+            <ThemedEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
+          {selectedPreset === "notion" && (
+            <NotionEditor
+              key={editorInstanceKey}
+              ref={editorRef}
+              onReady={handleEditorReady}
+              initialTheme={theme}
+              showDefaultContent={false}
+            />
+          )}
         </EditorPlayground>
       </main>
     </div>

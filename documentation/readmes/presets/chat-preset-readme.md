@@ -1,39 +1,34 @@
 # Chat preset
 
-Compact composer preset optimized for chat and messaging UX.
+Conversation-first full editor preset with compact visual spacing and markdown mode.
 
 ## Export
 
 - `chatPreset` from `@lyfie/luthor`
+- `ChatEditor` from `@lyfie/luthor`
 - Source export: `src/presets/chat/index.ts`
 
 ## Preset metadata
 
 - `id`: `chat`
 - `label`: `Chat`
-- `description`: `Compact composer with mentions and quick formatting.`
+- `description`: `Conversation-first editor with compact spacing and fast markdown fallback.`
 - `css`: `chat/styles.css`
 - `default placeholder`: `Write a message...`
+- `components.Editor`: `ChatEditor`
 
 ## Default toolbar
 
-`bold`, `italic`, `link`, `emoji`, `mention`
+Same as extensive preset (`extensiveToolbar`).
 
 ## Usage
 
 ```tsx
-import { chatPreset } from "@lyfie/luthor";
-import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
-
-const extensions = (chatPreset.extensions ?? []) as const;
-const { Provider } = createEditorSystem<typeof extensions>();
+import { ChatEditor } from "@lyfie/luthor";
+import "@lyfie/luthor/styles.css";
 
 export function ChatComposer() {
-  return (
-    <Provider extensions={extensions}>
-      <RichText placeholder={chatPreset.config?.placeholder} />
-    </Provider>
-  );
+  return <ChatEditor placeholder="Write a message..." />;
 }
 ```
 

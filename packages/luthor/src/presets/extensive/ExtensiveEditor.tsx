@@ -31,14 +31,20 @@ export interface ExtensiveEditorRef {
 function ExtensiveEditorContent({
   isDark,
   toggleTheme,
+  placeholder,
+  initialMode,
+  availableModes,
   onReady,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
+  placeholder: string;
+  initialMode: ExtensiveEditorMode;
+  availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
 }) {
   const { commands, hasExtension, activeStates, lexical: editor, extensions } = useEditor();
-  const [mode, setMode] = useState<ExtensiveEditorMode>("visual");
+  const [mode, setMode] = useState<ExtensiveEditorMode>(initialMode);
   const [content, setContent] = useState({ html: "", markdown: "" });
   const [commandPaletteState, setCommandPaletteState] = useState({
     isOpen: false,
@@ -140,6 +146,10 @@ function ExtensiveEditorContent({
   }, [extensions]);
 
   const handleModeChange = async (newMode: ExtensiveEditorMode) => {
+    if (!availableModes.includes(newMode)) {
+      return;
+    }
+
     if (mode === "markdown" && newMode !== "markdown" && hasExtension("markdown")) {
       await commands.importFromMarkdown(content.markdown, { immediate: true });
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -169,7 +179,7 @@ function ExtensiveEditorContent({
   return (
     <>
       <div className="luthor-editor-header">
-        <ModeTabs mode={mode} onModeChange={handleModeChange} />
+        <ModeTabs mode={mode} onModeChange={handleModeChange} availableModes={availableModes} />
         {mode === "visual" && (
           <Toolbar
             commands={commands as CoreEditorCommands}
@@ -187,7 +197,7 @@ function ExtensiveEditorContent({
           <>
             <div className="luthor-editor-visual-gutter" aria-hidden="true" />
             <RichText
-              placeholder="Write anything..."
+              placeholder={placeholder}
               classNames={{
                 container: "luthor-richtext-container luthor-preset-extensive__container",
                 contentEditable: "luthor-content-editable luthor-preset-extensive__content",
@@ -232,12 +242,19 @@ export interface ExtensiveEditorProps {
   initialTheme?: "light" | "dark";
   defaultContent?: string;
   showDefaultContent?: boolean;
+  placeholder?: string;
+  initialMode?: ExtensiveEditorMode;
+  availableModes?: readonly ExtensiveEditorMode[];
+  variantClassName?: string;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
-  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true }, ref) => {
+  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true, placeholder = "Write anything...", initialMode = "visual", availableModes = ["visual", "html", "markdown"], variantClassName }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
+    const resolvedInitialMode = availableModes.includes(initialMode)
+      ? initialMode
+      : (availableModes[0] ?? "visual");
 
     const toggleTheme = () => setEditorTheme(isDark ? "light" : "dark");
 
@@ -284,9 +301,16 @@ Start typing or use the toolbar above to format your text. Press \`Cmd+Shift+P\`
     };
 
     return (
-      <div className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper ${className || ""}`} data-editor-theme={editorTheme}>
+      <div className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper ${variantClassName || ""} ${className || ""}`.trim()} data-editor-theme={editorTheme}>
         <Provider extensions={extensiveExtensions}>
-          <ExtensiveEditorContent isDark={isDark} toggleTheme={toggleTheme} onReady={handleReady} />
+          <ExtensiveEditorContent
+            isDark={isDark}
+            toggleTheme={toggleTheme}
+            placeholder={placeholder}
+            initialMode={resolvedInitialMode}
+            availableModes={availableModes}
+            onReady={handleReady}
+          />
         </Provider>
       </div>
     );

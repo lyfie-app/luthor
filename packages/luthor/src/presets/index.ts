@@ -3,18 +3,20 @@ import type {
 	Extension,
 	LuthorTheme,
 } from "@lyfie/luthor-headless";
-import { blogPreset } from "./blog";
-import { chatPreset } from "./chat";
-import { classicPreset } from "./classic";
-import { cmsPreset } from "./cms";
-import { codePreset } from "./code";
-import { defaultPreset } from "./default";
-import { docsPreset } from "./docs";
-import { emailPreset } from "./email";
+import { ChatEditor, chatPreset } from "./chat";
+import type { ChatEditorProps } from "./chat";
+import { EmailEditor, emailPreset } from "./email";
+import type { EmailEditorProps } from "./email";
 import { extensivePreset, ExtensiveEditor, extensiveExtensions } from "./extensive";
 import type { ExtensiveEditorMode, ExtensiveEditorProps, ExtensiveEditorRef } from "./extensive";
-import { markdownPreset } from "./markdown";
-import { minimalPreset } from "./minimal";
+import { HtmlVisualEditor, htmlVisualPreset } from "./html-visual";
+import type { HtmlVisualEditorProps } from "./html-visual";
+import { MarkdownVisualEditor, markdownVisualPreset } from "./markdown-visual";
+import type { MarkdownVisualEditorProps } from "./markdown-visual";
+import { NotionEditor, notionPreset } from "./notion";
+import type { NotionEditorProps } from "./notion";
+import { ThemedEditor, themedPreset } from "./themed";
+import type { ThemedEditorProps } from "./themed";
 export { createPresetEditorConfig } from "../core/preset-config";
 
 export interface EditorPreset {
@@ -30,37 +32,41 @@ export interface EditorPreset {
 }
 
 export {
-	minimalPreset,
-	classicPreset,
-	docsPreset,
-	blogPreset,
-	cmsPreset,
 	chatPreset,
+	ChatEditor,
 	emailPreset,
-	markdownPreset,
-	codePreset,
-	defaultPreset,
+	EmailEditor,
+	markdownVisualPreset,
+	MarkdownVisualEditor,
+	htmlVisualPreset,
+	HtmlVisualEditor,
+	themedPreset,
+	ThemedEditor,
+	notionPreset,
+	NotionEditor,
 	extensivePreset,
 	ExtensiveEditor,
 	extensiveExtensions,
 };
 
 export type {
+	ChatEditorProps,
+	EmailEditorProps,
+	MarkdownVisualEditorProps,
+	HtmlVisualEditorProps,
+	ThemedEditorProps,
+	NotionEditorProps,
 	ExtensiveEditorMode,
 	ExtensiveEditorProps,
 	ExtensiveEditorRef,
 };
 
 export const presetRegistry: Record<string, EditorPreset> = {
-	minimal: minimalPreset,
-	classic: classicPreset,
-	docs: docsPreset,
-	blog: blogPreset,
-	cms: cmsPreset,
 	chat: chatPreset,
 	email: emailPreset,
-	markdown: markdownPreset,
-	code: codePreset,
-	default: defaultPreset,
+	markdownVisual: markdownVisualPreset,
+	htmlVisual: htmlVisualPreset,
+	themed: themedPreset,
+	notion: notionPreset,
 	extensive: extensivePreset,
 };

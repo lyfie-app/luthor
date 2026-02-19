@@ -1,0 +1,15 @@
+@import "../extensive/styles.css";
+
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-markdown-visual {
+	min-height: 460px;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-markdown-visual .luthor-source-view {
+	font-family: "JetBrains Mono", "Fira Code", Consolas, "Courier New", monospace;
+	font-size: 0.9rem;
+	line-height: 1.55;
+}
+
+.luthor-preset-extensive.luthor-editor-wrapper.luthor-preset-markdown-visual .luthor-content-editable {
+	line-height: 1.7;
+}
