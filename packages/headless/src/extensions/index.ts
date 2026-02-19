@@ -106,10 +106,6 @@ export {
 // Media extensions
 export { ImageExtension, imageExtension } from "./media/ImageExtension";
 export {
-  HTMLEmbedExtension,
-  htmlEmbedExtension,
-} from "./media/HTMLEmbedExtension";
-export {
   IframeEmbedExtension,
   iframeEmbedExtension,
 } from "./media/IframeEmbedExtension";

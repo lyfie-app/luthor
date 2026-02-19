@@ -73,45 +73,11 @@ Use Tab / Shift+Tab to validate indentation behavior in and out of code blocks.
 
 ### Iframe Embed (preset visible)
 
-\`\`\`html-embed
-<figure>
-  <iframe
-    src="https://player.vimeo.com/video/76979871"
-    width="720"
-    height="405"
-    title="Default iframe embed"
-    loading="lazy"
-    referrerpolicy="strict-origin-when-cross-origin"
-    allowfullscreen
-  ></iframe>
-</figure>
-\`\`\`
+Use the embed menu to insert an iframe block (for example, a Vimeo URL).
 
 ### YouTube Embed (preset visible)
 
-\`\`\`html-embed
-<figure>
-  <iframe
-    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
-    width="720"
-    height="405"
-    title="Default YouTube embed"
-    loading="lazy"
-    referrerpolicy="strict-origin-when-cross-origin"
-    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-    allowfullscreen
-  ></iframe>
-</figure>
-\`\`\`
-
-### HTML Embed (preset visible)
-
-\`\`\`html-embed
-<section>
-  <h3>HTML Embed Preview</h3>
-  <p>This block is loaded through the html-embed markdown transformer.</p>
-</section>
-\`\`\`
+Use the embed menu to insert a YouTube video block by URL.
 
 ## 6) Workflow + Productivity
 
@@ -161,7 +127,6 @@ export const CATEGORY_BY_EXTENSION: Record<string, string> = {
   draggableBlock: "Workflow",
   floatingToolbar: "Workflow",
   image: "Media",
-  htmlEmbed: "Media",
   iframeEmbed: "Media",
   youTubeEmbed: "Media",
   markdown: "Import / Export",
@@ -184,6 +149,6 @@ export const CATEGORY_ORDER = [
 export const SHOWCASE_HIGHLIGHTS = [
   "Visual + HTML + Markdown mode switching",
   "Command palette, slash menu, and context menu workflows",
-  "Media tooling: image, iframe, YouTube, and HTML embeds",
+  "Media tooling: image, iframe, and YouTube embeds",
   "Formatting depth: text, structure, code, and custom cards",
 ];

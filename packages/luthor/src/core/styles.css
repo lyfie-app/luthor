@@ -1714,50 +1714,6 @@
 	margin: 0 4px;
 }
 
-.luthor-html-embed-container {
-	border: 1px solid var(--luthor-border);
-	border-radius: 8px;
-	padding: 12px;
-	margin: 14px 0;
-	background: var(--luthor-muted);
-}
-
-.luthor-html-embed-preview {
-	padding: 10px;
-	border-radius: 6px;
-	background: var(--luthor-bg);
-	border: 1px solid var(--luthor-border);
-}
-
-.luthor-html-embed-editor {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-
-.luthor-html-embed-textarea {
-	width: 100%;
-	min-height: 120px;
-	padding: 10px;
-	border-radius: 6px;
-	border: 1px solid var(--luthor-border);
-	background: var(--luthor-bg);
-	color: var(--luthor-fg);
-	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-}
-
-.luthor-html-embed-toggle {
-	align-self: flex-end;
-	background: var(--luthor-accent);
-	color: var(--luthor-bg);
-	border: none;
-	border-radius: 6px;
-	padding: 6px 10px;
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: 600;
-}
-
 .luthor-media-embed-shell {
 	position: relative;
 	border: 2px solid var(--luthor-border);

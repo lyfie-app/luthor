@@ -28,7 +28,6 @@ import {
   ListOrderedIcon,
   MinusIcon,
   MoonIcon,
-  PencilIcon,
   RedoIcon,
   UndoIcon,
   SunIcon,
@@ -39,7 +38,6 @@ import {
   UnderlineIcon,
   UnlinkIcon,
   UploadIcon,
-  EyeIcon,
   HighlighterIcon,
   IndentIcon,
   OutdentIcon,
@@ -579,9 +577,8 @@ export function Toolbar({
 }: ToolbarProps) {
   const { handlers, fileInputRef } = useImageHandlers(commands, imageUploadHandler);
   const embedHandlers = useEmbedHandlers(commands);
-  const hasAnyEmbedExtension = hasExtension("htmlEmbed") || hasExtension("iframeEmbed") || hasExtension("youtubeEmbed");
+  const hasAnyEmbedExtension = hasExtension("iframeEmbed") || hasExtension("youtubeEmbed");
   const isAnyEmbedSelected =
-    activeStates.isHTMLEmbedSelected ||
     activeStates.isIframeEmbedSelected ||
     activeStates.isYouTubeEmbedSelected;
   const [showImageDropdown, setShowImageDropdown] = useState(false);
@@ -1133,12 +1130,6 @@ export function Toolbar({
               isOpen={showEmbedDropdown}
               onOpenChange={setShowEmbedDropdown}
             >
-              {hasExtension("htmlEmbed") ? (
-                <button className="luthor-dropdown-item" onClick={() => { commands.insertHTMLEmbed(); setShowEmbedDropdown(false); }}>
-                  <FileCodeIcon size={16} />
-                  <span>Custom HTML Embed</span>
-                </button>
-              ) : null}
               {hasExtension("iframeEmbed") ? (
                 <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertIframe(); setShowEmbedDropdown(false); }}>
                   <LinkIcon size={16} />
@@ -1152,11 +1143,6 @@ export function Toolbar({
                 </button>
               ) : null}
             </Dropdown>
-            {activeStates.isHTMLEmbedSelected && (
-              <IconButton onClick={() => commands.toggleHTMLPreview()} title="Toggle Preview/Edit">
-                {activeStates.isHTMLPreviewMode ? <EyeIcon size={16} /> : <PencilIcon size={16} />}
-              </IconButton>
-            )}
           </div>
         )}
 

@@ -2,7 +2,6 @@ import {
   ALL_MARKDOWN_TRANSFORMERS,
   MarkdownExtension,
   TableExtension,
-  HTMLEmbedExtension,
   IframeEmbedExtension,
   YouTubeEmbedExtension,
   ImageExtension,
@@ -236,13 +235,6 @@ const tableExt = new TableExtension();
   ),
 };
 
-const htmlEmbedExt = new HTMLEmbedExtension();
-(htmlEmbedExt as any).config = {
-  ...(htmlEmbedExt as any).config,
-  defaultPreview: true,
-  markdownExtension: markdownExt,
-};
-
 const iframeEmbedExt = new IframeEmbedExtension();
 (iframeEmbedExt as any).config = {
   ...(iframeEmbedExt as any).config,
@@ -407,7 +399,6 @@ export const extensiveExtensions = [
   codeFormatExtension,
   tabIndentExtension,
   enterKeyBehaviorExtension,
-  htmlEmbedExt,
   iframeEmbedExt,
   youTubeEmbedExt,
   floatingToolbarExt,

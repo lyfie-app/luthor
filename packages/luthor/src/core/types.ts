@@ -99,8 +99,6 @@ export interface CoreEditorCommands {
   insertYouTubeEmbed?: (inputUrl: string, width?: number, height?: number, start?: number) => void;
   setYouTubeEmbedAlignment?: (alignment: ImageAlignment) => void;
   resizeYouTubeEmbed?: (width: number, height: number) => void;
-  insertHTMLEmbed: (html?: string) => void;
-  toggleHTMLPreview: () => void;
   undo: () => void;
   redo: () => void;
   showCommandPalette: () => void;
@@ -158,8 +156,6 @@ export interface CoreEditorActiveStates {
   isYouTubeEmbedAlignedLeft?: boolean;
   isYouTubeEmbedAlignedCenter?: boolean;
   isYouTubeEmbedAlignedRight?: boolean;
-  isHTMLEmbedSelected?: boolean;
-  isHTMLPreviewMode?: boolean;
   canUndo?: boolean;
   canRedo?: boolean;
 }

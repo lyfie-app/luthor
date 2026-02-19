@@ -22,7 +22,6 @@ export const extensiveToolbar = [
   "image",
   "table",
   "horizontalRule",
-  "htmlEmbed",
   "iframeEmbed",
   "youtubeEmbed",
   "blockquote",

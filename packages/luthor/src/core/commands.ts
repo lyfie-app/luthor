@@ -62,10 +62,6 @@ function supportsSuperscript(commands: CoreEditorCommands): boolean {
   return typeof commands.toggleSuperscript === "function";
 }
 
-function supportsHtmlEmbed(commands: CoreEditorCommands): boolean {
-  return typeof commands.insertHTMLEmbed === "function";
-}
-
 function supportsIframeEmbed(commands: CoreEditorCommands): boolean {
   return typeof commands.insertIframeEmbed === "function";
 }
@@ -322,15 +318,6 @@ export function generateCommands(): CommandConfig[] {
       category: "Insert",
       action: (commands) => commands.insertTable({ rows: 3, columns: 3, includeHeaders: true }),
       keywords: ["table", "grid"],
-    },
-    {
-      id: "insert.html-embed",
-      label: "Insert HTML Embed",
-      description: "Insert a custom HTML block",
-      category: "Insert",
-      action: (commands) => commands.insertHTMLEmbed(),
-      keywords: ["html", "embed"],
-      condition: supportsHtmlEmbed,
     },
     {
       id: "insert.iframe",

@@ -124,7 +124,6 @@ State queries are async functions that return the current editor state.
 - `canUndo`: Boolean - Undo is available
 - `canRedo`: Boolean - Redo is available
 - `imageSelected`: Boolean - Image is selected
-- `isHTMLEmbedSelected`: Boolean - HTML embed is selected
 
 ## Extensions
 
@@ -216,10 +215,6 @@ const configuredImageExtension = imageExtension.configure({
   debug: boolean,
 });
 ```
-
-#### HTMLEmbedExtension
-
-Provides HTML embed functionality.
 
 ### Export/Import Extensions
 

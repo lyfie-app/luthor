@@ -359,20 +359,6 @@ commands.setImageCaption("New caption");
 activeStates.imageSelected;
 ```
 
-### HTML Embed Extension
-
-```tsx
-import { htmlEmbedExtension } from "@lyfie/luthor-headless";
-
-const extensions = [htmlEmbedExtension] as const;
-
-commands.insertHTMLEmbed();
-commands.toggleHTMLPreview();
-
-activeStates.isHTMLEmbedSelected;
-activeStates.isHTMLPreviewMode;
-```
-
 ## History Extension
 
 ### Undo/Redo
