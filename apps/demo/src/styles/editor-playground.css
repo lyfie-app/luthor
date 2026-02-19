@@ -1,15 +1,8 @@
-.editor-stage {
+.editor-panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   padding: 12px;
-}
-
-.editor-stage > * {
-  min-width: 0;
-}
-
-.editor-panel {
   min-width: 0;
   border: 1px solid var(--border);
   background: var(--surface-elevated);

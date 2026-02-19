@@ -59,8 +59,7 @@
 
 .demo-topbar,
 .hero-panel,
-.feature-panel,
-.editor-stage {
+.feature-panel {
   border: 1px solid var(--border);
   background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
   border-radius: 18px;
