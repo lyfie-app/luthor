@@ -1,0 +1,31 @@
+.editor-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+}
+
+.editor-stage > * {
+  min-width: 0;
+}
+
+.editor-panel {
+  min-width: 0;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.editor-panel__frame {
+  min-width: 0;
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 10%, transparent), transparent 56%), var(--surface-muted);
+  padding: 10px;
+}
+
+.editor-panel__container {
+  min-width: 0;
+  border-radius: 10px;
+  overflow: hidden;
+}

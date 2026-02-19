@@ -103,9 +103,10 @@
 	align-items: center;
 	gap: 4px;
 	padding: 8px;
-	flex-wrap: nowrap;
-	overflow-x: auto;
-	overflow-y: hidden;
+	flex-wrap: wrap;
+	overflow-x: hidden;
+	overflow-y: visible;
+	row-gap: 6px;
 	min-height: 48px;
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
@@ -113,8 +114,10 @@
 .luthor-toolbar-section {
 	display: flex;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 2px;
 	padding: 0 4px;
+	min-width: 0;
 }
 
 .luthor-toolbar-section:not(:last-child) {
@@ -575,6 +578,11 @@
 	background-color: var(--luthor-bg);
 	color: var(--luthor-fg);
 	border-radius: 0;
+	resize: vertical;
+	overflow-x: auto;
+	overflow-y: auto;
+	white-space: pre;
+	tab-size: 2;
 	transition: background-color var(--luthor-theme-transition), color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
 

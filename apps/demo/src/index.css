@@ -16,6 +16,14 @@ body {
   min-width: 320px;
   min-height: 100vh;
   width: 100%;
+  background-color: #f8fafc;
+  color: #0f172a;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html[data-theme="dark"] body {
+  background-color: #05070c;
+  color: #e2e8f0;
 }
 
 #root {

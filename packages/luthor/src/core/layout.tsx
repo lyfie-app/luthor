@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from "react";
 import type { CoreEditorMode } from "./types";
 
 export function ModeTabs({
@@ -41,8 +42,22 @@ export function SourceView({
   placeholder: string;
   className?: string;
 }) {
+  const sourceRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const textarea = sourceRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.max(textarea.scrollHeight, 280);
+    textarea.style.height = `${nextHeight}px`;
+  }, [value]);
+
   return (
     <textarea
+      ref={sourceRef}
       className={`luthor-source-view${className ? ` ${className}` : ""}`}
       value={value}
       onChange={(event) => onChange(event.target.value)}

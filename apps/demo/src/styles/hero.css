@@ -1,0 +1,63 @@
+.hero-panel {
+  padding: 26px;
+}
+
+.hero-panel h1 {
+  margin: 10px 0 0;
+  font-size: clamp(30px, 3.2vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  max-width: 22ch;
+}
+
+.hero-panel h1 span {
+  color: color-mix(in srgb, #2563eb 74%, #7c3aed 26%);
+}
+
+.hero-panel > p {
+  margin: 14px 0 0;
+  max-width: 78ch;
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.hero-stats {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  padding: 12px 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+.stat-card p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.stat-card strong {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+@media (max-width: 920px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-panel {
+    padding: 20px;
+  }
+}

@@ -3,75 +3,32 @@ import { ExtensiveEditor, extensiveExtensions } from "@lyfie/luthor";
 import type { ExtensiveEditorRef } from "@lyfie/luthor";
 import React from "react";
 import "@lyfie/luthor/styles.css";
+import { DemoTopBar } from "./components/DemoTopBar";
+import { EditorPlayground } from "./components/EditorPlayground";
+import { FeatureCoveragePanel } from "./components/FeatureCoveragePanel";
+import { ShowcaseHero } from "./components/ShowcaseHero";
+import {
+  CATEGORY_BY_EXTENSION,
+  CATEGORY_ORDER,
+  EXTENSIVE_DEMO_MARKDOWN,
+} from "./data/demoContent";
 
-const EXTENSIVE_DEMO_MARKDOWN = `# Extensive Editor: Full Capability Snapshot
+type DemoTheme = "light" | "dark";
 
-Use this editor as a complete production-ready sandbox.
+const THEME_STORAGE_KEY = "luthor-demo-theme";
 
-## Text and Typography
+function getInitialTheme(): DemoTheme {
+  if (typeof window === "undefined") {
+    return "light";
+  }
 
-- **Bold**, *italic*, <u>underline</u>, ~~strikethrough~~
-- Subscript and superscript
-- Font family, font size, and line-height controls
-- Text color and highlight controls
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
 
-## Rich Structure
-
-- Headings, paragraph, quote, and code blocks
-- Bulleted, numbered, and check lists
-- Horizontal rule insertion
-- Tables with row/column editing tools
-
-## Media + Power Tools
-
-- Image insertion with resizing and alignment
-- HTML embed blocks, iframe embeds, YouTube videos, and Tweet/X posts
-- Floating toolbar on text selection
-- Context menu and draggable block controls
-
-## Productivity
-
-- Undo/redo history
-- Command palette (Ctrl+Shift+P)
-- HTML + Markdown source mode round-trips
-- Custom feature-card node support
-`;
-
-const CATEGORY_BY_EXTENSION: Record<string, string> = {
-  bold: "Text",
-  italic: "Text",
-  underline: "Text",
-  strikethrough: "Text",
-  subscript: "Text",
-  superscript: "Text",
-  link: "Text",
-  fontFamily: "Typography",
-  fontSize: "Typography",
-  lineHeight: "Typography",
-  textColor: "Typography",
-  textHighlight: "Typography",
-  blockFormat: "Structure",
-  list: "Structure",
-  table: "Structure",
-  horizontalRule: "Structure",
-  code: "Code",
-  codeFormat: "Code",
-  codeIntelligence: "Code",
-  tabIndent: "Workflow",
-  enterKeyBehavior: "Workflow",
-  history: "Workflow",
-  commandPalette: "Workflow",
-  contextMenu: "Workflow",
-  draggableBlock: "Workflow",
-  floatingToolbar: "Workflow",
-  image: "Media",
-  htmlEmbed: "Media",
-  markdown: "Import / Export",
-  html: "Import / Export",
-  featureCard: "Custom",
-};
-
-const CATEGORY_ORDER = ["Text", "Typography", "Structure", "Code", "Media", "Workflow", "Import / Export", "Custom", "Other"] as const;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 function titleFromExtensionKey(key: string): string {
   return key
@@ -83,7 +40,11 @@ function titleFromExtensionKey(key: string): string {
 
 function App() {
   const editorRef = React.useRef<ExtensiveEditorRef>(null);
-  const [copied, setCopied] = React.useState(false);
+  const pendingMarkdownRef = React.useRef<string | null>(null);
+
+  const [theme, setTheme] = React.useState<DemoTheme>(() => getInitialTheme());
+  const [editorInstanceKey, setEditorInstanceKey] = React.useState(0);
+  const [copiedState, setCopiedState] = React.useState<"idle" | "done" | "error">("idle");
 
   const extensionNames = React.useMemo(() => {
     const names = extensiveExtensions
@@ -110,10 +71,22 @@ function App() {
       .filter((group) => group.items.length > 0);
   }, [extensionNames]);
 
-  // Handle when editor is ready - inject content immediately
+  const totalFeatureGroups = groupedFeatures.length;
+  const densestGroup = groupedFeatures.reduce<{ title: string; count: number }>(
+    (largest, group) => (group.items.length > largest.count ? { title: group.title, count: group.items.length } : largest),
+    { title: "N/A", count: 0 },
+  );
+
+  React.useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    console.log("🎯 Editor ready - injecting content immediately");
-    methods.injectMarkdown(`# Welcome to the Luthor Demo!`);
+    const markdown = pendingMarkdownRef.current ?? EXTENSIVE_DEMO_MARKDOWN;
+    methods.injectMarkdown(markdown);
+    pendingMarkdownRef.current = null;
   }, []);
 
   const handleLoadDemoContent = React.useCallback(() => {
@@ -121,67 +94,66 @@ function App() {
   }, []);
 
   const handleCopyMarkdown = React.useCallback(async () => {
-    const markdown = editorRef.current?.getMarkdown();
-    if (!markdown) return;
-    await navigator.clipboard.writeText(markdown);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1400);
+    try {
+      const markdown = editorRef.current?.getMarkdown();
+      if (!markdown) {
+        setCopiedState("error");
+        window.setTimeout(() => setCopiedState("idle"), 1600);
+        return;
+      }
+      await navigator.clipboard.writeText(markdown);
+      setCopiedState("done");
+    } catch {
+      setCopiedState("error");
+    }
+
+    window.setTimeout(() => setCopiedState("idle"), 1400);
   }, []);
 
+  const handleThemeToggle = React.useCallback(() => {
+    pendingMarkdownRef.current = editorRef.current?.getMarkdown() ?? EXTENSIVE_DEMO_MARKDOWN;
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+    setEditorInstanceKey((currentKey) => currentKey + 1);
+  }, []);
+
+  const copyButtonLabel = copiedState === "done" ? "Copied" : copiedState === "error" ? "Copy failed" : "Copy Markdown";
+
   return (
-    <div className="app-shell">
-      <main className="demo-layout">
-        <header className="demo-header">
-          <p className="demo-kicker">Luthor Extensive Demo</p>
-          <h1>Headless Feature Coverage</h1>
-          <p>
-            Live extension inventory sourced from the current extensive preset, with a clean editor canvas for fast visual
-            validation.
-          </p>
-        </header>
+    <div className="app-shell" data-theme={theme}>
+      <main className="demo-page">
+        <DemoTopBar
+          theme={theme}
+          onToggleTheme={handleThemeToggle}
+          onLoadDemoContent={handleLoadDemoContent}
+        />
 
-        <section className="feature-panel" aria-label="Current extensive editor feature coverage">
-          <div className="feature-panel__top">
-            <div>
-              <h2>Available Capabilities</h2>
-              <p>{extensionNames.length} active extensions in this build.</p>
-            </div>
-            <div className="feature-panel__actions">
-              <button type="button" className="demo-button" onClick={handleLoadDemoContent}>
-                Load Feature Demo Content
-              </button>
-              <button type="button" className="demo-button demo-button--ghost" onClick={handleCopyMarkdown}>
-                {copied ? "Copied" : "Copy Current Markdown"}
-              </button>
-            </div>
-          </div>
+        <ShowcaseHero
+          extensionCount={extensionNames.length}
+          totalFeatureGroups={totalFeatureGroups}
+          densestGroupTitle={densestGroup.title}
+        />
 
-          <div className="feature-grid">
-            {groupedFeatures.map((group) => (
-              <article key={group.title} className="feature-group">
-                <h3>{group.title}</h3>
-                <div className="feature-chips">
-                  {group.items.map((item) => (
-                    <span key={item} className="feature-chip">
-                      {titleFromExtensionKey(item)}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
+        <FeatureCoveragePanel
+          extensionCount={extensionNames.length}
+          totalFeatureGroups={totalFeatureGroups}
+          groupedFeatures={groupedFeatures}
+          onCopyMarkdown={handleCopyMarkdown}
+          copyButtonLabel={copyButtonLabel}
+          titleFromExtensionKey={titleFromExtensionKey}
+        />
 
-        <section className="editor-panel" aria-label="Extensive editor canvas">
-          <div className="editor-panel__frame">
-            <div className="editor-panel__container">
-              <ExtensiveEditor ref={editorRef} onReady={handleEditorReady} />
-            </div>
-          </div>
-        </section>
+        <EditorPlayground>
+          <ExtensiveEditor
+            key={editorInstanceKey}
+            ref={editorRef}
+            onReady={handleEditorReady}
+            initialTheme={theme}
+            showDefaultContent={false}
+          />
+        </EditorPlayground>
       </main>
     </div>
-  )
+  );
 }
 
 export default App

@@ -1,7 +1,19 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
-import { CommandPalette, SlashCommandMenu, commandsToCommandPaletteItems, commandsToSlashCommandItems, ModeTabs, registerKeyboardShortcuts, SourceView, Toolbar, type CoreEditorCommands } from "../../core";
+import {
+  CommandPalette,
+  SlashCommandMenu,
+  commandsToCommandPaletteItems,
+  commandsToSlashCommandItems,
+  formatHTMLSource,
+  formatMarkdownSource,
+  ModeTabs,
+  registerKeyboardShortcuts,
+  SourceView,
+  Toolbar,
+  type CoreEditorCommands,
+} from "../../core";
 import type { CommandPaletteExtension, SlashCommandExtension } from "@lyfie/luthor-headless";
 import "./styles.css";
 
@@ -139,12 +151,12 @@ function ExtensiveEditorContent({
 
     if (newMode === "markdown" && mode !== "markdown" && hasExtension("markdown")) {
       await new Promise((resolve) => setTimeout(resolve, 50));
-      const markdown = commands.exportToMarkdown();
+      const markdown = formatMarkdownSource(commands.exportToMarkdown());
       setContent((prev) => ({ ...prev, markdown }));
     }
     if (newMode === "html" && mode !== "html" && hasExtension("html")) {
       await new Promise((resolve) => setTimeout(resolve, 50));
-      const html = commands.exportToHTML();
+      const html = formatHTMLSource(commands.exportToHTML());
       setContent((prev) => ({ ...prev, html }));
     }
 
