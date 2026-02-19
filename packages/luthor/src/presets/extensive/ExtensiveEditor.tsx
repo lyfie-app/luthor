@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
-import { CommandPalette, commandsToCommandPaletteItems, ModeTabs, registerKeyboardShortcuts, SourceView, Toolbar, type CoreEditorCommands } from "../../core";
-import type { CommandPaletteExtension } from "@lyfie/luthor-headless";
+import { CommandPalette, SlashCommandMenu, commandsToCommandPaletteItems, commandsToSlashCommandItems, ModeTabs, registerKeyboardShortcuts, SourceView, Toolbar, type CoreEditorCommands } from "../../core";
+import type { CommandPaletteExtension, SlashCommandExtension } from "@lyfie/luthor-headless";
 import "./styles.css";
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
@@ -31,6 +31,12 @@ function ExtensiveEditorContent({
   const [commandPaletteState, setCommandPaletteState] = useState({
     isOpen: false,
     commands: [] as ReturnType<typeof commandsToCommandPaletteItems>,
+  });
+  const [slashCommandState, setSlashCommandState] = useState({
+    isOpen: false,
+    query: "",
+    position: null as { x: number; y: number } | null,
+    commands: [] as ReturnType<typeof commandsToSlashCommandItems>,
   });
   const commandsRef = useRef<CoreEditorCommands>(commands as CoreEditorCommands);
   const readyRef = useRef(false);
@@ -75,6 +81,8 @@ function ExtensiveEditorContent({
     const commandApi = commands as CoreEditorCommands;
     const paletteItems = commandsToCommandPaletteItems(commandApi);
     paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
+    const slashItems = commandsToSlashCommandItems(commandApi);
+    slashItems.forEach((cmd) => commandApi.registerSlashCommand?.(cmd));
 
     const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body);
 
@@ -86,6 +94,7 @@ function ExtensiveEditorContent({
     return () => {
       unregisterShortcuts();
       paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
+      slashItems.forEach((cmd) => commandApi.unregisterSlashCommand?.(cmd.id));
     };
   }, [editor, commands, methods, onReady]);
 
@@ -98,6 +107,23 @@ function ExtensiveEditorContent({
 
     return commandPaletteExtension.subscribe((isOpen, items) => {
       setCommandPaletteState({ isOpen, commands: items });
+    });
+  }, [extensions]);
+
+  useEffect(() => {
+    const slashCommandExtension = extensions.find(
+      (ext: any) => ext.name === "slashCommand",
+    ) as SlashCommandExtension | undefined;
+
+    if (!slashCommandExtension || !slashCommandExtension.subscribe) return;
+
+    return slashCommandExtension.subscribe((state) => {
+      setSlashCommandState({
+        isOpen: state.isOpen,
+        query: state.query,
+        position: state.position,
+        commands: state.commands,
+      });
     });
   }, [extensions]);
 
@@ -174,6 +200,16 @@ function ExtensiveEditorContent({
         onClose={() => commands.hideCommandPalette()}
         commands={commandPaletteState.commands}
       />
+      <SlashCommandMenu
+        isOpen={slashCommandState.isOpen}
+        query={slashCommandState.query}
+        position={slashCommandState.position}
+        commands={slashCommandState.commands}
+        onClose={() => commands.closeSlashMenu?.()}
+        onExecute={(commandId) => {
+          commands.executeSlashCommand?.(commandId);
+        }}
+      />
     </>
   );
 }
@@ -217,6 +253,7 @@ Luthor is a modern, type-safe React framework built on top of Meta's Lexical tha
 - Insert image, table, iframe/YouTube embeds, and custom feature card
 - Insert a horizontal rule from toolbar or type --- then space
 - Open Command Palette with Ctrl+Shift+P
+- Type / in the editor to open the slash command block menu
 - Switch between Visual, HTML, and Markdown tabs to verify import/export
 
 ## 📝 Try It Out

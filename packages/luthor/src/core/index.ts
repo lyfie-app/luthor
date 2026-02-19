@@ -1,6 +1,7 @@
 export * from "./commands";
 export * from "./code-intelligence-extension";
 export * from "./command-palette";
+export * from "./slash-command-menu";
 export * from "./extensions";
 export * from "./floating-toolbar";
 export * from "./icons";

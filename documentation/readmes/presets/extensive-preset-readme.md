@@ -30,6 +30,14 @@ Horizontal rules are available out of the box in the extensive preset.
 - Command palette action: `Insert Horizontal Rule`
 - Markdown shortcuts while typing (then press space/enter): `---`, `___`
 
+## Slash command menu
+
+Notion-style slash commands are enabled in visual mode.
+
+- Type `/` to open the block menu at the caret
+- Keep typing to filter commands
+- Press `Enter`/`Tab` to run, arrow keys to navigate, `Esc` to close
+
 ## Usage
 
 ```tsx

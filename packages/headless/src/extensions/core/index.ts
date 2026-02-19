@@ -10,6 +10,10 @@ export {
   CommandPaletteExtension,
   commandPaletteExtension,
 } from "./CommandPaletteExtension";
+export {
+  SlashCommandExtension,
+  slashCommandExtension,
+} from "./SlashCommandExtension";
 export { richTextExtension, type RichTextConfig } from "./RichTextExtension";
 export {
   TabIndentExtension,
@@ -43,6 +47,14 @@ export type {
   CommandPaletteCommands,
   CommandPaletteStateQueries,
 } from "./CommandPaletteExtension";
+
+export type {
+  SlashCommandItem,
+  SlashCommandConfig,
+  SlashCommandMenuState,
+  SlashCommandCommands,
+  SlashCommandStateQueries,
+} from "./SlashCommandExtension";
 
 export type {
   DraggableCommands,

@@ -389,6 +389,28 @@ activeStates.canUndo;
 activeStates.canRedo;
 ```
 
+## Slash Command Extension
+
+### Notion-style block menu
+
+```tsx
+import { SlashCommandExtension } from "@lyfie/luthor-headless";
+
+const slashCommandExtension = new SlashCommandExtension();
+
+const extensions = [slashCommandExtension] as const;
+
+commands.registerSlashCommand({
+  id: "insert.horizontal-rule",
+  label: "Insert Horizontal Rule",
+  category: "Insert",
+  action: () => commands.insertHorizontalRule(),
+});
+
+// Trigger from UI when a user picks an item in the slash menu
+commands.executeSlashCommand("insert.horizontal-rule");
+```
+
 ## Export/Import Extensions
 
 ### HTML Extension

@@ -84,6 +84,13 @@ Commands are functions that modify the editor state. Available commands depend o
 - `undo()`: Undo last action
 - `redo()`: Redo last undone action
 
+#### Slash Commands
+
+- `registerSlashCommand(item)`: Register an item in the `/` menu
+- `unregisterSlashCommand(id)`: Remove a slash menu item
+- `closeSlashMenu()`: Close the slash menu if open
+- `executeSlashCommand(id)`: Execute the slash menu item action
+
 #### Media
 
 - `insertImage(payload)`: Insert image
@@ -229,6 +236,10 @@ Provides Markdown export/import functionality.
 #### HistoryExtension
 
 Provides undo/redo functionality.
+
+#### SlashCommandExtension
+
+Provides `/` trigger-based command menus and execution helpers.
 
 ## Configuration
 

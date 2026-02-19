@@ -8,6 +8,7 @@ import {
   ImageExtension,
   ContextMenuExtension,
   CommandPaletteExtension,
+  SlashCommandExtension,
   DraggableBlockExtension,
   LinkExtension,
   createCustomNodeExtension,
@@ -269,6 +270,7 @@ const contextMenuExt = new ContextMenuExtension();
 };
 
 const commandPaletteExt = new CommandPaletteExtension();
+const slashCommandExt = new SlashCommandExtension();
 
 const draggableBlockExt = new DraggableBlockExtension();
 (draggableBlockExt as any).config = {
@@ -410,6 +412,7 @@ export const extensiveExtensions = [
   floatingToolbarExt,
   contextMenuExt,
   commandPaletteExt,
+  slashCommandExt,
   draggableBlockExt,
   featureCardExtension,
 ] as const;
