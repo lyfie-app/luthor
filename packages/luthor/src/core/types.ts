@@ -93,7 +93,7 @@ export interface CoreEditorCommands {
   insertImage: (config: InsertImageConfig) => void;
   setImageAlignment: (alignment: ImageAlignment) => void;
   setImageCaption: (caption: string) => void;
-  insertHTMLEmbed: () => void;
+  insertHTMLEmbed: (html?: string) => void;
   toggleHTMLPreview: () => void;
   undo: () => void;
   redo: () => void;

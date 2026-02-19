@@ -25,7 +25,7 @@ Use this editor as a complete production-ready sandbox.
 ## Media + Power Tools
 
 - Image insertion with resizing and alignment
-- HTML embed blocks
+- HTML embed blocks, iframe embeds, YouTube videos, and Tweet/X posts
 - Floating toolbar on text selection
 - Context menu and draggable block controls
 

@@ -49,6 +49,11 @@ import {
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
 import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment } from "./types";
+import {
+  buildIframeEmbedHtml,
+  buildTweetEmbedHtml,
+  buildYouTubeEmbedHtml,
+} from "./embed-templates";
 
 type SelectOption = {
   value: string;
@@ -528,6 +533,50 @@ function useImageHandlers(commands: CoreEditorCommands, imageUploadHandler?: (fi
   return { handlers, fileInputRef };
 }
 
+function useEmbedHandlers(commands: CoreEditorCommands) {
+  return useMemo(
+    () => ({
+      insertIframe: () => {
+        const inputUrl = prompt("Enter iframe URL:");
+        if (!inputUrl) return;
+
+        const result = buildIframeEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+      insertYouTube: () => {
+        const inputUrl = prompt("Enter YouTube URL:");
+        if (!inputUrl) return;
+
+        const result = buildYouTubeEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+      insertTweet: () => {
+        const inputUrl = prompt("Enter Tweet/X URL:");
+        if (!inputUrl) return;
+
+        const result = buildTweetEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+    }),
+    [commands],
+  );
+}
+
 export interface ToolbarProps {
   commands: CoreEditorCommands;
   hasExtension: (name: string) => boolean;
@@ -550,8 +599,10 @@ export function Toolbar({
   classNames,
 }: ToolbarProps) {
   const { handlers, fileInputRef } = useImageHandlers(commands, imageUploadHandler);
+  const embedHandlers = useEmbedHandlers(commands);
   const [showImageDropdown, setShowImageDropdown] = useState(false);
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
+  const [showEmbedDropdown, setShowEmbedDropdown] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [fontFamilyValue, setFontFamilyValue] = useState("default");
   const [fontFamilyOptions, setFontFamilyOptions] = useState<SelectOption[]>([
@@ -1089,9 +1140,32 @@ export function Toolbar({
 
         {hasExtension("htmlEmbed") && (
           <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <IconButton onClick={() => commands.insertHTMLEmbed()} active={activeStates.isHTMLEmbedSelected} title="Insert HTML Embed">
-              <FileCodeIcon size={16} />
-            </IconButton>
+            <Dropdown
+              trigger={
+                <button className={`luthor-toolbar-button ${activeStates.isHTMLEmbedSelected ? "active" : ""}`} title="Insert Embed">
+                  <FileCodeIcon size={16} />
+                </button>
+              }
+              isOpen={showEmbedDropdown}
+              onOpenChange={setShowEmbedDropdown}
+            >
+              <button className="luthor-dropdown-item" onClick={() => { commands.insertHTMLEmbed(); setShowEmbedDropdown(false); }}>
+                <FileCodeIcon size={16} />
+                <span>Custom HTML Embed</span>
+              </button>
+              <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertIframe(); setShowEmbedDropdown(false); }}>
+                <LinkIcon size={16} />
+                <span>Embed iframe</span>
+              </button>
+              <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertYouTube(); setShowEmbedDropdown(false); }}>
+                <ImageIcon size={16} />
+                <span>Embed YouTube Video</span>
+              </button>
+              <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertTweet(); setShowEmbedDropdown(false); }}>
+                <QuoteIcon size={16} />
+                <span>Embed Tweet/X Post</span>
+              </button>
+            </Dropdown>
             {activeStates.isHTMLEmbedSelected && (
               <IconButton onClick={() => commands.toggleHTMLPreview()} title="Toggle Preview/Edit">
                 {activeStates.isHTMLPreviewMode ? <EyeIcon size={16} /> : <PencilIcon size={16} />}

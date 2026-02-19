@@ -1,5 +1,10 @@
 import type { CommandPaletteItem } from "@lyfie/luthor-headless";
 import type { CoreEditorCommands } from "./types";
+import {
+  buildIframeEmbedHtml,
+  buildTweetEmbedHtml,
+  buildYouTubeEmbedHtml,
+} from "./embed-templates";
 
 export type KeyboardShortcut = {
   key: string;
@@ -60,6 +65,10 @@ function supportsSubscript(commands: CoreEditorCommands): boolean {
 
 function supportsSuperscript(commands: CoreEditorCommands): boolean {
   return typeof commands.toggleSuperscript === "function";
+}
+
+function supportsHtmlEmbed(commands: CoreEditorCommands): boolean {
+  return typeof commands.insertHTMLEmbed === "function";
 }
 
 export function generateCommands(): CommandConfig[] {
@@ -318,6 +327,67 @@ export function generateCommands(): CommandConfig[] {
       category: "Insert",
       action: (commands) => commands.insertHTMLEmbed(),
       keywords: ["html", "embed"],
+      condition: supportsHtmlEmbed,
+    },
+    {
+      id: "insert.iframe",
+      label: "Insert iframe",
+      description: "Insert an iframe embed from URL",
+      category: "Insert",
+      action: (commands) => {
+        const inputUrl = prompt("Enter iframe URL:");
+        if (!inputUrl) return;
+
+        const result = buildIframeEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+      keywords: ["iframe", "embed", "url"],
+      condition: supportsHtmlEmbed,
+    },
+    {
+      id: "insert.youtube",
+      label: "Insert YouTube Video",
+      description: "Insert an embedded YouTube video",
+      category: "Insert",
+      action: (commands) => {
+        const inputUrl = prompt("Enter YouTube URL:");
+        if (!inputUrl) return;
+
+        const result = buildYouTubeEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+      keywords: ["youtube", "video", "embed"],
+      condition: supportsHtmlEmbed,
+    },
+    {
+      id: "insert.tweet",
+      label: "Insert Tweet",
+      description: "Insert an embedded Tweet/X post",
+      category: "Insert",
+      action: (commands) => {
+        const inputUrl = prompt("Enter Tweet/X URL:");
+        if (!inputUrl) return;
+
+        const result = buildTweetEmbedHtml(inputUrl);
+        if ("error" in result) {
+          alert(result.error);
+          return;
+        }
+
+        commands.insertHTMLEmbed(result.html);
+      },
+      keywords: ["tweet", "x", "twitter", "embed"],
+      condition: supportsHtmlEmbed,
     },
     {
       id: "edit.undo",
