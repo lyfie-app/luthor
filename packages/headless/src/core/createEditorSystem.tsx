@@ -90,10 +90,11 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
         return {} as ExtractCommands<Exts>;
       }
 
-      return extensions.reduce(
-        (acc, ext) => ({ ...acc, ...ext.getCommands(editor) }),
-        {} as ExtractCommands<Exts>,
-      );
+      const aggregated = {} as ExtractCommands<Exts>;
+      for (const extension of extensions) {
+        Object.assign(aggregated, extension.getCommands(editor));
+      }
+      return aggregated;
     }, [extensions, editor]);
 
     const commands = useMemo(
@@ -102,24 +103,27 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
     ) as BaseCommands & ExtractCommands<Exts>;
 
     // Plugins: Collect and separate by position
-    const plugins = useMemo(
-      () => extensions.flatMap((ext) => ext.getPlugins?.() || []),
-      [extensions],
-    );
-    const pluginsBefore = useMemo(
-      () =>
-        extensions
-          .filter((ext) => (ext.config?.position || "before") === "before")
-          .flatMap((ext) => ext.getPlugins?.() || []),
-      [extensions],
-    );
-    const pluginsAfter = useMemo(
-      () =>
-        extensions
-          .filter((ext) => (ext.config?.position || "before") === "after")
-          .flatMap((ext) => ext.getPlugins?.() || []),
-      [extensions],
-    );
+    const { plugins, pluginsBefore, pluginsAfter } = useMemo(() => {
+      const beforePlugins: ReactNode[] = [];
+      const afterPlugins: ReactNode[] = [];
+
+      for (const extension of extensions) {
+        const extensionPlugins = extension.getPlugins?.() || [];
+        const position = extension.config?.position || "before";
+
+        if (position === "after") {
+          afterPlugins.push(...extensionPlugins);
+        } else {
+          beforePlugins.push(...extensionPlugins);
+        }
+      }
+
+      return {
+        plugins: [...beforePlugins, ...afterPlugins],
+        pluginsBefore: beforePlugins,
+        pluginsAfter: afterPlugins,
+      };
+    }, [extensions]);
 
     // Register extensions (this was missing!)
     useEffect(() => {
@@ -142,13 +146,14 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
         return {} as Record<string, () => Promise<boolean>>;
       }
 
-      return extensions.reduce(
-        (acc, ext) => ({
-          ...acc,
-          ...(ext.getStateQueries ? ext.getStateQueries(editor) : {}),
-        }),
-        {} as Record<string, () => Promise<boolean>>,
-      );
+      const aggregatedQueries = {} as Record<string, () => Promise<boolean>>;
+      for (const extension of extensions) {
+        if (!extension.getStateQueries) {
+          continue;
+        }
+        Object.assign(aggregatedQueries, extension.getStateQueries(editor));
+      }
+      return aggregatedQueries;
     }, [extensions, editor]);
 
     // Batched active states

@@ -4,6 +4,7 @@ import {
   BaseExtensionConfig,
   Extension,
   ExtensionCategory,
+  LexicalNodeRegistration,
   ToolbarItem,
 } from "@lyfie/luthor-headless/extensions/types";
 
@@ -88,7 +89,7 @@ export abstract class BaseExtension<
    *
    * @returns Array of Lexical node classes
    */
-  getNodes(): unknown[] {
+  getNodes(): LexicalNodeRegistration[] {
     return [];
   }
 

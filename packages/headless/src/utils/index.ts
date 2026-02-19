@@ -33,6 +33,8 @@
  *   });
  */
 
+import * as enhancedMarkdownConvertor from './EnhancedMarkdownConvertor';
+
 export {
   serializeBlockMetadata,
   parseBlockMetadata,
@@ -57,9 +59,9 @@ export {
 
 // Convenience namespace for clarity
 export const EnhancedMarkdownConvertor = {
-  serializeBlockMetadata: require('./EnhancedMarkdownConvertor').serializeBlockMetadata,
-  parseBlockMetadata: require('./EnhancedMarkdownConvertor').parseBlockMetadata,
-  lexicalNodesToEnhancedMarkdown: require('./EnhancedMarkdownConvertor').lexicalNodesToEnhancedMarkdown,
-  parseEnhancedMarkdown: require('./EnhancedMarkdownConvertor').parseEnhancedMarkdown,
-  extractMetadataFromEnhancedMarkdown: require('./EnhancedMarkdownConvertor').extractMetadataFromEnhancedMarkdown,
+  serializeBlockMetadata: enhancedMarkdownConvertor.serializeBlockMetadata,
+  parseBlockMetadata: enhancedMarkdownConvertor.parseBlockMetadata,
+  lexicalNodesToEnhancedMarkdown: enhancedMarkdownConvertor.lexicalNodesToEnhancedMarkdown,
+  parseEnhancedMarkdown: enhancedMarkdownConvertor.parseEnhancedMarkdown,
+  extractMetadataFromEnhancedMarkdown: enhancedMarkdownConvertor.extractMetadataFromEnhancedMarkdown,
 };

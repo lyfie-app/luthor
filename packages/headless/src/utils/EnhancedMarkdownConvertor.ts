@@ -23,6 +23,45 @@ export interface BlockMetadata {
   payload: Record<string, unknown>;
 }
 
+interface LexicalNodeLike {
+  type: string;
+  text?: string;
+  children?: LexicalNodeLike[];
+  [key: string]: unknown;
+}
+
+interface LexicalEditorStateLike {
+  root: {
+    type: 'root';
+    children: LexicalNodeLike[];
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isBlockMetadata(value: unknown): value is BlockMetadata {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const type = value.type;
+  if (type !== 'youtube-embed' && type !== 'iframe-embed' && type !== 'image') {
+    return false;
+  }
+
+  return isRecord(value.payload);
+}
+
+function asString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function asNumber(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+}
+
 /**
  * Serialize block metadata as an HTML comment for embedding in markdown
  */
@@ -37,7 +76,8 @@ export function parseBlockMetadata(commentText: string): BlockMetadata | null {
   try {
     const match = commentText.match(/^LUTHOR_BLOCK\s*(.+)$/);
     if (!match || !match[1]) return null;
-    return JSON.parse(match[1]);
+    const parsed = JSON.parse(match[1]) as unknown;
+    return isBlockMetadata(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -49,10 +89,12 @@ export function parseBlockMetadata(commentText: string): BlockMetadata | null {
  * @param nodes - Lexical editor state nodes
  * @returns markdown string with embedded metadata for extensions
  */
-export function lexicalNodesToEnhancedMarkdown(nodes: any[]): string {
+export function lexicalNodesToEnhancedMarkdown(
+  nodes: readonly LexicalNodeLike[],
+): string {
   const lines: string[] = [];
 
-  function walkNodes(nodeArray: any[]) {
+  function walkNodes(nodeArray: readonly LexicalNodeLike[]) {
     for (const node of nodeArray) {
       if (!node) continue;
 
@@ -116,9 +158,9 @@ export function lexicalNodesToEnhancedMarkdown(nodes: any[]): string {
 
       // Handle heading nodes
       if (node.type === 'heading') {
-        const level = node.tag.replace('h', '');
+        const level = asString(node.tag).replace('h', '');
         const text = extractTextFromNode(node);
-        lines.push(`${'#'.repeat(parseInt(level))} ${text}`);
+        lines.push(`${'#'.repeat(Number.parseInt(level, 10))} ${text}`);
         lines.push('');
         continue;
       }
@@ -138,7 +180,7 @@ export function lexicalNodesToEnhancedMarkdown(nodes: any[]): string {
         const listItems = node.children || [];
         const isOrdered = node.listType === 'number';
         
-        listItems.forEach((item: any, idx: number) => {
+        listItems.forEach((item, idx) => {
           const text = extractTextFromNode(item);
           const marker = isOrdered ? `${idx + 1}.` : '-';
           lines.push(`${marker} ${text}`);
@@ -180,13 +222,13 @@ export function lexicalNodesToEnhancedMarkdown(nodes: any[]): string {
 /**
  * Extract plain text from a Lexical node (handling text + format nodes)
  */
-function extractTextFromNode(node: any): string {
-  if (node.text) {
+function extractTextFromNode(node: LexicalNodeLike): string {
+  if (typeof node.text === 'string') {
     return node.text;
   }
 
   if (node.children && Array.isArray(node.children)) {
-    return node.children.map((child: any) => extractTextFromNode(child)).join('');
+    return node.children.map((child) => extractTextFromNode(child)).join('');
   }
 
   return '';
@@ -259,14 +301,14 @@ export function extractMetadataFromEnhancedMarkdown(markdown: string): BlockMeta
  * @param markdown - Enhanced markdown string with embedded metadata
  * @returns Lexical editor state JSON
  */
-export function enhancedMarkdownToLexicalJSON(markdown: string): any {
+export function enhancedMarkdownToLexicalJSON(markdown: string): LexicalEditorStateLike {
   const lines = markdown.split('\n');
-  const nodes: any[] = [];
+  const nodes: LexicalNodeLike[] = [];
   let currentBlockMetadata: BlockMetadata | null = null;
   let buffer: string[] = [];
   let inCodeBlock = false;
 
-  function createTextNode(text: string): any {
+  function createTextNode(text: string): LexicalNodeLike {
     return {
       type: 'text',
       text: text,
@@ -442,43 +484,44 @@ export function enhancedMarkdownToLexicalJSON(markdown: string): any {
 /**
  * Reconstruct a Lexical node from extracted metadata
  */
-function reconstructNodeFromMetadata(metadata: BlockMetadata): any | null {
+function reconstructNodeFromMetadata(
+  metadata: BlockMetadata,
+): LexicalNodeLike | null {
   try {
+    const payload = metadata.payload;
+
     switch (metadata.type) {
       case 'youtube-embed': {
-        const payload = metadata.payload as any;
         return {
           type: 'youtube-embed',
-          src: payload.src || '',
-          width: payload.width || 720,
-          height: payload.height || 405,
-          alignment: payload.alignment || 'center',
-          start: payload.start || 0,
+          src: asString(payload.src),
+          width: asNumber(payload.width, 720),
+          height: asNumber(payload.height, 405),
+          alignment: asString(payload.alignment, 'center'),
+          start: asNumber(payload.start, 0),
         };
       }
 
       case 'iframe-embed': {
-        const payload = metadata.payload as any;
         return {
           type: 'iframe-embed',
-          src: payload.src || '',
-          width: payload.width || 720,
-          height: payload.height || 405,
-          alignment: payload.alignment || 'center',
-          title: payload.title || 'Embedded Content',
+          src: asString(payload.src),
+          width: asNumber(payload.width, 720),
+          height: asNumber(payload.height, 405),
+          alignment: asString(payload.alignment, 'center'),
+          title: asString(payload.title, 'Embedded Content'),
         };
       }
 
       case 'image': {
-        const payload = metadata.payload as any;
         return {
           type: 'image',
-          src: payload.src || '',
-          alt: payload.alt || '',
-          caption: payload.caption || '',
-          alignment: payload.alignment || 'center',
-          width: payload.width,
-          height: payload.height,
+          src: asString(payload.src),
+          alt: asString(payload.alt),
+          caption: asString(payload.caption),
+          alignment: asString(payload.alignment, 'center'),
+          width: typeof payload.width === 'number' ? payload.width : undefined,
+          height: typeof payload.height === 'number' ? payload.height : undefined,
         };
       }
 

@@ -1,7 +1,11 @@
 import { LexicalEditor, TextFormatType } from "lexical";
 import { ReactNode } from "react";
 import { BaseExtension } from "../extensions/base/BaseExtension";
-import { BaseExtensionConfig, ExtensionCategory } from "../extensions/types";
+import {
+  BaseExtensionConfig,
+  ExtensionCategory,
+  LexicalNodeRegistration,
+} from "../extensions/types";
 
 /**
  * Configuration options for creating a custom extension
@@ -38,7 +42,7 @@ export interface CreateExtensionConfig<
   initialize?: (editor: LexicalEditor) => (() => void) | void;
 
   /** Custom Lexical nodes */
-  nodes?: unknown[];
+  nodes?: LexicalNodeRegistration[];
 
   /** Text formats supported by this extension */
   supportedFormats?: readonly TextFormatType[];
@@ -96,7 +100,7 @@ export function createExtension<
     Plugins
   > {
     private _plugins: Plugins = [] as unknown as Plugins;
-    private _nodes: unknown[] = [];
+    private _nodes: LexicalNodeRegistration[] = [];
     private _initialize?: (editor: LexicalEditor) => (() => void) | void;
 
     constructor() {
@@ -138,7 +142,7 @@ export function createExtension<
       };
     }
 
-    getNodes(): unknown[] {
+    getNodes(): LexicalNodeRegistration[] {
       return this._nodes;
     }
 

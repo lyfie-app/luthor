@@ -44,5 +44,6 @@ export function createExtensionTransformer(
   // 2. Implementing export() to serialize node data
   // 3. Implementing replace() to detect and reconstruct from markdown  
   // For now, use EnhancedMarkdownConvertor directly in your app
-  return {} as any;
+  void nodeType;
+  return Object.freeze({}) as Transformer;
 }
