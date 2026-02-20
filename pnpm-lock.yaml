@@ -136,9 +136,6 @@ importers:
       '@lexical/code':
         specifier: '>=0.40.0'
         version: 0.40.0
-      '@lexical/html':
-        specifier: '>=0.40.0'
-        version: 0.40.0
       '@lexical/link':
         specifier: '>=0.40.0'
         version: 0.40.0
@@ -205,9 +202,6 @@ importers:
   packages/luthor:
     dependencies:
       '@lexical/code':
-        specifier: ^0.40.0
-        version: 0.40.0
-      '@lexical/html':
         specifier: ^0.40.0
         version: 0.40.0
       '@lexical/link':
