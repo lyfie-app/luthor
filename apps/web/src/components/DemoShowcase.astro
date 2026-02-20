@@ -1,0 +1,11 @@
+---
+import ExtensiveEditorIsland from './ExtensiveEditorIsland.tsx';
+---
+<section style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;width:100%;background:var(--astro-bg, #f8fafc);transition:background 0.2s;">
+  <h1 style="font-size:2.2rem;font-weight:800;margin:0 0 0.5rem;text-align:center;letter-spacing:-0.03em;color:var(--astro-h1, #18181b);">
+    Luthor Demo Playground
+  </h1>
+  <div style="width:100%;max-width:720px;margin:2rem auto 2.5rem;box-shadow:0 4px 32px #0002;border-radius:16px;overflow:hidden;background:var(--astro-editor-bg, #fff);padding:24px;">
+    <ExtensiveEditorIsland client:only="react" />
+  </div>
+</section>

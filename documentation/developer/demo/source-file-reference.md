@@ -62,13 +62,9 @@ This is the canonical per-file reference for the demo app.
 
 ## Public/static assets
 
-### `apps/demo/public/vite.svg`
+### `apps/demo/public/logo.svg`
 
 - Purpose: static favicon asset.
-
-### `apps/demo/src/assets/react.svg`
-
-- Purpose: React SVG asset for app source usage.
 
 ## Source runtime files
 

@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
+    "types": ["node"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "baseUrl": ".",
