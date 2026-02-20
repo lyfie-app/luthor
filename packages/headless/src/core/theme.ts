@@ -54,22 +54,6 @@ export interface LuthorTheme extends EditorThemeClasses {
       buttonActive?: React.CSSProperties;
     };
   };
-  htmlEmbed?: {
-    container?: string;
-    preview?: string;
-    editor?: string;
-    textarea?: string;
-    toggle?: string;
-    content?: string;
-    styles?: {
-      container?: React.CSSProperties;
-      preview?: React.CSSProperties;
-      editor?: React.CSSProperties;
-      textarea?: React.CSSProperties;
-      toggle?: React.CSSProperties;
-      content?: React.CSSProperties;
-    };
-  };
   // Styles for inline CSS properties
   styles?: {
     toolbar?: {
@@ -96,14 +80,6 @@ export interface LuthorTheme extends EditorThemeClasses {
       button?: React.CSSProperties;
       buttonActive?: React.CSSProperties;
     };
-    htmlEmbed?: {
-      container?: React.CSSProperties;
-      preview?: React.CSSProperties;
-      editor?: React.CSSProperties;
-      textarea?: React.CSSProperties;
-      toggle?: React.CSSProperties;
-      content?: React.CSSProperties;
-    };
   };
 }
 
@@ -123,6 +99,8 @@ export const defaultLuthorTheme: LuthorTheme = {
     ul: "luthor-list-ul",
     ol: "luthor-list-ol",
     listitem: "luthor-list-li",
+    listitemChecked: "luthor-list-item-checked",
+    listitemUnchecked: "luthor-list-item-unchecked",
     nested: {
       list: "luthor-list-nested",
       listitem: "luthor-list-nested-item",
@@ -213,14 +191,6 @@ export const defaultLuthorTheme: LuthorTheme = {
     button: "luthor-floating-toolbar-button",
     buttonActive: "luthor-floating-toolbar-button-active",
   },
-  htmlEmbed: {
-    container: "luthor-html-embed-container",
-    preview: "luthor-html-embed-preview",
-    editor: "luthor-html-embed-editor",
-    textarea: "luthor-html-embed-textarea",
-    toggle: "luthor-html-embed-toggle",
-    content: "luthor-html-embed-content",
-  },
   richText: {
     contentEditable: "luthor-content-editable",
     placeholder: "luthor-placeholder",
@@ -277,14 +247,6 @@ export function mergeThemes(
         ...overrideTheme.floatingToolbar?.styles,
       },
     },
-    htmlEmbed: {
-      ...baseTheme.htmlEmbed,
-      ...overrideTheme.htmlEmbed,
-      styles: {
-        ...baseTheme.htmlEmbed?.styles,
-        ...overrideTheme.htmlEmbed?.styles,
-      },
-    },
     richText: {
       ...baseTheme.richText,
       ...overrideTheme.richText,
@@ -301,10 +263,6 @@ export function mergeThemes(
       floatingToolbar: {
         ...baseTheme.styles?.floatingToolbar,
         ...overrideTheme.styles?.floatingToolbar,
-      },
-      htmlEmbed: {
-        ...baseTheme.styles?.htmlEmbed,
-        ...overrideTheme.styles?.htmlEmbed,
       },
       ...overrideTheme.styles,
     },

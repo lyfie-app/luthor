@@ -1,7 +1,0 @@
-@import "../shared/preset-base.css";
-
-.luthor-preset-default {
-	--luthor-preset-content-padding: 16px;
-	--luthor-preset-content-min-height: 200px;
-	--luthor-preset-accent: #2563eb;
-}

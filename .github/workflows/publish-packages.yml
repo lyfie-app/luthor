@@ -18,12 +18,12 @@ on:
 
 jobs:
   publish:
-    if: github.actor != 'github-actions[bot]' && !contains(github.event.head_commit.message, '[skip ci]')
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: read
-      id-token: write 
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4

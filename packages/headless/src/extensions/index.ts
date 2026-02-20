@@ -25,6 +25,45 @@ export {
   horizontalRuleExtension,
 } from "./formatting/HorizontalRuleExtension";
 export {
+  FontFamilyExtension,
+  fontFamilyExtension,
+  type FontFamilyConfig,
+  type FontFamilyOption,
+  type FontCssLoadStrategy,
+} from "./formatting/FontFamilyExtension";
+export {
+  FontSizeExtension,
+  fontSizeExtension,
+  type FontSizeConfig,
+  type FontSizeOption,
+} from "./formatting/FontSizeExtension";
+export {
+  LineHeightExtension,
+  lineHeightExtension,
+  type LineHeightConfig,
+  type LineHeightOption,
+} from "./formatting/LineHeightExtension";
+export {
+  TextColorExtension,
+  textColorExtension,
+  type TextColorConfig,
+  type TextColorOption,
+} from "./formatting/TextColorExtension";
+export {
+  TextHighlightExtension,
+  textHighlightExtension,
+  type TextHighlightConfig,
+  type TextHighlightOption,
+} from "./formatting/TextHighlightExtension";
+export {
+  SubscriptExtension,
+  subscriptExtension,
+} from "./formatting/SubscriptExtension";
+export {
+  SuperscriptExtension,
+  superscriptExtension,
+} from "./formatting/SuperscriptExtension";
+export {
   TableExtension,
   tableExtension,
   type TableConfig,
@@ -33,6 +72,11 @@ export {
 // Structure extensions
 export { ListExtension, listExtension } from "./formatting/ListExtension";
 export { CodeExtension, codeExtension } from "./formatting/CodeExtension";
+export {
+  CodeIntelligenceExtension,
+  codeIntelligenceExtension,
+  type CodeIntelligenceCommands,
+} from "./formatting/CodeIntelligenceExtension";
 export {
   CodeFormatExtension,
   codeFormatExtension,
@@ -52,19 +96,16 @@ export {
   type DraggableConfig,
 } from "./core/DraggableBlockExtension";
 
-// Export/import extensions
-export { HTMLExtension, htmlExtension } from "./export/HTMLExtension";
-export {
-  MarkdownExtension,
-  markdownExtension,
-} from "./export/MarkdownExtension";
-
 // Media extensions
 export { ImageExtension, imageExtension } from "./media/ImageExtension";
 export {
-  HTMLEmbedExtension,
-  htmlEmbedExtension,
-} from "./media/HTMLEmbedExtension";
+  IframeEmbedExtension,
+  iframeEmbedExtension,
+} from "./media/IframeEmbedExtension";
+export {
+  YouTubeEmbedExtension,
+  youTubeEmbedExtension,
+} from "./media/YouTubeEmbedExtension";
 
 // Custom extensions
 export { createCustomNodeExtension } from "./custom/CustomNodeExtension";
@@ -76,14 +117,24 @@ export {
   type RichTextConfig,
   type RichTextComponentProps,
 } from "./core/RichTextExtension";
+export {
+  TabIndentExtension,
+  tabIndentExtension,
+} from "./core/TabIndentExtension";
+export {
+  EmojiExtension,
+  emojiExtension,
+  type EmojiCatalogItem,
+  type EmojiSuggestionState,
+  type EmojiConfig,
+  type EmojiCommands,
+  type EmojiStateQueries,
+} from "./core/EmojiExtension";
 export * from "./core";
 
 // Base classes and types
 export { TextFormatExtension } from "./base/TextFormatExtension";
 export * from "./types";
-
-// Export transformers
-export { ALL_MARKDOWN_TRANSFORMERS } from "./export/transformers";
 
 // Export media types
 export * from "./media/types";

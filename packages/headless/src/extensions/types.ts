@@ -1,5 +1,16 @@
-import { LexicalEditor, TextFormatType, EditorThemeClasses } from "lexical";
+import {
+  LexicalEditor,
+  TextFormatType,
+  EditorThemeClasses,
+  KlassConstructor,
+  LexicalNode,
+  LexicalNodeReplacement,
+} from "lexical";
 import { ComponentType, CSSProperties, ReactNode } from "react";
+
+export type LexicalNodeRegistration =
+  | KlassConstructor<typeof LexicalNode>
+  | LexicalNodeReplacement;
 
 /** Extension category buckets */
 export enum ExtensionCategory {
@@ -17,7 +28,7 @@ export interface BaseExtensionConfig {
   position?: "before" | "after";
   /** Initialization priority; higher registers first (default: 0) */
   initPriority?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /** Toolbar item configuration */
@@ -25,7 +36,7 @@ export interface ToolbarItem {
   label: string;
   onClick: () => void;
   isActive?: () => boolean;
-  component?: React.ComponentType<any>;
+  component?: React.ComponentType<Record<string, unknown>>;
 }
 
 /**
@@ -41,8 +52,11 @@ export interface ToolbarItem {
 export interface Extension<
   Name extends string = string,
   Config extends BaseExtensionConfig = BaseExtensionConfig,
-  Commands extends Record<string, any> = {},
-  StateQueries extends Record<string, () => Promise<boolean>> = {},
+  Commands extends Record<string, unknown> = Record<string, never>,
+  StateQueries extends Record<string, () => Promise<boolean>> = Record<
+    string,
+    never
+  >,
   Plugins extends ReactNode[] = ReactNode[],
 > {
   /** Unique identifier for this extension */
@@ -71,18 +85,18 @@ export interface Extension<
       selected?: boolean;
       className?: string;
       style?: CSSProperties;
-      [key: string]: any;
+      [key: string]: unknown;
     }>,
   ) => Extension<Name, Config, Commands, StateQueries, Plugins>;
 
   /** Override node rendering logic */
   overrideNodeRender?: (overrides: {
-    createDOM?: (config: any) => HTMLElement;
-    updateDOM?: (prev: any, next: any, dom: HTMLElement) => boolean;
+    createDOM?: (config: unknown) => HTMLElement;
+    updateDOM?: (prev: unknown, next: unknown, dom: HTMLElement) => boolean;
   }) => Extension<Name, Config, Commands, StateQueries, Plugins>;
 
   /** Return custom Lexical nodes */
-  getNodes?: () => any[];
+  getNodes?: () => LexicalNodeRegistration[];
 
   /** Return React plugins */
   getPlugins: () => Plugins;
@@ -116,13 +130,6 @@ export type ExtractCommands<Exts extends readonly Extension[]> = MergeCommands<
 export type ExtractPlugins<Exts extends readonly Extension[]> = ReturnType<
   Exts[number]["getPlugins"]
 >[number];
-
-// Helper: union to intersection for flat types
-type UnionToIntersection<U> = (U extends any
-  ? (k: U) => void
-  : never)[any] extends (k: infer I) => void
-  ? I
-  : never;
 
 // Helper for union keys
 type UnionKeys<T> = T extends unknown ? keyof T : never;
@@ -159,12 +166,12 @@ export interface EditorContextType<Exts extends readonly Extension[]> {
   activeStates: ExtractStateQueries<Exts>;
 
   /** State query functions from extensions */
-  stateQueries: Record<string, () => Promise<any>>;
+  stateQueries: Record<string, () => Promise<unknown>>;
 
   /** Event listener registration */
   listeners: {
     registerUpdate: (
-      listener: (state: any) => void,
+      listener: (state: unknown) => void,
     ) => (() => void) | undefined;
     registerPaste: (
       listener: (event: ClipboardEvent) => boolean,
@@ -173,16 +180,12 @@ export interface EditorContextType<Exts extends readonly Extension[]> {
 
   /** Export helpers for formats */
   export: {
-    toHTML: () => Promise<string>;
-    toMarkdown: () => Promise<string>;
-    toJSON: () => any;
+    toJSON: () => unknown;
   };
 
   /** Import helpers for formats */
   import: {
-    fromHTML: (html: string) => Promise<void>;
-    fromMarkdown: (md: string) => Promise<void>;
-    fromJSON: (json: any) => void;
+    fromJSON: (json: unknown) => void;
   };
 
   /** Alias of the raw Lexical editor */
@@ -205,5 +208,5 @@ export interface EditorContextType<Exts extends readonly Extension[]> {
 // Assumes EditorConfig is defined elsewhere; add if needed
 export interface EditorConfig {
   theme?: EditorThemeClasses;
-  [key: string]: any;
+  [key: string]: unknown;
 }

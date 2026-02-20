@@ -6,7 +6,7 @@ import {
   RangeSelection,
 } from "lexical";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base/BaseExtension";
 import {
@@ -117,7 +117,7 @@ export interface FloatingConfig<TCommands = any, TStates = any>
 /**
  * Commands exposed by the floating toolbar extension (none by default).
  */
-export type FloatingCommands = {};
+export type FloatingCommands = Record<string, never>;
 
 /**
  * State queries exposed by the floating toolbar extension.
@@ -158,6 +158,7 @@ export class FloatingToolbarExtension<
   }
 
   register(editor: LexicalEditor): () => void {
+    void editor;
     return () => {};
   }
 
@@ -172,10 +173,12 @@ export class FloatingToolbarExtension<
   }
 
   getCommands(editor: LexicalEditor): FloatingCommands {
+    void editor;
     return {};
   }
 
   getStateQueries(editor: LexicalEditor): FloatingStateQueries {
+    void editor;
     return {
       isFloatingVisible: async () => this.isVisible,
     };
@@ -230,6 +233,14 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
   );
   const [selection, setSelection] = useState<RangeSelection | null>(null);
 
+  const getSelectionAnchorRect = (element: HTMLElement): DOMRect => {
+    const anchorElement = element.querySelector<HTMLElement>(
+      '[data-luthor-selection-anchor="true"]',
+    );
+
+    return (anchorElement ?? element).getBoundingClientRect();
+  };
+
   /* Debounce utility for delaying function execution */
   const debounce = <T extends (...args: any[]) => any>(
     func: T,
@@ -243,7 +254,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
   };
 
   /* Convert DOMRect to SelectionRect with intelligent positioning logic */
-  const createSelectionRect = (domRect: DOMRect): SelectionRect => {
+  const createSelectionRect = useCallback((domRect: DOMRect): SelectionRect => {
     const offset = config.offset || { x: 0, y: 8 };
     const strategy = config.positionStrategy || "below";
 
@@ -260,15 +271,24 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
       y = domRect.top + scrollY - offset.y;
     } else if (strategy === "auto") {
       const spaceBelow = viewportHeight - domRect.bottom;
-      const spaceAbove = domRect.top;
       y =
         spaceBelow > 60
           ? domRect.bottom + scrollY + offset.y
           : domRect.top + scrollY - offset.y;
     }
 
+    const activeStates = config.getActiveStates?.() as
+      | {
+          isIframeEmbedSelected?: boolean;
+          isYouTubeEmbedSelected?: boolean;
+        }
+      | undefined;
+    const isEmbedSelection =
+      !!activeStates?.isIframeEmbedSelected ||
+      !!activeStates?.isYouTubeEmbedSelected;
+
     /* Toolbar dimensions (configurable with defaults) */
-    const toolbarWidth = config.toolbarDimensions?.width || 300;
+    const toolbarWidth = config.toolbarDimensions?.width || (isEmbedSelection ? 132 : 300);
     const toolbarHeight = config.toolbarDimensions?.height || 40;
     const margin = 10; // Minimum margin from viewport edges
 
@@ -278,7 +298,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
 
     /* Determine optimal positioning strategy */
     let x: number;
-    let positionFromRight = false;
+    let positionFromRight: boolean;
 
     /* Check available space on both sides of selection center */
     const spaceLeft = selectionCenterX - margin; /* Space to the left of center */
@@ -330,7 +350,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
       right: domRect.right + scrollX,
       positionFromRight,
     };
-  };
+  }, [config]);
 
   /* Update extension state */
   useEffect(() => {
@@ -360,7 +380,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
               const key = node.getKey();
               const domElement = editor.getElementByKey(key);
               if (domElement) {
-                newRect = domElement.getBoundingClientRect();
+                newRect = getSelectionAnchorRect(domElement);
               }
             }
           }
@@ -397,7 +417,7 @@ function FloatingToolbarPlugin<TCommands = any, TStates = any>({
       unregister();
       document.removeEventListener("selectionchange", handleSelectionChange);
     };
-  }, [editor, config.debounceMs]);
+  }, [editor, config.debounceMs, createSelectionRect, extension]);
 
   /* Hide callback */
   const hide = () => {

@@ -10,12 +10,28 @@ export {
   CommandPaletteExtension,
   commandPaletteExtension,
 } from "./CommandPaletteExtension";
+export {
+  SlashCommandExtension,
+  slashCommandExtension,
+} from "./SlashCommandExtension";
+export {
+  EmojiExtension,
+  emojiExtension,
+} from "./EmojiExtension";
 export { richTextExtension, type RichTextConfig } from "./RichTextExtension";
+export {
+  TabIndentExtension,
+  tabIndentExtension,
+} from "./TabIndentExtension";
 export {
   DraggableBlockExtension,
   draggableBlockExtension,
   type DraggableConfig,
 } from "./DraggableBlockExtension";
+export {
+  EnterKeyBehaviorExtension,
+  enterKeyBehaviorExtension,
+} from "./EnterKeyBehaviorExtension";
 
 export type {
   ContextMenuItem,
@@ -35,6 +51,22 @@ export type {
   CommandPaletteCommands,
   CommandPaletteStateQueries,
 } from "./CommandPaletteExtension";
+
+export type {
+  SlashCommandItem,
+  SlashCommandConfig,
+  SlashCommandMenuState,
+  SlashCommandCommands,
+  SlashCommandStateQueries,
+} from "./SlashCommandExtension";
+
+export type {
+  EmojiCatalogItem,
+  EmojiSuggestionState,
+  EmojiConfig,
+  EmojiCommands,
+  EmojiStateQueries,
+} from "./EmojiExtension";
 
 export type {
   DraggableCommands,

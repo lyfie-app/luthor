@@ -1,0 +1,60 @@
+---
+import metadata from '../data/package-metadata.json';
+
+const formatCompact = (value) => {
+  if (typeof value !== 'number') return 'N/A';
+  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+};
+
+const formatBytes = (value) => {
+  if (typeof value !== 'number') return 'N/A';
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+};
+
+const stats = {
+  weeklyDownloads: formatCompact(metadata.metrics?.weeklyDownloads),
+  latestVersion: metadata.metrics?.latestVersion ?? 'N/A',
+  minzippedSize: formatBytes(metadata.metrics?.minzippedSizeBytes),
+  githubStars: formatCompact(metadata.metrics?.githubStars),
+};
+
+const fetchedDate = metadata.fetchedAt ? new Date(metadata.fetchedAt).toLocaleString('en-US') : 'N/A';
+---
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Social proof and package momentum.</h2>
+    <p class="section-copy">
+      Package metadata is fetched at build time and exposed as compact badges for fast credibility checks.
+    </p>
+
+    <div class="stats-badge-row">
+      <article class="metric metric-badge">
+        <p class="metric-label">Weekly downloads</p>
+        <p class="metric-value">{stats.weeklyDownloads}</p>
+      </article>
+      <article class="metric metric-badge">
+        <p class="metric-label">Version</p>
+        <p class="metric-value">{stats.latestVersion}</p>
+      </article>
+      <article class="metric metric-badge">
+        <p class="metric-label">Bundle size</p>
+        <p class="metric-value">{stats.minzippedSize}</p>
+      </article>
+      <article class="metric metric-badge">
+        <p class="metric-label">GitHub stars</p>
+        <p class="metric-value">{stats.githubStars}</p>
+      </article>
+    </div>
+
+    <div class="link-row">
+      <a class="btn btn-muted" href={metadata.npmUrl} target="_blank" rel="noopener noreferrer">NPM package</a>
+      <a class="btn btn-muted" href={metadata.githubUrl} target="_blank" rel="noopener noreferrer">GitHub repository</a>
+      <a class="btn btn-primary" href={metadata.sponsorsUrl} target="_blank" rel="noopener noreferrer">Support the project</a>
+    </div>
+
+    <p class="mono-small">Data sources: npm downloads API, npm registry API, Bundlephobia API, GitHub API. Last sync: {fetchedDate}</p>
+  </div>
+</section>

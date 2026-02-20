@@ -1,6 +1,19 @@
-import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
+import {
+  COMMAND_PRIORITY_LOW,
+  KEY_TAB_COMMAND,
+  LexicalEditor,
+  $getSelection,
+  $isRangeSelection,
+} from "lexical";
 import { $setBlocksType } from "@lexical/selection";
-import { $createCodeNode, $isCodeNode, CodeNode } from "@lexical/code";
+import {
+  $createCodeNode,
+  $isCodeNode,
+  CodeHighlightNode,
+  CodeNode,
+  PrismTokenizer,
+  registerCodeHighlighting,
+} from "@lexical/code";
 import { $createParagraphNode } from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
@@ -46,7 +59,7 @@ export type CodeStateQueries = {
  */
 export class CodeExtension extends BaseExtension<
   "code",
-  {},
+  Record<string, never>,
   CodeCommands,
   CodeStateQueries,
   ReactNode[]
@@ -61,7 +74,43 @@ export class CodeExtension extends BaseExtension<
    * @returns Cleanup function
    */
   register(editor: LexicalEditor): () => void {
-    return () => {};
+    const unregisterCodeHighlighting = registerCodeHighlighting(editor, PrismTokenizer);
+
+    const unregisterTabCommand = editor.registerCommand<KeyboardEvent>(
+      KEY_TAB_COMMAND,
+      (event) => {
+        let handled = false;
+
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
+          const anchorNode = selection.anchor.getNode();
+          const block = this.getBlockNode(anchorNode);
+          if (!block) {
+            return;
+          }
+
+          handled = true;
+          selection.insertText("\t");
+        });
+
+        if (handled) {
+          event?.preventDefault();
+          return true;
+        }
+
+        return false;
+      },
+      COMMAND_PRIORITY_LOW,
+    );
+
+    return () => {
+      unregisterCodeHighlighting();
+      unregisterTabCommand();
+    };
   }
 
   /**
@@ -69,7 +118,7 @@ export class CodeExtension extends BaseExtension<
    * @returns Array of node classes
    */
   getNodes() {
-    return [CodeNode];
+    return [CodeNode, CodeHighlightNode];
   }
 
   /**

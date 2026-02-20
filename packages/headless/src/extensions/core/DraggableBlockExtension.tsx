@@ -1,7 +1,9 @@
 import {
+  $createParagraphNode,
   LexicalEditor,
   $getNearestNodeFromDOMNode,
   $getNodeByKey,
+  $getRoot,
   $isElementNode,
   $getSelection,
   $isRangeSelection,
@@ -9,6 +11,7 @@ import {
 import React, {
   ReactNode,
   useEffect,
+  useMemo,
   useState,
   useCallback,
   useRef,
@@ -20,31 +23,13 @@ import { ExtensionCategory, BaseExtensionConfig } from "../types";
 import { useBaseEditor as useEditor } from "../../core/createEditorSystem";
 
 /**
- * Debounce utility for performance
- */
-function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number,
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
-
-/**
  * DraggableBlockExtension configuration
  */
 export interface DraggableConfig extends BaseExtensionConfig {
   /** Portal anchor element (default: document.body) */
   anchorElem?: HTMLElement;
-  /** Show move buttons */
-  showMoveButtons?: boolean;
-  /** Show the up button */
-  showUpButton?: boolean;
-  /** Show the down button */
-  showDownButton?: boolean;
+  /** Show the add button near the drag handle */
+  showAddButton?: boolean;
   /** Button stack position relative to blocks */
   buttonStackPosition?: "left" | "right";
   /** Allow drag via text selection (default: true) */
@@ -59,8 +44,7 @@ export interface DraggableConfig extends BaseExtensionConfig {
     handleActive?: string;
     blockDragging?: string;
     dropIndicator?: string;
-    upButton?: string;
-    downButton?: string;
+    addButton?: string;
     buttonStack?: string;
   };
   /** Custom styles for UI elements */
@@ -69,8 +53,7 @@ export interface DraggableConfig extends BaseExtensionConfig {
     handleActive?: React.CSSProperties;
     blockDragging?: React.CSSProperties;
     dropIndicator?: React.CSSProperties;
-    upButton?: React.CSSProperties;
-    downButton?: React.CSSProperties;
+    addButton?: React.CSSProperties;
     buttonStack?: React.CSSProperties;
   };
   /** Custom handle renderer for full headless control */
@@ -140,6 +123,7 @@ export class DraggableBlockExtension extends BaseExtension<
       showMoveButtons: true,
       showUpButton: true,
       showDownButton: true,
+      showAddButton: true,
       buttonStackPosition: "left",
       enableTextSelectionDrag: true,
       offsetLeft: -40,
@@ -149,6 +133,7 @@ export class DraggableBlockExtension extends BaseExtension<
   }
 
   register(editor: LexicalEditor): () => void {
+    void editor;
     return () => {};
   }
 
@@ -222,6 +207,7 @@ export class DraggableBlockExtension extends BaseExtension<
   }
 
   getStateQueries(editor: LexicalEditor): DraggableStateQueries {
+    void editor;
     return {
       isDragging: async () => this.isDraggingState,
     };
@@ -264,7 +250,10 @@ function DraggableBlockPlugin({
     (ext: { name: string }) => ext.name === "draggableBlock",
   ) as DraggableBlockExtension | undefined;
   const draggableConfig = draggableExt?.config as DraggableConfig | undefined;
-  const globalDraggableTheme = globalConfig?.theme?.draggable || {};
+  const globalDraggableTheme = useMemo(
+    () => globalConfig?.theme?.draggable || {},
+    [globalConfig?.theme?.draggable],
+  );
   const [hoveredBlock, setHoveredBlock] = useState<HTMLElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dropIndicator, setDropIndicator] = useState<{
@@ -276,112 +265,122 @@ function DraggableBlockPlugin({
 
   const draggedElementRef = useRef<HTMLElement | null>(null);
   const draggedKeyRef = useRef<string | null>(null);
+  const hoveredBlockRef = useRef<HTMLElement | null>(null);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverFrameRef = useRef<number | null>(null);
+  const queuedHoveredBlockRef = useRef<HTMLElement | null>(null);
+  const pointerFrameRef = useRef<number | null>(null);
+  const queuedPointerPageYRef = useRef<number | null>(null);
+  const [pointerPageY, setPointerPageY] = useState<number | null>(null);
 
   // Sync local isDragging to extension
   useEffect(() => {
     extension.setIsDragging(isDragging);
   }, [isDragging, extension]);
 
-  // SSR safety
-  if (typeof document === "undefined") return null;
+  const isBrowser =
+    typeof document !== "undefined" && typeof window !== "undefined";
+  const editorRootElement = editor.getRootElement();
+  const defaultAnchorElem = isBrowser
+    ? (((editorRootElement?.closest?.(".luthor-editor") as HTMLElement | null) ||
+        editorRootElement?.parentElement ||
+        document.body) as HTMLElement)
+    : null;
   const anchorElem =
-    draggableConfig?.anchorElem || config.anchorElem || document.body;
+    draggableConfig?.anchorElem || config.anchorElem || defaultAnchorElem;
 
   // Default styles for UI elements - minimal and functional
-  const defaultStyles = {
-    handle: {
-      cursor: "grab",
-      userSelect: "none" as const,
-    },
-    handleActive: {
-      cursor: "grabbing",
-    },
-    blockDragging: {
-      opacity: 0.5,
-    },
-    dropIndicator: {
-      backgroundColor: "#3b82f6",
-      borderRadius: "2px",
-    },
-    upButton: {
-      cursor: "pointer",
-    },
-    downButton: {
-      cursor: "pointer",
-    },
-    buttonStack: {},
-  };
+  const defaultStyles = useMemo(
+    () => ({
+      handle: {
+        cursor: "grab",
+        userSelect: "none" as const,
+      },
+      handleActive: {
+        cursor: "grabbing",
+      },
+      blockDragging: {
+        opacity: 0.5,
+      },
+      dropIndicator: {
+        backgroundColor: "var(--luthor-accent, #3b82f6)",
+        borderRadius: "2px",
+      },
+      addButton: {
+        cursor: "pointer",
+      },
+      buttonStack: {},
+    }),
+    [],
+  );
 
   // Merged styles: extension config -> global theme styles -> defaults
-  const mergedStyles = {
-    handle: {
-      ...defaultStyles.handle,
-      ...globalDraggableTheme.styles?.handle,
-      ...draggableConfig?.styles?.handle,
-    },
-    handleActive: {
-      ...defaultStyles.handleActive,
-      ...globalDraggableTheme.styles?.handleActive,
-      ...draggableConfig?.styles?.handleActive,
-    },
-    blockDragging: {
-      ...defaultStyles.blockDragging,
-      ...globalDraggableTheme.styles?.blockDragging,
-      ...draggableConfig?.styles?.blockDragging,
-    },
-    dropIndicator: {
-      ...defaultStyles.dropIndicator,
-      ...globalDraggableTheme.styles?.dropIndicator,
-      ...draggableConfig?.styles?.dropIndicator,
-    },
-    upButton: {
-      ...defaultStyles.upButton,
-      ...globalDraggableTheme.styles?.upButton,
-      ...draggableConfig?.styles?.upButton,
-    },
-    downButton: {
-      ...defaultStyles.downButton,
-      ...globalDraggableTheme.styles?.downButton,
-      ...draggableConfig?.styles?.downButton,
-    },
-    buttonStack: {
-      ...defaultStyles.buttonStack,
-      ...globalDraggableTheme.styles?.buttonStack,
-      ...draggableConfig?.styles?.buttonStack,
-    },
-  };
+  const mergedStyles = useMemo(
+    () => ({
+      handle: {
+        ...defaultStyles.handle,
+        ...globalDraggableTheme.styles?.handle,
+        ...draggableConfig?.styles?.handle,
+      },
+      handleActive: {
+        ...defaultStyles.handleActive,
+        ...globalDraggableTheme.styles?.handleActive,
+        ...draggableConfig?.styles?.handleActive,
+      },
+      blockDragging: {
+        ...defaultStyles.blockDragging,
+        ...globalDraggableTheme.styles?.blockDragging,
+        ...draggableConfig?.styles?.blockDragging,
+      },
+      dropIndicator: {
+        ...defaultStyles.dropIndicator,
+        ...globalDraggableTheme.styles?.dropIndicator,
+        ...draggableConfig?.styles?.dropIndicator,
+      },
+      addButton: {
+        ...defaultStyles.addButton,
+        ...globalDraggableTheme.styles?.addButton,
+        ...draggableConfig?.styles?.addButton,
+      },
+      buttonStack: {
+        ...defaultStyles.buttonStack,
+        ...globalDraggableTheme.styles?.buttonStack,
+        ...draggableConfig?.styles?.buttonStack,
+      },
+    }),
+    [defaultStyles, draggableConfig?.styles, globalDraggableTheme.styles],
+  );
 
   // Merged theme classes: extension config -> global theme -> defaults
-  const mergedThemeClasses = {
-    handle:
-      draggableConfig?.theme?.handle ||
-      globalDraggableTheme.handle ||
-      "luthor-draggable-handle",
-    handleActive:
-      draggableConfig?.theme?.handleActive ||
-      globalDraggableTheme.handleActive ||
-      "luthor-draggable-handle-active",
-    blockDragging:
-      draggableConfig?.theme?.blockDragging ||
-      globalDraggableTheme.blockDragging ||
-      "luthor-draggable-block-dragging",
-    dropIndicator:
-      draggableConfig?.theme?.dropIndicator ||
-      globalDraggableTheme.dropIndicator ||
-      "luthor-draggable-drop-indicator",
-    upButton:
-      draggableConfig?.theme?.upButton ||
-      globalDraggableTheme.upButton ||
-      "luthor-draggable-up-button",
-    downButton:
-      draggableConfig?.theme?.downButton ||
-      globalDraggableTheme.downButton ||
-      "luthor-draggable-down-button",
-    buttonStack:
-      draggableConfig?.theme?.buttonStack ||
-      globalDraggableTheme.buttonStack ||
-      "luthor-draggable-button-stack",
-  };
+  const mergedThemeClasses = useMemo(
+    () => ({
+      handle:
+        draggableConfig?.theme?.handle ||
+        globalDraggableTheme.handle ||
+        "luthor-draggable-handle",
+      handleActive:
+        draggableConfig?.theme?.handleActive ||
+        globalDraggableTheme.handleActive ||
+        "luthor-draggable-handle-active",
+      blockDragging:
+        draggableConfig?.theme?.blockDragging ||
+        globalDraggableTheme.blockDragging ||
+        "luthor-draggable-block-dragging",
+      dropIndicator:
+        draggableConfig?.theme?.dropIndicator ||
+        globalDraggableTheme.dropIndicator ||
+        "luthor-draggable-drop-indicator",
+      addButton:
+        draggableConfig?.theme?.addButton ||
+        globalDraggableTheme.addButton ||
+        "luthor-draggable-add-button",
+      buttonStack:
+        draggableConfig?.theme?.buttonStack ||
+        globalDraggableTheme.buttonStack ||
+        "luthor-draggable-button-stack",
+    }),
+    [draggableConfig?.theme, globalDraggableTheme],
+  );
 
   // Clean up drag classes helper
   const cleanupDragClasses = useCallback(
@@ -417,6 +416,17 @@ function DraggableBlockPlugin({
     [mergedThemeClasses, mergedStyles.blockDragging],
   );
 
+  const focusEditorWithoutScroll = useCallback(() => {
+    const editorElement = editor.getRootElement();
+    if (!editorElement) return;
+
+    try {
+      editorElement.focus({ preventScroll: true });
+    } catch {
+      editorElement.focus();
+    }
+  }, [editor]);
+
   // Clean up drag state
   const cleanupDragState = useCallback(() => {
     if (draggedElementRef.current) {
@@ -426,18 +436,15 @@ function DraggableBlockPlugin({
     setIsDragging(false);
     setDropIndicator(null);
 
-    // Restore editor focus
-    const editorElement = editor.getRootElement();
-    if (editorElement) {
-      editorElement.focus();
-    }
+    // Restore editor focus without forcing viewport scroll
+    focusEditorWithoutScroll();
 
     // Don't clear refs immediately - let the UI update
     setTimeout(() => {
       draggedElementRef.current = null;
       draggedKeyRef.current = null;
     }, 100);
-  }, [cleanupDragClasses, editor]);
+  }, [cleanupDragClasses, focusEditorWithoutScroll]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -446,8 +453,101 @@ function DraggableBlockPlugin({
       if (draggedElementRef.current) {
         cleanupDragClasses(draggedElementRef.current);
       }
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+      if (hoverFrameRef.current !== null) {
+        window.cancelAnimationFrame(hoverFrameRef.current);
+      }
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current);
+      }
     };
   }, [cleanupDragClasses]);
+
+  useEffect(() => {
+    hoveredBlockRef.current = hoveredBlock;
+  }, [hoveredBlock]);
+
+  const queueHoveredBlock = useCallback((nextBlock: HTMLElement | null) => {
+    queuedHoveredBlockRef.current = nextBlock;
+
+    if (hoverFrameRef.current !== null) {
+      return;
+    }
+
+    hoverFrameRef.current = window.requestAnimationFrame(() => {
+      hoverFrameRef.current = null;
+      const queuedBlock = queuedHoveredBlockRef.current;
+      setHoveredBlock((prev) => (prev === queuedBlock ? prev : queuedBlock));
+    });
+  }, []);
+
+  const queuePointerPageY = useCallback((nextPointerPageY: number) => {
+    queuedPointerPageYRef.current = nextPointerPageY;
+
+    if (pointerFrameRef.current !== null) {
+      return;
+    }
+
+    pointerFrameRef.current = window.requestAnimationFrame(() => {
+      pointerFrameRef.current = null;
+      const queuedPointer = queuedPointerPageYRef.current;
+      if (queuedPointer == null) {
+        return;
+      }
+      setPointerPageY((prev) =>
+        prev != null && Math.abs(prev - queuedPointer) < 0.5
+          ? prev
+          : queuedPointer,
+      );
+    });
+  }, []);
+
+  const insertParagraphBelowBlock = useCallback(
+    (element: HTMLElement) => {
+      let insertedParagraphKey: string | null = null;
+
+      editor.update(() => {
+        const paragraphNode = $createParagraphNode();
+        const blockNode = $getNearestNodeFromDOMNode(element);
+
+        if (blockNode) {
+          try {
+            const topLevelElement = blockNode.getTopLevelElementOrThrow();
+            topLevelElement.insertAfter(paragraphNode);
+          } catch {
+            $getRoot().append(paragraphNode);
+          }
+        } else {
+          $getRoot().append(paragraphNode);
+        }
+
+        paragraphNode.selectStart();
+        insertedParagraphKey = paragraphNode.getKey();
+      });
+
+      if (insertedParagraphKey) {
+        setTimeout(() => {
+          const insertedElement = editor.getElementByKey(insertedParagraphKey!);
+          if (
+            insertedElement &&
+            insertedElement instanceof HTMLElement &&
+            typeof insertedElement.getBoundingClientRect === "function"
+          ) {
+            queueHoveredBlock(insertedElement);
+            const insertedRect = insertedElement.getBoundingClientRect();
+            queuePointerPageY(
+              insertedRect.top + window.scrollY + insertedRect.height / 2,
+            );
+          }
+        }, 0);
+      }
+
+      focusEditorWithoutScroll();
+    },
+    [editor, focusEditorWithoutScroll, queueHoveredBlock, queuePointerPageY],
+  );
 
   // Manage visibility for smooth animations
   useEffect(() => {
@@ -458,12 +558,10 @@ function DraggableBlockPlugin({
       const timeout = setTimeout(() => setIsVisible(false), 300);
       return () => clearTimeout(timeout);
     }
-  }, [hoveredBlock, draggedElementRef.current]);
+  }, [hoveredBlock]);
 
   // Mouse tracking for handle visibility with smooth positioning
   useEffect(() => {
-    let hideTimeout: NodeJS.Timeout;
-
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) return;
 
@@ -471,13 +569,16 @@ function DraggableBlockPlugin({
       if (!editorElement) return;
 
       const target = e.target as HTMLElement;
+      queuePointerPageY(e.clientY + window.scrollY);
 
       // Check if over handle area or handle itself
       const isOverHandle =
         target &&
         target.closest &&
         (target.closest(".drag-handle-area") ||
-          target.closest('[draggable="true"]'));
+          target.closest('[draggable="true"]') ||
+          target.closest(".luthor-drag-button") ||
+          target.closest(".luthor-draggable-button-stack"));
 
       // Check if there's a text selection - don't show handle if text is selected
       const selection = window.getSelection();
@@ -500,32 +601,32 @@ function DraggableBlockPlugin({
         current = current.parentElement!;
       }
 
-      // Clear any existing hide timeout
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
       }
 
       if ((blockElement || isOverHandle) && !hasTextSelection && !isDragging) {
-        if (blockElement && blockElement !== hoveredBlock) {
-          setHoveredBlock(blockElement);
+        if (blockElement) {
+          queueHoveredBlock(blockElement);
         }
       } else {
-        // Delay hiding the handle to make it easier to catch
-        hideTimeout = setTimeout(() => {
-          setHoveredBlock(null);
+        hideTimeoutRef.current = setTimeout(() => {
+          queueHoveredBlock(null);
+          hideTimeoutRef.current = null;
         }, 500);
       }
     };
 
     const handleMouseLeave = () => {
       if (!isDragging) {
-        // Clear any existing timeout
-        if (hideTimeout) {
-          clearTimeout(hideTimeout);
+        if (hideTimeoutRef.current) {
+          clearTimeout(hideTimeoutRef.current);
+          hideTimeoutRef.current = null;
         }
-        // Delay hiding when mouse leaves the entire document
-        hideTimeout = setTimeout(() => {
-          setHoveredBlock(null);
+        hideTimeoutRef.current = setTimeout(() => {
+          queueHoveredBlock(null);
+          hideTimeoutRef.current = null;
         }, 300);
       }
     };
@@ -536,11 +637,20 @@ function DraggableBlockPlugin({
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseleave", handleMouseLeave);
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+        hideTimeoutRef.current = null;
+      }
+      if (hoverFrameRef.current !== null) {
+        window.cancelAnimationFrame(hoverFrameRef.current);
+        hoverFrameRef.current = null;
+      }
+      if (pointerFrameRef.current !== null) {
+        window.cancelAnimationFrame(pointerFrameRef.current);
+        pointerFrameRef.current = null;
       }
     };
-  }, [editor, isDragging, hoveredBlock]);
+  }, [editor, isDragging, queueHoveredBlock, queuePointerPageY]);
 
   // Drag start handler for handle
   const handleDragStart = useCallback(
@@ -548,6 +658,7 @@ function DraggableBlockPlugin({
       event.stopPropagation();
 
       setIsDragging(true);
+      setDropIndicator(null);
       draggedElementRef.current = element;
 
       // Add drag styling
@@ -579,11 +690,6 @@ function DraggableBlockPlugin({
       event.dataTransfer!.setDragImage(clone, 0, 0);
       setTimeout(() => document.body.removeChild(clone), 0);
 
-      // Ensure editor retains focus
-      const editorElement = editor.getRootElement();
-      if (editorElement) {
-        editorElement.focus();
-      }
     },
     [editor, applyDragClasses],
   );
@@ -728,37 +834,6 @@ function DraggableBlockPlugin({
     [editor, isDragging, cleanupDragState],
   );
 
-  // Move handlers
-  const handleMoveUp = useCallback(() => {
-    if (!hoveredBlock) return;
-
-    editor.update(() => {
-      const node = $getNearestNodeFromDOMNode(hoveredBlock);
-      if (node) {
-        const prevSibling = node.getPreviousSibling();
-        if (prevSibling) {
-          node.remove();
-          prevSibling.insertBefore(node);
-        }
-      }
-    });
-  }, [editor, hoveredBlock]);
-
-  const handleMoveDown = useCallback(() => {
-    if (!hoveredBlock) return;
-
-    editor.update(() => {
-      const node = $getNearestNodeFromDOMNode(hoveredBlock);
-      if (node) {
-        const nextSibling = node.getNextSibling();
-        if (nextSibling) {
-          node.remove();
-          nextSibling.insertAfter(node);
-        }
-      }
-    });
-  }, [editor, hoveredBlock]);
-
   // Drag event handlers (desktop)
   useEffect(() => {
     const editorElement = editor.getRootElement();
@@ -848,6 +923,7 @@ function DraggableBlockPlugin({
 
       // Set dragging state
       setIsDragging(true);
+      setDropIndicator(null);
       draggedElementRef.current = blockElement;
       applyDragClasses(blockElement);
       draggedKeyRef.current = key;
@@ -966,11 +1042,8 @@ function DraggableBlockPlugin({
               console.warn("Error finding moved element:", error);
             }
           }
-          // Restore editor focus after drop
-          const editorElement = editor.getRootElement();
-          if (editorElement) {
-            editorElement.focus();
-          }
+          // Restore editor focus without forcing viewport scroll
+          focusEditorWithoutScroll();
         }, 50);
       }
 
@@ -992,9 +1065,47 @@ function DraggableBlockPlugin({
     editor,
     cleanupDragState,
     applyDragClasses,
+    focusEditorWithoutScroll,
     draggableConfig?.enableTextSelectionDrag,
     config.enableTextSelectionDrag,
   ]);
+
+  // Global drag safety net: handle cancel/escape/drop outside editor when handle is portaled.
+  useEffect(() => {
+    if (!isDragging) {
+      return;
+    }
+
+    const handleGlobalDragEnd = () => {
+      cleanupDragState();
+    };
+
+    const handleGlobalKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        cleanupDragState();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        cleanupDragState();
+      }
+    };
+
+    window.addEventListener("dragend", handleGlobalDragEnd);
+    window.addEventListener("drop", handleGlobalDragEnd);
+    window.addEventListener("blur", handleGlobalDragEnd);
+    document.addEventListener("keydown", handleGlobalKeyDown);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("dragend", handleGlobalDragEnd);
+      window.removeEventListener("drop", handleGlobalDragEnd);
+      window.removeEventListener("blur", handleGlobalDragEnd);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isDragging, cleanupDragState]);
 
   // Touch event handlers for long press on text (mobile)
   useEffect(() => {
@@ -1080,7 +1191,7 @@ function DraggableBlockPlugin({
       }
     };
 
-    const handleTouchEndEvent = (e: TouchEvent) => {
+    const handleTouchEndEvent = () => {
       if (pressTimeout) {
         clearTimeout(pressTimeout);
         pressTimeout = null;
@@ -1124,6 +1235,8 @@ function DraggableBlockPlugin({
 
   // Ensure we have a valid DOM element with getBoundingClientRect method
   if (
+    !isBrowser ||
+    !anchorElem ||
     !currentElement ||
     typeof currentElement.getBoundingClientRect !== "function"
   ) {
@@ -1137,24 +1250,85 @@ function DraggableBlockPlugin({
     return null;
   }
 
+  const editorLayoutElement =
+    (editorRootElement?.closest?.(".luthor-editor") as HTMLElement | null) ||
+    null;
+  const layoutReferenceElement = editorLayoutElement || editorRootElement;
+
+  if (!layoutReferenceElement) {
+    return null;
+  }
+
+  const layoutRect = layoutReferenceElement.getBoundingClientRect();
+  const layoutStyles = window.getComputedStyle(layoutReferenceElement);
+  const gutterWidth =
+    Number.parseFloat(
+      layoutStyles.getPropertyValue("--luthor-drag-gutter-width"),
+    ) || 40;
+  const showAddButton =
+    (draggableConfig?.showAddButton ?? config.showAddButton) !== false;
+  const buttonStackWidth = showAddButton ? 52 : 24;
+  const fixedGutterLeft =
+    layoutRect.left +
+    window.scrollX +
+    Math.max(0, (gutterWidth - buttonStackWidth) / 2);
+
+  const buttonStackPosition =
+    draggableConfig?.buttonStackPosition || config.buttonStackPosition;
+  const pageLeft =
+    buttonStackPosition === "right"
+      ? rect.right +
+        window.scrollX +
+        (draggableConfig?.offsetRight || config.offsetRight || 10)
+      : editorLayoutElement
+        ? fixedGutterLeft
+        : rect.left +
+          window.scrollX +
+          (draggableConfig?.offsetLeft || config.offsetLeft || -40);
+
+  const iconSize = 24;
+  const handleCenterOffset = iconSize / 2;
+
+  const blockTopPage = rect.top + window.scrollY;
+  const blockBottomPage = rect.bottom + window.scrollY;
+  const fallbackPointerPageY = blockTopPage + rect.height / 2;
+  const desiredPointerPageY = pointerPageY ?? fallbackPointerPageY;
+  const minHandleCenterPageY = blockTopPage + iconSize / 2;
+  const maxHandleCenterPageY = blockBottomPage - iconSize / 2;
+  const clampedHandleCenterPageY = Math.min(
+    maxHandleCenterPageY,
+    Math.max(minHandleCenterPageY, desiredPointerPageY),
+  );
+
+  const minStackTopPage = blockTopPage;
+  const maxStackTopPage = Math.max(
+    minStackTopPage,
+    blockBottomPage - (handleCenterOffset + iconSize / 2),
+  );
+  const pageTop = Math.min(
+    maxStackTopPage,
+    Math.max(minStackTopPage, clampedHandleCenterPageY - handleCenterOffset),
+  );
+
+  const anchorRect = anchorElem.getBoundingClientRect();
+  const anchorOffsetLeft =
+    anchorElem === document.body ? 0 : anchorRect.left + window.scrollX;
+  const anchorOffsetTop =
+    anchorElem === document.body ? 0 : anchorRect.top + window.scrollY;
+  const portalLeft = pageLeft - anchorOffsetLeft;
+  const portalTop = pageTop - anchorOffsetTop;
+
   return (
     <>
       {/* Button stack */}
       {createPortal(
         <div
-          className={`${mergedThemeClasses.buttonStack} ${!isVisible ? "fade-out" : ""}`}
+          className={`luthor-draggable-button-stack ${mergedThemeClasses.buttonStack} ${!isVisible ? "fade-out" : ""}`}
           style={{
             position: "absolute",
-            left:
-              (draggableConfig?.buttonStackPosition ||
-                config.buttonStackPosition) === "right"
-                ? rect.right +
-                  window.scrollX +
-                  (draggableConfig?.offsetRight || config.offsetRight || 10)
-                : rect.left +
-                  window.scrollX +
-                  (draggableConfig?.offsetLeft || config.offsetLeft || -40),
-            top: rect.top + window.scrollY,
+            left: 0,
+            top: 0,
+            transform: `translate3d(${portalLeft}px, ${portalTop}px, 0)`,
             zIndex: 40,
             display: "flex",
             flexDirection: "row",
@@ -1164,92 +1338,72 @@ function DraggableBlockPlugin({
             willChange: "transform, opacity",
             backfaceVisibility: "hidden",
             perspective: "1000px",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            transition:
+              "transform 140ms cubic-bezier(0.2, 0, 0, 1), opacity 140ms ease",
             ...mergedStyles.buttonStack,
           }}
         >
-          {/* Move button cluster */}
+          {/* Button row: add button + drag handle */}
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: "4px",
+              flexDirection: "row",
               alignItems: "center",
+              gap: "4px",
             }}
           >
-            {/* Move up control */}
-            {(draggableConfig?.showMoveButtons ?? config.showMoveButtons) !==
-              false &&
-              (draggableConfig?.showUpButton ?? config.showUpButton) !==
-                false &&
-              (draggableConfig?.buttonsRenderer || config.buttonsRenderer ? (
-                (draggableConfig?.buttonsRenderer || config.buttonsRenderer)!({
+              {showAddButton && (
+                <button
+                  type="button"
+                  aria-label="Add block"
+                  title="Add"
+                  className={`luthor-drag-button ${mergedThemeClasses.addButton}`}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (!currentElement || isDragging) {
+                      return;
+                    }
+
+                    insertParagraphBelowBlock(currentElement);
+                  }}
+                  style={mergedStyles.addButton}
+                >
+                  +
+                </button>
+              )}
+
+              {/* Drag handle */}
+              {draggableConfig?.handleRenderer || config.handleRenderer ? (
+                (draggableConfig?.handleRenderer || config.handleRenderer)!({
                   rect,
-                  onMoveUp: handleMoveUp,
-                  onMoveDown: handleMoveDown,
-                  showUp: true,
-                  showDown: false,
-                  upClassName: `luthor-drag-button ${mergedThemeClasses.upButton}`,
-                  downClassName: `luthor-drag-button ${mergedThemeClasses.downButton}`,
+                  isDragging,
+                  onDragStart: (e) => handleDragStart(e, currentElement),
+                  className:
+                    `luthor-drag-button ${mergedThemeClasses.handle} ${isDragging ? mergedThemeClasses.handleActive : ""}`.trim(),
                 })
               ) : (
-                <button
-                  className={`luthor-drag-button ${mergedThemeClasses.upButton}`}
-                  onClick={handleMoveUp}
-                  style={mergedStyles.upButton}
+                <div
+                  className={`luthor-drag-button ${mergedThemeClasses.handle} ${isDragging ? mergedThemeClasses.handleActive : ""}`.trim()}
+                  draggable={true}
+                  onDragStart={(e) => handleDragStart(e, currentElement)}
+                  onDragEnd={cleanupDragState}
+                  onTouchStart={(e) => handleTouchStart(e, currentElement)}
+                  style={
+                    isDragging
+                      ? mergedStyles.handleActive
+                      : mergedStyles.handle
+                  }
                 >
-                  ↑
-                </button>
-              ))}
-
-            {/* Drag handle */}
-            {draggableConfig?.handleRenderer || config.handleRenderer ? (
-              (draggableConfig?.handleRenderer || config.handleRenderer)!({
-                rect,
-                isDragging,
-                onDragStart: (e) => handleDragStart(e, currentElement),
-                className:
-                  `luthor-drag-button ${mergedThemeClasses.handle} ${isDragging ? mergedThemeClasses.handleActive : ""}`.trim(),
-              })
-            ) : (
-              <div
-                className={`luthor-drag-button ${mergedThemeClasses.handle} ${isDragging ? mergedThemeClasses.handleActive : ""}`.trim()}
-                draggable={true}
-                onDragStart={(e) => handleDragStart(e, currentElement)}
-                onTouchStart={(e) => handleTouchStart(e, currentElement)}
-                style={
-                  isDragging ? mergedStyles.handleActive : mergedStyles.handle
-                }
-              >
-                ⋮⋮
-              </div>
-            )}
-
-            {/* Move down control */}
-            {(draggableConfig?.showMoveButtons ?? config.showMoveButtons) !==
-              false &&
-              (draggableConfig?.showDownButton ?? config.showDownButton) !==
-                false &&
-              (draggableConfig?.buttonsRenderer || config.buttonsRenderer ? (
-                (draggableConfig?.buttonsRenderer || config.buttonsRenderer)!({
-                  rect,
-                  onMoveUp: handleMoveUp,
-                  onMoveDown: handleMoveDown,
-                  showUp: false,
-                  showDown: true,
-                  upClassName: `luthor-drag-button ${mergedThemeClasses.upButton}`,
-                  downClassName: `luthor-drag-button ${mergedThemeClasses.downButton}`,
-                })
-              ) : (
-                <button
-                  className={`luthor-drag-button ${mergedThemeClasses.downButton}`}
-                  onClick={handleMoveDown}
-                  style={mergedStyles.downButton}
-                >
-                  ↓
-                </button>
-              ))}
-          </div>
+                  ⋮⋮
+                </div>
+              )}
+            </div>
         </div>,
         anchorElem,
       )}
@@ -1270,8 +1424,8 @@ function DraggableBlockPlugin({
                 className={mergedThemeClasses.dropIndicator}
                 style={{
                   position: "absolute",
-                  top: dropIndicator.top - 4,
-                  left: dropIndicator.left,
+                  top: dropIndicator.top - 4 - anchorOffsetTop,
+                  left: dropIndicator.left - anchorOffsetLeft,
                   width: dropIndicator.width,
                   height: "8px",
                   pointerEvents: "none",

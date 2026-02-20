@@ -6,6 +6,13 @@
   "private": false,
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -13,7 +20,13 @@
       "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./styles.css": "./dist/index.css"
+    "./styles.css": "./dist/index.css",
+    "./presets/extensive": {
+      "types": "./dist/presets/extensive/index.d.ts",
+      "import": "./dist/presets/extensive/index.js",
+      "require": "./dist/presets/extensive/index.js",
+      "default": "./dist/presets/extensive/index.js"
+    }
   },
   "scripts": {
     "build": "tsup",
@@ -40,26 +53,25 @@
   },
   "homepage": "https://github.com/lyfie-app/luthor#readme",
   "dependencies": {
-    "@lyfie/luthor-headless": "^2.0.1",
-    "@lexical/code": "^0.34.0",
-    "@lexical/html": "^0.34.0",
-    "@lexical/link": "^0.34.0",
-    "@lexical/list": "^0.34.0",
-    "@lexical/markdown": "^0.34.0",
-    "@lexical/react": "^0.34.0",
-    "@lexical/rich-text": "^0.34.0",
-    "@lexical/selection": "^0.34.0",
-    "@lexical/table": "^0.34.0",
-    "@lexical/utils": "^0.34.0",
-    "lexical": "^0.34.0",
+    "@lexical/code": "^0.40.0",
+    "@lexical/link": "^0.40.0",
+    "@lexical/list": "^0.40.0",
+    "@lexical/markdown": "^0.40.0",
+    "@lexical/react": "^0.40.0",
+    "@lexical/rich-text": "^0.40.0",
+    "@lexical/selection": "^0.40.0",
+    "@lexical/table": "^0.40.0",
+    "@lexical/utils": "^0.40.0",
+    "@lyfie/luthor-headless": "workspace:*",
+    "lexical": "^0.40.0",
     "lucide-react": "^0.475.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^20.19.9",
-    "@types/react": "^19.1.1",
-    "@types/react-dom": "^19.1.1",
+    "@types/node": "^20.19.33",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "eslint": "^9.32.0",
     "tsup": "^8.0.0",
     "typescript": "^5.7.3"

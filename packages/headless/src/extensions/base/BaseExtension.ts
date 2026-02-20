@@ -4,6 +4,7 @@ import {
   BaseExtensionConfig,
   Extension,
   ExtensionCategory,
+  LexicalNodeRegistration,
   ToolbarItem,
 } from "@lyfie/luthor-headless/extensions/types";
 
@@ -20,8 +21,11 @@ import {
 export abstract class BaseExtension<
   Name extends string = string,
   Config extends BaseExtensionConfig = BaseExtensionConfig,
-  Commands extends Record<string, any> = {},
-  StateQueries extends Record<string, () => Promise<boolean>> = {},
+  Commands extends Record<string, unknown> = Record<string, never>,
+  StateQueries extends Record<string, () => Promise<boolean>> = Record<
+    string,
+    never
+  >,
   Plugins extends ReactNode[] = ReactNode[],
 > implements Extension<Name, Config, Commands, StateQueries, Plugins>
 {
@@ -39,8 +43,8 @@ export abstract class BaseExtension<
 
   /** Node rendering overrides */
   public nodeOverrides: {
-    createDOM?: (config: any) => HTMLElement;
-    updateDOM?: (prev: any, next: any, dom: HTMLElement) => boolean;
+    createDOM?: (config: unknown) => HTMLElement;
+    updateDOM?: (prev: unknown, next: unknown, dom: HTMLElement) => boolean;
   } = {};
 
   /**
@@ -85,7 +89,7 @@ export abstract class BaseExtension<
    *
    * @returns Array of Lexical node classes
    */
-  getNodes(): any[] {
+  getNodes(): LexicalNodeRegistration[] {
     return [];
   }
 
@@ -100,9 +104,10 @@ export abstract class BaseExtension<
       selected?: boolean;
       className?: string;
       style?: CSSProperties;
-      [key: string]: any;
+      [key: string]: unknown;
     }>,
   ): Extension<Name, Config, Commands, StateQueries, Plugins> {
+    void CustomUI;
     // For node rendering, perhaps
     return this;
   }
@@ -114,8 +119,8 @@ export abstract class BaseExtension<
    * @returns Extension instance for chaining
    */
   overrideNodeRender(overrides: {
-    createDOM?: (config: any) => HTMLElement;
-    updateDOM?: (prev: any, next: any, dom: HTMLElement) => boolean;
+    createDOM?: (config: unknown) => HTMLElement;
+    updateDOM?: (prev: unknown, next: unknown, dom: HTMLElement) => boolean;
   }): Extension<Name, Config, Commands, StateQueries, Plugins> {
     this.nodeOverrides = { ...this.nodeOverrides, ...overrides };
     return this;
@@ -137,6 +142,7 @@ export abstract class BaseExtension<
    * @returns Object containing command functions
    */
   getCommands(editor: LexicalEditor): Commands {
+    void editor;
     return {} as Commands;
   }
 
@@ -147,6 +153,7 @@ export abstract class BaseExtension<
    * @returns Object containing state query functions
    */
   getStateQueries(editor: LexicalEditor): StateQueries {
+    void editor;
     return {} as StateQueries;
   }
 
@@ -156,7 +163,8 @@ export abstract class BaseExtension<
    * @param commands - Available commands from all extensions
    * @returns Array of toolbar item configurations
    */
-  getToolbarItems(commands: any): ToolbarItem[] {
+  getToolbarItems(commands: Record<string, unknown>): ToolbarItem[] {
+    void commands;
     return [];
   }
 }

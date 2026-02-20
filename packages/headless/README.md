@@ -1,255 +1,152 @@
-# Luthor-Headless
+# @lyfie/luthor-headless
 
-**Type-safe rich text editor for React developers**
+Type-safe, headless rich text editor system for React, built on Lexical.
 
-Built on Meta's Lexical. Headless, extensible, and production-ready.
+## Package scope
 
-[![npm version](https://badge.fury.io/js/%40luthor%2Feditor.svg)](https://badge.fury.io/js/%40luthor%2Feditor)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+- Owns all Lexical-derived features and extension implementations.
+- Exposes a typed extension composition system (`createEditorSystem`).
+- Keeps runtime dependencies lightweight using peer dependencies for React/Lexical.
+- Supports optional integrations (like `highlight.js`) without making them mandatory.
 
-**[🚀 Demo](https://luthor.lyfie.app/demo)** • **[📖 Documentation](https://luthor.lyfie.app/docs)** • **[⚡ Playground](https://stackblitz.com/edit/vitejs-vite-bpg2kpze?file=src%2FEditor.tsx)**
+## Version and compatibility
 
-![Luthor Editor](https://github.com/user-attachments/assets/ec547406-0ab0-4e69-b9d7-ccd050adf78a)
+- Package version: `2.2.0`
+- React peers: `^18.0.0 || ^19.0.0`
+- Lexical peers: `>=0.40.0` (`lexical` + required `@lexical/*` packages)
+- Optional dependency: `highlight.js >=11.0.0`
 
----
+## Why headless
 
-## Why Luthor?
+Use this package when you want:
 
-Rich text editors shouldn't be a nightmare. Luthor makes building them delightful:
+- full control over extension selection
+- custom editor UI and layout
+- typed command/state composition with minimal runtime surface
 
-- **🔒 Type-safe everything** - Commands and states inferred from your extensions. No runtime surprises.
-- **🎨 Headless & flexible** - Build any UI you want. Style it your way.
-- **🧩 Modular extensions** - Add only what you need, when you need it.
-- **⚡ Production features** - HTML/Markdown export, image handling, tables, undo/redo.
-- **⚛️ React-first** - Hooks, components, and patterns you already know.
-
-```tsx
-// Your extensions define your API - TypeScript knows everything ✨
-const extensions = [boldExtension, listExtension, imageExtension] as const;
-const { Provider, useEditor } = createEditorSystem<typeof extensions>();
-
-function MyEditor() {
-  const { commands, activeStates } = useEditor();
-
-  // TypeScript autocompletes and validates these
-  commands.toggleBold();        // ✅ Available
-  commands.toggleUnorderedList(); // ✅ Available
-  commands.insertImage();       // ✅ Available
-  commands.nonExistent();       // ❌ TypeScript error
-}
-```
-
-## Quick Start
-
-### Installation
-
-Luthor-Headless is designed to be lightweight with Lexical packages as **peer dependencies**.
+## Installation
 
 ```bash
-# npm
-npm install @lyfie/luthor-headless
-
-# pnpm
-pnpm add @lyfie/luthor-headless
+pnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/html @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
 ```
 
-Install the required Lexical peer dependencies:
+Optional:
 
 ```bash
-# npm
-npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
-
-# pnpm
-pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+pnpm add highlight.js
 ```
 
-> **💡 Want a simpler setup?** Check out [@lyfie/luthor](../luthor/README.md) which bundles all Lexical dependencies for you.
-
-### Basic Usage
-
-```bash
-# npm
-npm install @lyfie/luthor-headless
-
-# pnpm
-pnpm add @lyfie/luthor-headless
-```
-
-Install the Lexical peer dependencies:
-
-```bash
-# npm
-npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
-
-# pnpm
-pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
-```
+## Quick start
 
 ```tsx
 import {
   createEditorSystem,
+  RichText,
+  richTextExtension,
   boldExtension,
   italicExtension,
-  listExtension,
-  RichText,
 } from "@lyfie/luthor-headless";
 
-const extensions = [boldExtension, italicExtension, listExtension] as const;
+const extensions = [richTextExtension, boldExtension, italicExtension] as const;
 const { Provider, useEditor } = createEditorSystem<typeof extensions>();
 
 function Toolbar() {
   const { commands, activeStates } = useEditor();
+
   return (
-    <div className="toolbar">
-      <button
-        onClick={() => commands.toggleBold()}
-        className={activeStates.bold ? "active" : ""}
-      >
+    <div>
+      <button onClick={() => commands.toggleBold()} aria-pressed={activeStates.bold}>
         Bold
       </button>
-      <button
-        onClick={() => commands.toggleItalic()}
-        className={activeStates.italic ? "active" : ""}
-      >
+      <button onClick={() => commands.toggleItalic()} aria-pressed={activeStates.italic}>
         Italic
       </button>
-      <button onClick={() => commands.toggleUnorderedList()}>
-        Bullet List
-      </button>
     </div>
   );
 }
 
-function Editor() {
+export function Editor() {
   return (
-    <div className="editor-container">
+    <Provider extensions={extensions} config={{ namespace: "LuthorEditor" }}>
       <Toolbar />
-      <RichText placeholder="Start writing..." />
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <Provider extensions={extensions}>
-      <Editor />
+      <RichText placeholder="Write here..." />
     </Provider>
   );
 }
 ```
 
-**That's it.** You now have a fully functional, type-safe rich text editor.
+## Extension model
 
-## Installation Options
+- Extensions contribute commands, state queries, nodes, and plugins.
+- Your extension list should be declared `as const` for full type inference.
+- `useEditor()` returns only the command/state surface available from installed extensions.
 
-### Option 1: Headless Package (This Package)
+## Core public building blocks
 
-For maximum control and flexibility:
+Frequently used APIs:
+
+- `createEditorSystem`
+- `RichText`
+- extension factories such as `boldExtension`, `italicExtension`, `historyExtension`, `linkExtension`
+- import/export helpers for HTML and enhanced markdown workflows
+
+The exact exported surface is documented in:
+
+- [../../documentation/developer/headless/source-file-reference.md](../../documentation/developer/headless/source-file-reference.md)
+
+## Built-in extension categories
+
+- Core UX: rich text, history, slash commands, floating toolbar, context menu, draggable blocks, tab indent, emoji
+- Formatting: text styles, block formats, list/link/table/code/typography controls
+- Media: image, iframe embeds, YouTube embeds
+- Import/export: HTML and Markdown extensions
+- Custom: factory for custom node-based extensions
+
+## Import and export support
+
+- Canonical fidelity: Lexical JSON
+- Interop format: HTML
+- Human-readable with metadata: enhanced Markdown (`LUTHOR_BLOCK` comment metadata)
+
+## Installation notes
+
+- Install required Lexical peer packages from the install command in this README.
+- If using code intelligence/highlighting flows, install optional `highlight.js`.
+- Ensure your app includes compatible React and React DOM versions.
+
+## For contributors
+
+- Keep headless package minimal and dependency-light.
+- Implement Lexical-derived features in this package, then re-export/compose from `@lyfie/luthor`.
+- Update docs whenever extension APIs or source file responsibilities change.
+
+## Documentation
+
+Canonical docs root: [../../documentation/index.md](../../documentation/index.md)
+
+- User docs (headless): [../../documentation/user/headless/getting-started.md](../../documentation/user/headless/getting-started.md)
+- Extension/config docs: [../../documentation/user/headless/extensions-and-configuration.md](../../documentation/user/headless/extensions-and-configuration.md)
+- Import/export docs: [../../documentation/user/headless/import-export.md](../../documentation/user/headless/import-export.md)
+- Developer architecture: [../../documentation/developer/headless/architecture.md](../../documentation/developer/headless/architecture.md)
+- Developer file map: [../../documentation/developer/headless/source-file-reference.md](../../documentation/developer/headless/source-file-reference.md)
+- Maintainer notes: [../../documentation/developer/headless/maintainer-notes.md](../../documentation/developer/headless/maintainer-notes.md)
+
+Related luthor preset docs:
+
+- [../../packages/luthor/README.md](../../packages/luthor/README.md)
+- [../../documentation/user/luthor/getting-started.md](../../documentation/user/luthor/getting-started.md)
+
+Related demo docs:
+
+- [../../documentation/user/demo/getting-started.md](../../documentation/user/demo/getting-started.md)
+- [../../documentation/developer/demo/architecture.md](../../documentation/developer/demo/architecture.md)
+
+## Workspace development
+
+From repository root:
 
 ```bash
-# npm
-npm install @lyfie/luthor-headless
-npm install lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
-
-# pnpm
-pnpm add @lyfie/luthor-headless
-pnpm add lexical @lexical/react @lexical/html @lexical/markdown @lexical/list @lexical/rich-text @lexical/selection @lexical/utils @lexical/code @lexical/link @lexical/table
+pnpm --filter @lyfie/luthor-headless dev
+pnpm --filter @lyfie/luthor-headless build
+pnpm --filter @lyfie/luthor-headless lint
 ```
-
-**Use this when:**
-- You want complete control over Lexical versions
-- Building a custom editor UI from scratch
-- Need minimum bundle size
-- Want to manage dependencies yourself
-
-### Option 2: Full Package (Recommended for Quick Start)
-
-For a batteries-included experience:
-
-```bash
-# npm
-npm install @lyfie/luthor-headless @lyfie/luthor
-
-# pnpm
-pnpm add @lyfie/luthor-headless @lyfie/luthor
-
-# That's it! All Lexical dependencies included
-```
-
-**Use this when:**
-- You want ready-to-use editor presets
-- Don't want to manage Lexical dependencies
-- Need a working editor quickly
-- Want plug-and-play components
-
-[📖 See @lyfie/luthor documentation](../luthor/README.md)
-
-## Features
-
-### 🎨 Built-in Extensions (25+)
-- **Text Formatting**: Bold, italic, underline, strikethrough, inline code
-- **Structure**: Headings, lists (with nesting), quotes, horizontal rules
-- **Rich Content**: Tables, images (upload/paste/alignment), links, code blocks
-- **Advanced**: History (undo/redo), command palette, floating toolbar, context menus
-
-### 🎯 Smart List Handling
-- Toggle lists with intelligent nesting behavior
-- Context-aware toolbar (indent/outdent appear when needed)
-- Nested lists without keyboard shortcuts
-- Clean UX that matches modern editors
-
-### 📤 Export & Import
-- **HTML** with semantic markup
-- **Markdown** with GitHub Flavored syntax
-- **JSON** for structured data
-- Custom transformers for specialized formats
-
-### 🎨 Theming & Styling
-- CSS classes or Tailwind utilities
-- Custom themes for consistent styling
-- Dark mode support
-- Accessible by default
-
-## Real World Usage
-
-Luthor powers editors in:
-- Content management systems
-- Documentation platforms
-- Blog editors
-- Note-taking applications
-- Comment systems
-- Collaborative writing tools
-
-## Community & Support
-
-- **[💬 Discord](https://discord.gg/RAMYSDRag7)** - Get help, share ideas
-- **[🐛 GitHub Issues](https://github.com/lyfie-app/luthor/issues)** - Bug reports, feature requests
-- **[💭 Discussions](https://github.com/lyfie-app/luthor/discussions)** - Questions, showcase your projects
-
-## Contributing
-
-We welcome contributions! Whether you:
-- Find and report bugs
-- Suggest new features
-- Contribute code or documentation
-- Share projects built with Luthor
-- Star the repo to show support
-
-Check our [Contributing Guide](./CONTRIBUTING.md) to get started.
-
-## Support This Project
-
-Luthor is free and open source, built by developers for developers. If it's helping you build better editors, consider supporting its development:
-
-- **⭐ Star this repository** to show your support
-- **💝 [Sponsor the project](https://github.com/sponsors/rahulnsanand)** to help with maintenance and new features
-- **📢 Share Luthor** with other developers
-
-Your support keeps this project alive and helps us build better tools for the React community.
-
----
-
-**Built with ❤️ by [Rahul NS Anand](https://github.com/rahulnsanand)**
-
-MIT License - Use it however you want.</content>
-

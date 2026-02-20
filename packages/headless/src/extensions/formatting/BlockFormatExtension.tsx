@@ -2,11 +2,12 @@ import {
   LexicalEditor,
   $getSelection,
   $isRangeSelection,
-  COMMAND_PRIORITY_LOW,
   COMMAND_PRIORITY_NORMAL,
   COMMAND_PRIORITY_EDITOR,
   KEY_ENTER_COMMAND,
   INSERT_PARAGRAPH_COMMAND,
+  FORMAT_ELEMENT_COMMAND,
+  type ElementFormatType,
 } from "lexical";
 import { $setBlocksType } from "@lexical/selection"; // Key import!
 import { $createParagraphNode, $isParagraphNode, ParagraphNode } from "lexical";
@@ -19,7 +20,6 @@ import {
 import { $createQuoteNode, $isQuoteNode, QuoteNode } from "@lexical/rich-text";
 import { BaseExtension } from "../base/BaseExtension";
 import { ExtensionCategory } from "../types";
-import { $getNearestNodeOfType } from "@lexical/utils"; // For better state queries
 
 /**
  * Supported block formats for BlockFormatExtension
@@ -38,6 +38,8 @@ export type BlockFormatCommands = {
   toggleHeading: (tag: HeadingTagType) => void;
   /** Switch to quote format */
   toggleQuote: () => void;
+  /** Set text alignment for selected blocks */
+  setTextAlignment: (alignment: "left" | "center" | "right" | "justify") => void;
   /** Return the current block type as a string ('p', 'h1', 'h2', etc.) */
   getCurrentBlockType: () => BlockFormat;
 };
@@ -62,6 +64,14 @@ export type BlockFormatStateQueries = {
   isH6: () => Promise<boolean>;
   /** Check whether the selection is in a quote block */
   isQuote: () => Promise<boolean>;
+  /** Check whether selected blocks are left-aligned */
+  isTextAlignedLeft: () => Promise<boolean>;
+  /** Check whether selected blocks are center-aligned */
+  isTextAlignedCenter: () => Promise<boolean>;
+  /** Check whether selected blocks are right-aligned */
+  isTextAlignedRight: () => Promise<boolean>;
+  /** Check whether selected blocks are justified */
+  isTextAlignedJustify: () => Promise<boolean>;
 };
 
 /**
@@ -90,7 +100,7 @@ export type BlockFormatStateQueries = {
  */
 export class BlockFormatExtension extends BaseExtension<
   "blockFormat",
-  {}, // No extra config needed
+  Record<string, never>,
   BlockFormatCommands,
   BlockFormatStateQueries
 > {
@@ -132,28 +142,33 @@ export class BlockFormatExtension extends BaseExtension<
     const unregisterEnter = editor.registerCommand(
       KEY_ENTER_COMMAND,
       (event: KeyboardEvent | null) => {
-        // If Shift+Enter, let default behavior handle line breaks
-        if (event && event.shiftKey) {
-          return false;
-        }
+        let handled = false;
 
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
           const anchorNode = selection.anchor.getNode();
           const blockNode = this.getBlockNode(anchorNode);
 
-          // If we're in a heading or quote, handle the transition
-          if (
-            blockNode &&
-            ($isHeadingNode(blockNode) || $isQuoteNode(blockNode))
-          ) {
-            // Use the proper toggleParagraph command instead of manual insertion
-            this.toggleBlockFormat(editor, "p");
-            return true; // Prevent default behavior
+          if (!blockNode) {
+            return;
           }
+
+          // Heading behavior remains unchanged
+          if ($isHeadingNode(blockNode) && !event?.shiftKey) {
+            this.toggleBlockFormat(editor, "p");
+            handled = true;
+          }
+        });
+
+        if (handled) {
+          event?.preventDefault();
         }
 
-        return false; // Let default behavior handle other cases
+        return handled;
       },
       COMMAND_PRIORITY_EDITOR, // Highest priority to override other handlers
     );
@@ -185,8 +200,24 @@ export class BlockFormatExtension extends BaseExtension<
       toggleHeading: (tag: HeadingTagType) =>
         this.toggleBlockFormat(editor, tag),
       toggleQuote: () => this.toggleBlockFormat(editor, "quote"),
+      setTextAlignment: (alignment) => this.setTextAlignment(editor, alignment),
       getCurrentBlockType: () => this.getCurrentFormat(editor) || "p",
     };
+  }
+
+  /**
+   * Set element alignment for selected blocks
+   * @param editor - Lexical editor instance
+   * @param alignment - Target text alignment
+   */
+  private setTextAlignment(
+    editor: LexicalEditor,
+    alignment: "left" | "center" | "right" | "justify",
+  ) {
+    editor.dispatchCommand(
+      FORMAT_ELEMENT_COMMAND,
+      alignment as ElementFormatType,
+    );
   }
 
   /**
@@ -230,7 +261,58 @@ export class BlockFormatExtension extends BaseExtension<
       isH5: () => Promise.resolve(this.isFormat("h5", editor)),
       isH6: () => Promise.resolve(this.isFormat("h6", editor)),
       isQuote: () => Promise.resolve(this.isFormat("quote", editor)),
+      isTextAlignedLeft: () => Promise.resolve(this.isAlignment("left", editor)),
+      isTextAlignedCenter: () => Promise.resolve(this.isAlignment("center", editor)),
+      isTextAlignedRight: () => Promise.resolve(this.isAlignment("right", editor)),
+      isTextAlignedJustify: () => Promise.resolve(this.isAlignment("justify", editor)),
     };
+  }
+
+  /**
+   * Check whether all selected blocks match the specified alignment
+   * @param alignment - Alignment to check
+   * @param editor - Lexical editor instance
+   * @returns True if all selected blocks match the alignment
+   */
+  private isAlignment(
+    alignment: "left" | "center" | "right" | "justify",
+    editor: LexicalEditor,
+  ): boolean {
+    let matches = true;
+
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if (!$isRangeSelection(selection)) {
+        matches = false;
+        return;
+      }
+
+      const nodes = selection.getNodes();
+      for (const node of nodes) {
+        const block = this.getBlockNode(node);
+        if (!block) {
+          matches = false;
+          break;
+        }
+
+        const blockAlignment = this.normalizeAlignment(
+          block.getFormatType() as ElementFormatType,
+        );
+        if (blockAlignment !== alignment) {
+          matches = false;
+          break;
+        }
+      }
+    });
+
+    return matches;
+  }
+
+  private normalizeAlignment(formatType: ElementFormatType): "left" | "center" | "right" | "justify" {
+    if (formatType === "center" || formatType === "right" || formatType === "justify") {
+      return formatType;
+    }
+    return "left";
   }
 
   /**

@@ -1,0 +1,49 @@
+---
+const valueProps = [
+  {
+    title: 'MIT Licensed and Free Forever',
+    description:
+      'Modify everything. Own your editor. Luthor is open source, commercially friendly, and built to stay out of paywalls.',
+    proof: 'Open forever, no lock-in',
+  },
+  {
+    title: 'Lexical Core Logic',
+    description:
+      'Luthor derives its runtime behavior from Meta\'s Lexical framework for fast input handling, predictable updates, and resilient editing state.',
+    proof: 'Engineered for responsiveness',
+  },
+  {
+    title: 'Type-Safe and Secure',
+    description:
+      'TypeScript-first APIs and regular maintenance updates keep integrations stable while reducing unexpected runtime drift.',
+    proof: 'Stable today, safer upgrades',
+  },
+  {
+    title: 'Headless or Plug-and-Play',
+    description:
+      'Use @lyfie/luthor-headless for full logic control, or @lyfie/luthor for a complete UI-first editor you can ship quickly.',
+    proof: 'Freedom to choose your layer',
+  },
+];
+---
+
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Trust, freedom, and technical credibility.</h2>
+    <p class="section-copy">
+      Built for React developers who hate bloated editors. Start simple, then customize every part of the stack when you need deeper control.
+    </p>
+    <div class="value-grid">
+      {
+        valueProps.map((item) => (
+          <article class="value-card">
+            <p class="value-proof">{item.proof}</p>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+          </article>
+        ))
+      }
+    </div>
+    <p class="value-tailline">Free forever. Open forever. Stable today.</p>
+  </div>
+</section>

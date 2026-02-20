@@ -1,21 +1,32 @@
-import { LexicalEditor, $getSelection, $isRangeSelection } from "lexical";
+import {
+  LexicalEditor,
+  $getSelection,
+  $isRangeSelection,
+} from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { BaseExtensionConfig } from "@lyfie/luthor-headless/extensions/types";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
-import { markdownExtension } from "../export/MarkdownExtension";
+import { useBaseEditor as useEditor } from "../../core/createEditorSystem";
 import {
   TableNode,
   TableRowNode,
   TableCellNode,
+  TableCellHeaderStates,
   $createTableNodeWithDimensions,
   $isTableNode,
   $isTableRowNode,
   $isTableCellNode,
+  $findCellNode,
+  $getTableNodeFromLexicalNodeOrThrow,
+  $getTableRowIndexFromTableCellNode,
+  $getTableColumnIndexFromTableCellNode,
+  $mergeCells,
+  $unmergeCell,
 } from "@lexical/table";
 import {
-  INSERT_TABLE_COMMAND,
   $isTableSelection,
   $insertTableRowAtSelection,
   $insertTableColumnAtSelection,
@@ -27,7 +38,6 @@ import {
   ContextMenuItem,
   ContextMenuProvider,
   ContextMenuRenderer,
-  ContextMenuExtension,
   contextMenuExtension
 } from "@lyfie/luthor-headless/extensions/core/ContextMenuExtension";
 
@@ -46,8 +56,22 @@ export type TableConfig = BaseExtensionConfig & {
   contextMenuRenderer?: ContextMenuRenderer;
   /** Context menu extension used to register providers */
   contextMenuExtension?: typeof contextMenuExtension;
-  /** Markdown extension used to register transformers */
-  markdownExtension?: typeof markdownExtension;
+  /** Custom table bubble menu renderer */
+  tableBubbleRenderer?: (props: TableBubbleRenderProps) => ReactNode;
+};
+
+export type TableBubbleRenderProps = {
+  headersEnabled: boolean;
+  setHeadersEnabled: (enabled: boolean) => void;
+  actions: {
+    insertRowAbove: () => void;
+    insertRowBelow: () => void;
+    insertColumnLeft: () => void;
+    insertColumnRight: () => void;
+    deleteSelectedColumn: () => void;
+    deleteSelectedRow: () => void;
+    deleteTable: () => void;
+  };
 };
 
 /**
@@ -59,6 +83,10 @@ export type TableCommands = {
   insertRowBelow: () => void;
   insertColumnLeft: () => void;
   insertColumnRight: () => void;
+  toggleRowHeader: () => void;
+  toggleColumnHeader: () => void;
+  mergeSelectedCells: () => void;
+  unmergeSelectedCell: () => void;
   deleteRow: () => void;
   deleteColumn: () => void;
   deleteTable: () => void;
@@ -72,6 +100,281 @@ export type TableStateQueries = {
   isTableSelected: () => Promise<boolean>;
   isInTableCell: () => Promise<boolean>;
 };
+
+function getSelectedTableCell(): TableCellNode | null {
+  const selection = $getSelection();
+
+  if ($isTableSelection(selection)) {
+    const selectedCell = selection.getNodes().find((node) => $isTableCellNode(node));
+    if ($isTableCellNode(selectedCell)) {
+      return selectedCell;
+    }
+  }
+
+  if ($isRangeSelection(selection)) {
+    const anchorNode = selection.anchor.getNode();
+    const cellNode = $findCellNode(anchorNode);
+    if ($isTableCellNode(cellNode)) {
+      return cellNode;
+    }
+  }
+
+  return null;
+}
+
+function DefaultTableBubbleMenu({
+  headersEnabled,
+  setHeadersEnabled,
+  actions,
+}: TableBubbleRenderProps) {
+  return (
+    <>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert row above"
+        aria-label="Insert row above"
+        onClick={actions.insertRowAbove}
+      >
+        Row ↑
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert row below"
+        aria-label="Insert row below"
+        onClick={actions.insertRowBelow}
+      >
+        Row ↓
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert column left"
+        aria-label="Insert column left"
+        onClick={actions.insertColumnLeft}
+      >
+        Col ←
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Insert column right"
+        aria-label="Insert column right"
+        onClick={actions.insertColumnRight}
+      >
+        Col →
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Delete selected column"
+        aria-label="Delete selected column"
+        onClick={actions.deleteSelectedColumn}
+      >
+        Del Col
+      </button>
+      <button
+        type="button"
+        className="luthor-table-bubble-button"
+        title="Delete selected row"
+        aria-label="Delete selected row"
+        onClick={actions.deleteSelectedRow}
+      >
+        Del Row
+      </button>
+      <label className="luthor-table-bubble-checkbox" title="Use first row as table headers">
+        <input
+          type="checkbox"
+          title="Use first row as table headers"
+          aria-label="Use first row as table headers"
+          checked={headersEnabled}
+          onChange={(event) => setHeadersEnabled(event.target.checked)}
+        />
+        Headers
+      </label>
+      <button
+        type="button"
+        className="luthor-table-bubble-button luthor-table-bubble-button-danger"
+        title="Delete table"
+        aria-label="Delete table"
+        onClick={actions.deleteTable}
+      >
+        Delete Table
+      </button>
+    </>
+  );
+}
+
+function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
+  const { editor } = useEditor();
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [headersEnabled, setHeadersEnabled] = useState(false);
+  const [bubblePosition, setBubblePosition] = useState<{ x: number; y: number } | null>(null);
+
+  const runWithSelectedTableCell = (action: (cell: TableCellNode) => void) => {
+    if (!editor) {
+      return;
+    }
+
+    editor.update(() => {
+      const selectedCell = getSelectedTableCell();
+      if (!selectedCell) {
+        return;
+      }
+
+      selectedCell.selectStart();
+      action(selectedCell);
+    });
+  };
+
+  const setTableHeaders = (enabled: boolean) => {
+    runWithSelectedTableCell((selectedCell) => {
+      const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+      const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
+
+      rowNodes.forEach((rowNode, rowIndex) => {
+        const rowCells = rowNode.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node));
+        rowCells.forEach((cell) => {
+          const rowHeaderState = enabled && rowIndex === 0
+            ? TableCellHeaderStates.ROW
+            : TableCellHeaderStates.NO_STATUS;
+          cell.setHeaderStyles(rowHeaderState, TableCellHeaderStates.ROW);
+        });
+      });
+    });
+  };
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
+    const rootElement = editor.getRootElement();
+    const container = (rootElement?.closest(".luthor-editor-wrapper") as HTMLElement | null)
+      || rootElement?.parentElement
+      || null;
+    setPortalContainer(container);
+
+    const updateBubbleState = () => {
+      editor.getEditorState().read(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection) && !selection.isCollapsed()) {
+          setIsVisible(false);
+          setBubblePosition(null);
+          return;
+        }
+
+        const selectedCell = getSelectedTableCell();
+        if (!selectedCell) {
+          setIsVisible(false);
+          setBubblePosition(null);
+          return;
+        }
+
+        const cellElement = editor.getElementByKey(selectedCell.getKey());
+        const tableElement = cellElement?.closest("table");
+        if (!tableElement || !container) {
+          setIsVisible(false);
+          setBubblePosition(null);
+          return;
+        }
+
+        const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+        const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
+
+        const firstRowCells = rowNodes[0]?.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node)) || [];
+        const hasRowHeaders = firstRowCells.length > 0 && firstRowCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.ROW));
+        setHeadersEnabled(hasRowHeaders);
+
+        const containerRect = container.getBoundingClientRect();
+        const tableRect = tableElement.getBoundingClientRect();
+
+        setBubblePosition({
+          x: tableRect.left - containerRect.left + tableRect.width / 2,
+          y: tableRect.top - containerRect.top - 12,
+        });
+        setIsVisible(true);
+      });
+    };
+
+    updateBubbleState();
+
+    const unregisterUpdate = editor.registerUpdateListener(() => {
+      updateBubbleState();
+    });
+
+    const handleViewportChange = () => {
+      updateBubbleState();
+    };
+
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
+
+    return () => {
+      unregisterUpdate();
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [editor]);
+
+  if (!portalContainer || !isVisible || !bubblePosition || typeof document === "undefined") {
+    return null;
+  }
+
+  const bubbleActions: TableBubbleRenderProps["actions"] = {
+    insertRowAbove: () => runWithSelectedTableCell(() => $insertTableRowAtSelection(false)),
+    insertRowBelow: () => runWithSelectedTableCell(() => $insertTableRowAtSelection(true)),
+    insertColumnLeft: () => runWithSelectedTableCell(() => $insertTableColumnAtSelection(false)),
+    insertColumnRight: () => runWithSelectedTableCell(() => $insertTableColumnAtSelection(true)),
+    deleteSelectedColumn: () => runWithSelectedTableCell(() => $deleteTableColumnAtSelection()),
+    deleteSelectedRow: () => runWithSelectedTableCell(() => $deleteTableRowAtSelection()),
+    deleteTable: () =>
+      runWithSelectedTableCell((selectedCell) => {
+        const tableNode = $getTableNodeFromLexicalNodeOrThrow(selectedCell);
+        tableNode.remove();
+      }),
+  };
+
+  const bubbleContent = extension.config.tableBubbleRenderer
+    ? extension.config.tableBubbleRenderer({
+      headersEnabled,
+      setHeadersEnabled: (enabled) => {
+        setHeadersEnabled(enabled);
+        setTableHeaders(enabled);
+      },
+      actions: bubbleActions,
+    })
+    : (
+      <DefaultTableBubbleMenu
+        headersEnabled={headersEnabled}
+        setHeadersEnabled={(enabled) => {
+          setHeadersEnabled(enabled);
+          setTableHeaders(enabled);
+        }}
+        actions={bubbleActions}
+      />
+    );
+
+  return createPortal(
+    <div
+      className="luthor-table-bubble-menu"
+      style={{
+        position: "absolute",
+        left: bubblePosition.x,
+        top: bubblePosition.y,
+        transform: "translate(-50%, -100%)",
+        zIndex: 30,
+      }}
+      onMouseDown={(event) => event.preventDefault()}
+    >
+      {bubbleContent}
+    </div>,
+    portalContainer,
+  );
+}
 
 /**
  * Table extension for table operations in the editor.
@@ -112,6 +415,32 @@ export class TableExtension extends BaseExtension<
       action: () => commands.insertColumnRight(),
     },
     {
+      separator: true,
+      label: "",
+      action: () => {},
+    },
+    {
+      label: "Toggle Row Header",
+      action: () => commands.toggleRowHeader(),
+    },
+    {
+      label: "Toggle Column Header",
+      action: () => commands.toggleColumnHeader(),
+    },
+    {
+      label: "Merge Cells",
+      action: () => commands.mergeSelectedCells(),
+    },
+    {
+      label: "Split Cell",
+      action: () => commands.unmergeSelectedCell(),
+    },
+    {
+      separator: true,
+      label: "",
+      action: () => {},
+    },
+    {
       label: "Delete Row",
       action: () => commands.deleteRow(),
     },
@@ -147,13 +476,7 @@ export class TableExtension extends BaseExtension<
   }
 
   register(editor: LexicalEditor): () => void {
-    // Register its markdown transformer with markdown extension
-    const mdExtension = this.config.markdownExtension || markdownExtension;
-    try {
-      mdExtension.registerTransformer?.(TABLE_MARKDOWN_TRANSFORMER as any);
-    } catch (e) {
-      console.warn('[TableExtension] failed to register table markdown transformer', e);
-    }
+    let unregisterContextMenuProvider: (() => void) | undefined;
 
     // Register our context menu provider if context menu is enabled
     if (this.config.enableContextMenu) {
@@ -187,7 +510,7 @@ export class TableExtension extends BaseExtension<
         const commands = contextMenuExt.getCommands(editor);
         commands.registerProvider(provider);
 
-        return () => {
+        unregisterContextMenuProvider = () => {
           const commands = contextMenuExt.getCommands(editor);
           if (commands) {
             commands.unregisterProvider('table');
@@ -196,7 +519,9 @@ export class TableExtension extends BaseExtension<
       }
     }
 
-    return () => {};
+    return () => {
+      unregisterContextMenuProvider?.();
+    };
   }
 
   getNodes(): any[] {
@@ -236,6 +561,72 @@ export class TableExtension extends BaseExtension<
           $insertTableColumnAtSelection(true); // true = insert right
         });
       },
+      toggleRowHeader: () => {
+        editor.update(() => {
+          const activeCell = getSelectedTableCell();
+          if (!activeCell) {
+            return;
+          }
+
+          const tableNode = $getTableNodeFromLexicalNodeOrThrow(activeCell);
+          const rowIndex = $getTableRowIndexFromTableCellNode(activeCell);
+          const rowNode = tableNode.getChildren()[rowIndex];
+          if (!$isTableRowNode(rowNode)) {
+            return;
+          }
+
+          const rowCells = rowNode.getChildren().filter((node): node is TableCellNode => $isTableCellNode(node));
+          const enableHeader = !rowCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.ROW));
+          const nextHeaderState = enableHeader ? TableCellHeaderStates.ROW : TableCellHeaderStates.NO_STATUS;
+
+          rowCells.forEach((cell) => {
+            cell.setHeaderStyles(nextHeaderState, TableCellHeaderStates.ROW);
+          });
+        });
+      },
+      toggleColumnHeader: () => {
+        editor.update(() => {
+          const activeCell = getSelectedTableCell();
+          if (!activeCell) {
+            return;
+          }
+
+          const tableNode = $getTableNodeFromLexicalNodeOrThrow(activeCell);
+          const columnIndex = $getTableColumnIndexFromTableCellNode(activeCell);
+          const rowNodes = tableNode.getChildren().filter((node): node is TableRowNode => $isTableRowNode(node));
+
+          const columnCells = rowNodes
+            .map((rowNode) => rowNode.getChildren()[columnIndex])
+            .filter((node): node is TableCellNode => $isTableCellNode(node));
+
+          const enableHeader = !columnCells.every((cell) => cell.hasHeaderState(TableCellHeaderStates.COLUMN));
+          const nextHeaderState = enableHeader ? TableCellHeaderStates.COLUMN : TableCellHeaderStates.NO_STATUS;
+
+          columnCells.forEach((cell) => {
+            cell.setHeaderStyles(nextHeaderState, TableCellHeaderStates.COLUMN);
+          });
+        });
+      },
+      mergeSelectedCells: () => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isTableSelection(selection)) {
+            return;
+          }
+
+          const cellNodes = selection.getNodes().filter((node): node is TableCellNode => $isTableCellNode(node));
+          if (cellNodes.length < 2) {
+            return;
+          }
+
+          $mergeCells(cellNodes);
+        });
+      },
+      unmergeSelectedCell: () => {
+        editor.update(() => {
+          $unmergeCell();
+        });
+      },
       deleteRow: () => {
         editor.update(() => {
           $deleteTableRowAtSelection();
@@ -258,7 +649,8 @@ export class TableExtension extends BaseExtension<
           }
         });
       },
-      showTableContextMenu: (position: { x: number; y: number }) => {
+      showTableContextMenu: (_position: { x: number; y: number }) => {
+        void _position;
         // This will be implemented when the extension system allows cross-extension commands
         // For now, this is a placeholder
       },
@@ -292,7 +684,7 @@ export class TableExtension extends BaseExtension<
   }
 
   getPlugins(): ReactNode[] {
-    return [<TablePlugin key="table-plugin" />];
+    return [<TablePlugin key="table-plugin" />, <TableQuickActionsPlugin key="table-quick-actions-plugin" extension={this} />];
   }
 }
 
@@ -358,7 +750,8 @@ export const TABLE_MARKDOWN_TRANSFORMER = {
     optional: true as const,
     regExp: /^$/
   },
-  replace: (rootNode: any, children: any, startMatch: any, endMatch: any, linesInBetween: any, isImport: boolean) => {
+  replace: (rootNode: any, children: any, startMatch: any, endMatch: any, linesInBetween: any, _isImport: boolean) => {
+    void _isImport;
     // Combine the start line with lines in between to get all table lines
     const allLines = [startMatch[0], ...(linesInBetween || [])];
     

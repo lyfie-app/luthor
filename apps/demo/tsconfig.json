@@ -7,7 +7,8 @@
       "@lyfie/luthor-headless/*": ["../../packages/headless/src/*"],
       "@lyfie/luthor": ["../../packages/luthor/src"],
       "@lyfie/luthor/*": ["../../packages/luthor/src/*"]
-    }
+    },
+    "types": ["node"]
   },
   "files": [],
   "references": [

@@ -1,55 +1,42 @@
-import './App.css'
+// ...existing code...
 import { ExtensiveEditor } from "@lyfie/luthor";
-import type { ExtensiveEditorRef } from "@lyfie/luthor";
-import React from "react";
 import "@lyfie/luthor/styles.css";
+import { useDemoTheme } from "./hooks/useDemoTheme";
 
 function App() {
-  const editorRef = React.useRef<ExtensiveEditorRef>(null);
-  // Handle when editor is ready - inject content immediately
-  const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    console.log("🎯 Editor ready - injecting content immediately");
-    methods.injectMarkdown(`# Welcome to Luthor
-
-**Build amazing React-based rich text editors with ease**
-
-Luthor is a modern, type-safe React framework built on top of Meta's Lexical that makes creating powerful text editors simple and enjoyable.
-
-## ✨ Key Features
-
-- 🚀 **Lightning Fast** - Optimized performance with minimal bundle size
-- 🛡️ **Type-Safe** - Full TypeScript support with auto-completion
-- 🧩 **Extensible** - 25+ built-in extensions for common features
-- 🎨 **Customizable** - Framework-agnostic styling with CSS custom properties
-- 📱 **Responsive** - Works perfectly on all devices
-
-## 🏁 Quick Start
-
-\`\`\`bash
-npm install @lyfie/luthor-headless lexical @lexical/react
-\`\`\`
-
-That's it! You're ready to build something amazing.`);
-  }, []);
-
+  const { theme, toggleTheme } = useDemoTheme();
   return (
-    <div className="app-container">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-background" />
-        <div className="hero-content">          
-
-          {/* Editor Demo */}
-          <div className="editor-wrapper">
-            <div className="editor-glow" />
-            <div className="editor-container">
-              <ExtensiveEditor ref={editorRef} onReady={handleEditorReady} />
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="app-shell" data-theme={theme}>
+      <button
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 10,
+          padding: "8px 16px",
+          borderRadius: 8,
+          border: "none",
+          background: theme === "dark" ? "#222" : "#eee",
+          color: theme === "dark" ? "#fff" : "#222",
+          cursor: "pointer",
+          fontWeight: 600,
+        }}
+        onClick={toggleTheme}
+      >
+        {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
+      </button>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ExtensiveEditor initialTheme={theme} />
+      </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

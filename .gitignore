@@ -165,3 +165,9 @@ docs_repo_arch
 
 # turbo folder
 .turbo
+
+# claude folder
+.claude
+.astro
+.vscode
+.wrangler
