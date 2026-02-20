@@ -96,13 +96,6 @@ export {
   type DraggableConfig,
 } from "./core/DraggableBlockExtension";
 
-// Export/import extensions
-export { HTMLExtension, htmlExtension } from "./export/HTMLExtension";
-export {
-  MarkdownExtension,
-  markdownExtension,
-} from "./export/MarkdownExtension";
-
 // Media extensions
 export { ImageExtension, imageExtension } from "./media/ImageExtension";
 export {
@@ -142,9 +135,6 @@ export * from "./core";
 // Base classes and types
 export { TextFormatExtension } from "./base/TextFormatExtension";
 export * from "./types";
-
-// Export transformers
-export { ALL_MARKDOWN_TRANSFORMERS } from "./export/transformers";
 
 // Export media types
 export * from "./media/types";

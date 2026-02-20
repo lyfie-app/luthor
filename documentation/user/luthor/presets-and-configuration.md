@@ -30,7 +30,7 @@ The extensive preset is the full-feature default and includes:
 - comprehensive toolbar actions
 - command palette + slash command system
 - media and embeds (image, iframe, YouTube)
-- source mode switching and conversion helpers
+- source mode switching and JSONB conversion helpers
 
 ## `ExtensiveEditor` commonly used props
 
@@ -49,8 +49,6 @@ The extensive preset is the full-feature default and includes:
 Supported modes:
 
 - `visual`
-- `html`
-- `markdown`
 - `jsonb`
 
 When moving from source to visual mode, source content is validated and imported. Invalid source content blocks mode transition to prevent data loss.
@@ -73,6 +71,6 @@ The extensive preset internally configures options such as:
 - text/background color option catalogs
 - image upload and alignment behavior
 - embed defaults and URL handling
-- markdown transformer wiring
+- JSONB persistence-friendly content workflows
 
 For contributor-level details, see [../../developer/luthor/source-file-reference.md](../../developer/luthor/source-file-reference.md).

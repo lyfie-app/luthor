@@ -12,7 +12,6 @@ export default defineConfig({
     "react-dom",
     "lexical",
     "@lexical/code",
-    "@lexical/html",
     "@lexical/link",
     "@lexical/list",
     "@lexical/markdown",

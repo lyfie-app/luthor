@@ -1,49 +1,38 @@
 # Import and Export (User)
 
-`@lyfie/luthor-headless` supports JSON, HTML, and Markdown flows through extension commands and utility converters.
+`@lyfie/luthor-headless` now uses a JSON/JSONB-first import/export model.
 
 ## Recommended storage strategy
 
-Store both:
+Store canonical editor state as JSON (or JSONB in PostgreSQL):
 
-- Canonical: Lexical JSON (highest fidelity)
-- Interop: HTML or enhanced Markdown (for external channels/search/audit)
+- Canonical: Lexical JSON for exact fidelity
+- Persistence: JSONB payloads for reversible edits and reliable restores
 
-## HTML flow
+## Runtime API shape
 
-- `htmlExtension` exposes export/import commands.
-- Enhanced HTML helpers can embed and recover `LUTHOR_STATE` metadata for better round trips.
+The editor runtime context exposes:
 
-Use cases:
+- `export.toJSON()`
+- `import.fromJSON(value)`
 
-- Share content to systems expecting HTML.
-- Recover near-full editor state when metadata is preserved.
-
-## Markdown flow
-
-- `markdownExtension` handles markdown import/export via lexical transformers.
-- Enhanced markdown helpers embed metadata comments in the form:
-
-```md
-<!-- LUTHOR_BLOCK {"type":"image","payload":{...}} -->
-```
-
-Use cases:
-
-- Human-readable storage with richer node reconstruction.
-- Easier diffing and code-review of content changes.
-
-## Utility APIs
-
-Exported from package utils:
-
-- Enhanced HTML helpers from `EnhancedHTMLConvertor`
-- Enhanced markdown helpers from `EnhancedMarkdownConvertor`
-
-These APIs are useful when you need explicit metadata parsing/stripping behavior outside editor commands.
+These APIs are lossless for supported nodes and extension state.
 
 ## Practical guidance
 
-- If exact fidelity is mandatory, rely on JSON as source of truth.
-- If markdown comments may be stripped by external processors, keep JSON fallback.
-- Validate import content before injecting untrusted HTML/URLs.
+- Treat JSON/JSONB as the only source of truth.
+- Validate untrusted JSON before calling `fromJSON`.
+- Keep schema version metadata in your persistence envelope if your app evolves custom nodes over time.
+
+## Example persistence envelope
+
+```json
+{
+	"schemaVersion": 1,
+	"preset": "extensive",
+	"savedAt": "2026-02-20T00:00:00.000Z",
+	"content": {
+		"jsonb": "{ ...lexical state... }"
+	}
+}
+```

@@ -14,11 +14,9 @@ export function ModeTabs({
   availableModes?: readonly CoreEditorMode[];
   isConverting?: CoreEditorMode | null;
 }) {
-  const modes = availableModes ?? ["visual", "html", "markdown", "jsonb"];
+  const modes = availableModes ?? ["visual", "jsonb"];
   const tabLabels: Record<CoreEditorMode, string> = {
     visual: labels?.visual ?? "Visual",
-    html: labels?.html ?? "HTML",
-    markdown: labels?.markdown ?? "Markdown",
     jsonb: labels?.jsonb ?? "JSONB",
   };
 
@@ -28,18 +26,6 @@ export function ModeTabs({
         <button className={`luthor-mode-tab ${mode === "visual" ? "active" : ""}`} onClick={() => onModeChange("visual")}>
           {tabLabels.visual}
           {isConverting === "visual" && <span className="luthor-tab-converting-spinner" />}
-        </button>
-      )}
-      {modes.includes("html") && (
-        <button className={`luthor-mode-tab ${mode === "html" ? "active" : ""}`} onClick={() => onModeChange("html")}>
-          {tabLabels.html}
-          {isConverting === "html" && <span className="luthor-tab-converting-spinner" />}
-        </button>
-      )}
-      {modes.includes("markdown") && (
-        <button className={`luthor-mode-tab ${mode === "markdown" ? "active" : ""}`} onClick={() => onModeChange("markdown")}>
-          {tabLabels.markdown}
-          {isConverting === "markdown" && <span className="luthor-tab-converting-spinner" />}
         </button>
       )}
       {modes.includes("jsonb") && (

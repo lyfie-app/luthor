@@ -14,7 +14,6 @@ export default defineConfig({
     "@lyfie/luthor-headless",
     "lexical",
     "@lexical/code",
-    "@lexical/html",
     "@lexical/link",
     "@lexical/list",
     "@lexical/markdown",

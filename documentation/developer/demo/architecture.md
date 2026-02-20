@@ -39,9 +39,7 @@ The app keeps behavior clear by separating display-only components from editor-b
 
 The integration uses `ExtensiveEditorRef` methods to control content and persistence:
 
-- `injectMarkdown(...)`
 - `injectJSONB(...)`
-- `getMarkdown()`
 - `getJSONB()`
 
 This keeps demo operations aligned with real consumer integration patterns.
@@ -52,7 +50,6 @@ This keeps demo operations aligned with real consumer integration patterns.
 
 `src/data/demoContent.ts` provides:
 
-- markdown demo content
 - JSONB scenario payload
 - extension-to-category maps used by feature panels
 

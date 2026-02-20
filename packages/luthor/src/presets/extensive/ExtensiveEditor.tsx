@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { createEditorSystem, RichText, lexicalNodesToEnhancedMarkdown, enhancedMarkdownToLexicalJSON, importHTMLWithCodeSupport } from "@lyfie/luthor-headless";
+import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
 import {
   CommandPalette,
@@ -7,9 +7,7 @@ import {
   EmojiSuggestionMenu,
   commandsToCommandPaletteItems,
   commandsToSlashCommandItems,
-  formatHTMLSource,
   formatJSONBSource,
-  formatMarkdownSource,
   ModeTabs,
   registerKeyboardShortcuts,
   SourceView,
@@ -23,61 +21,87 @@ import "./styles.css";
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
-export type ExtensiveEditorMode = "visual" | "html" | "markdown" | "jsonb";
+export type ExtensiveEditorMode = "visual" | "jsonb";
 
 export interface ExtensiveEditorRef {
-  injectMarkdown: (content: string) => void;
-  injectHTML: (content: string) => void;
   injectJSONB: (content: string) => void;
-  getMarkdown: () => string;
-  getHTML: () => string;
   getJSONB: () => string;
 }
 
-/**
- * Helper function to export editor state to enhanced markdown
- * Uses the enhanced markdown convertor to preserve all extension metadata
- */
-function exportToEnhancedMarkdown(editorStateJson: any): string {
-  try {
-    const nodes = editorStateJson?.root?.children || [];
-    const enhancedMarkdown = lexicalNodesToEnhancedMarkdown(nodes);
-    return formatMarkdownSource(enhancedMarkdown);
-  } catch (error) {
-    console.error("Error exporting to enhanced markdown:", error);
-    return "";
-  }
+type JsonTextNode = {
+  type: "text";
+  version: 1;
+  text: string;
+  detail: 0;
+  format: 0;
+  mode: "normal";
+  style: "";
+};
+
+type JsonParagraphNode = {
+  type: "paragraph";
+  version: 1;
+  format: "";
+  indent: 0;
+  direction: null;
+  children: JsonTextNode[];
+};
+
+type JsonbDocument = {
+  root: {
+    type: "root";
+    version: 1;
+    format: "";
+    indent: 0;
+    direction: null;
+    children: JsonParagraphNode[];
+  };
+};
+
+function createJSONBDocumentFromText(content: string): JsonbDocument {
+  const normalized = content.replace(/\r\n?/g, "\n").trim();
+  const blocks = normalized
+    .split(/\n{2,}/)
+    .map((block) => block.replace(/\s+/g, " ").trim())
+    .filter((block) => block.length > 0);
+
+  const children = (blocks.length > 0 ? blocks : [""]).map<JsonParagraphNode>((block) => ({
+    type: "paragraph",
+    version: 1,
+    format: "",
+    indent: 0,
+    direction: null,
+    children: [
+      {
+        type: "text",
+        version: 1,
+        text: block,
+        detail: 0,
+        format: 0,
+        mode: "normal",
+        style: "",
+      },
+    ],
+  }));
+
+  return {
+    root: {
+      type: "root",
+      version: 1,
+      format: "",
+      indent: 0,
+      direction: null,
+      children,
+    },
+  };
 }
 
-/**
- * Helper function to import from enhanced markdown
- * Reconstructs Lexical JSON from enhanced markdown with embedded metadata
- * This preserves all extension node properties (embeds, images, etc.)
- */
-function importFromEnhancedMarkdown(markdown: string, importApi: any): void {
+function toJSONBInput(value: string): string {
   try {
-    // Convert enhanced markdown directly back to Lexical JSON
-    // This preserves all metadata from LUTHOR_BLOCK comments
-    const lexicalJson = enhancedMarkdownToLexicalJSON(markdown);
-    importApi.fromJSON(lexicalJson);
-  } catch (error) {
-    console.error("Error parsing enhanced markdown:", error);
-    throw error;
-  }
-}
-
-/**
- * Helper function to import from enhanced HTML
- * Reconstructs Lexical JSON from HTML with proper handling of code blocks
- * This preserves all code and inline code formatting
- */
-async function importFromEnhancedHTML(html: string, editor: any, importApi: any): Promise<void> {
-  try {
-    // Use the enhanced HTML importer that properly handles code blocks
-    await importHTMLWithCodeSupport(html, editor, importApi);
-  } catch (error) {
-    console.error("Error parsing enhanced HTML:", error);
-    throw error;
+    const parsed = JSON.parse(value);
+    return JSON.stringify(parsed);
+  } catch {
+    return JSON.stringify(createJSONBDocumentFromText(value));
   }
 }
 
@@ -108,7 +132,7 @@ function ExtensiveEditorContent({
     import: importApi,
   } = useEditor();
   const [mode, setMode] = useState<ExtensiveEditorMode>(initialMode);
-  const [content, setContent] = useState({ html: "", markdown: "", jsonb: "" });
+  const [content, setContent] = useState({ jsonb: "" });
   const [convertingMode, setConvertingMode] = useState<ExtensiveEditorMode | null>(null);
   const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorMode; error: string } | null>(null);
   const [commandPaletteState, setCommandPaletteState] = useState({
@@ -127,7 +151,6 @@ function ExtensiveEditorContent({
     position: null as { x: number; y: number } | null,
     suggestions: [] as EmojiCatalogItem[],
   });
-  const commandsRef = useRef<CoreEditorCommands>(commands as CoreEditorCommands);
   const readyRef = useRef(false);
   
   // Lazy conversion state: track which formats are valid cache
@@ -135,55 +158,25 @@ function ExtensiveEditorContent({
   const editorChangeCountRef = useRef(0);
 
   useEffect(() => {
-    commandsRef.current = commands as CoreEditorCommands;
-  }, [commands]);
-
-  useEffect(() => {
     setFloatingToolbarContext(commands, activeStates, isDark ? "dark" : "light");
   }, [commands, activeStates, isDark]);
 
   const methods = useMemo<ExtensiveEditorRef>(
     () => ({
-      injectMarkdown: (value: string) => {
-        setTimeout(() => {
-          if (editor) {
-            try {
-              importFromEnhancedMarkdown(value, importApi);
-            } catch (error) {
-              console.error("Failed to inject markdown:", error);
-            }
-          }
-        }, 100);
-      },
-      injectHTML: (value: string) => {
-        setTimeout(() => {
-          if (editor) {
-            // Use enhanced HTML importer that properly handles code blocks
-            importFromEnhancedHTML(value, editor, importApi).catch((error) => {
-              console.error("Failed to inject HTML:", error);
-            });
-          }
-        }, 100);
-      },
       injectJSONB: (value: string) => {
         setTimeout(() => {
           try {
             const parsed = JSON.parse(value);
             importApi.fromJSON(parsed);
-          } catch {
+          } catch (error) {
+            console.error("Failed to inject JSONB:", error);
             return;
           }
         }, 100);
       },
-      getMarkdown: () => {
-        // Use enhanced markdown convertor to preserve all extension metadata
-        const editorStateJson = exportApi.toJSON();
-        return exportToEnhancedMarkdown(editorStateJson);
-      },
-      getHTML: () => commandsRef.current.exportToHTML(),
       getJSONB: () => formatJSONBSource(JSON.stringify(exportApi.toJSON())),
     }),
-    [editor, exportApi, importApi],
+    [exportApi, importApi],
   );
 
   useEffect(() => {
@@ -279,16 +272,6 @@ function ExtensiveEditorContent({
       setSourceError(null);
 
       // Step 1: Import edited content from source tabs
-      if (mode === "markdown" && newMode !== "markdown" && hasExtension("markdown")) {
-        // Import from enhanced markdown to reconstruct all extension nodes with metadata
-        importFromEnhancedMarkdown(content.markdown, importApi);
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
-      if (mode === "html" && newMode !== "html" && hasExtension("html")) {
-        // Use enhanced HTML importer that properly handles code blocks and inline code
-        await importFromEnhancedHTML(content.html, editor, importApi);
-        await new Promise((resolve) => setTimeout(resolve, 50));
-      }
       if (mode === "jsonb" && newMode !== "jsonb") {
         const parsed = JSON.parse(content.jsonb);
         importApi.fromJSON(parsed);
@@ -300,36 +283,6 @@ function ExtensiveEditorContent({
 
       // Step 2: Lazy export - only convert format if not cached
       // This ensures smooth tab switching with progressive conversion
-      if (newMode === "markdown" && mode !== "markdown" && hasExtension("markdown")) {
-        if (!cacheValidRef.current.has("markdown")) {
-          setConvertingMode("markdown");
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          try {
-            // Use enhanced markdown convertor to preserve all extension metadata
-            const editorStateJson = exportApi.toJSON();
-            const markdown = exportToEnhancedMarkdown(editorStateJson);
-            setContent((prev) => ({ ...prev, markdown }));
-            cacheValidRef.current.add("markdown");
-          } finally {
-            setConvertingMode(null);
-          }
-        }
-      }
-
-      if (newMode === "html" && mode !== "html" && hasExtension("html")) {
-        if (!cacheValidRef.current.has("html")) {
-          setConvertingMode("html");
-          await new Promise((resolve) => setTimeout(resolve, 50));
-          try {
-            const html = formatHTMLSource(commands.exportToHTML());
-            setContent((prev) => ({ ...prev, html }));
-            cacheValidRef.current.add("html");
-          } finally {
-            setConvertingMode(null);
-          }
-        }
-      }
-
       if (newMode === "jsonb" && mode !== "jsonb") {
         if (!cacheValidRef.current.has("jsonb")) {
           setConvertingMode("jsonb");
@@ -397,17 +350,11 @@ function ExtensiveEditorContent({
               <div className="luthor-source-error">
                 <div className="luthor-source-error-icon">⚠️</div>
                 <div className="luthor-source-error-message">
-                  <strong>Invalid {mode.toUpperCase()}</strong>
+                  <strong>Invalid JSONB</strong>
                   <p>{sourceError.error}</p>
                   <small>Fix the errors above and try switching modes again</small>
                 </div>
               </div>
-            )}
-            {mode === "html" && (
-              <SourceView value={content.html} onChange={(value) => setContent((prev) => ({ ...prev, html: value }))} placeholder="Enter HTML content..." />
-            )}
-            {mode === "markdown" && (
-              <SourceView value={content.markdown} onChange={(value) => setContent((prev) => ({ ...prev, markdown: value }))} placeholder="Enter Markdown content..." />
             )}
             {mode === "jsonb" && (
               <SourceView value={content.jsonb} onChange={(value) => setContent((prev) => ({ ...prev, jsonb: value }))} placeholder="Enter JSONB document content..." />
@@ -458,7 +405,7 @@ export interface ExtensiveEditorProps {
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
-  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true, placeholder = "Write anything...", initialMode = "visual", availableModes = ["visual", "html", "markdown", "jsonb"], variantClassName, toolbarLayout }, ref) => {
+  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true, placeholder = "Write anything...", initialMode = "visual", availableModes = ["visual", "jsonb"], variantClassName, toolbarLayout }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
     const resolvedInitialMode = availableModes.includes(initialMode)
@@ -496,7 +443,7 @@ Luthor is a modern, type-safe React framework built on top of Meta's Lexical tha
 - Insert a horizontal rule from toolbar or type --- then space
 - Open Command Palette with Ctrl+Shift+P
 - Type / in the editor to open the slash command block menu
-- Switch between Visual, HTML, and Markdown tabs to verify import/export
+- Switch between Visual and JSONB tabs to verify reversible editing
 
 ## 📝 Try It Out
 
@@ -506,9 +453,9 @@ Start typing or use the toolbar above to format your text. Press \`Cmd+Shift+P\`
       setMethods(m);
       // Auto-inject default welcome content if enabled
       if (showDefaultContent && defaultContent === undefined) {
-        m.injectMarkdown(welcomeContent);
+        m.injectJSONB(JSON.stringify(createJSONBDocumentFromText(welcomeContent)));
       } else if (defaultContent) {
-        m.injectMarkdown(defaultContent);
+        m.injectJSONB(toJSONBInput(defaultContent));
       }
       onReady?.(m);
     };

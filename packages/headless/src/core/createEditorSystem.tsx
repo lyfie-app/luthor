@@ -305,13 +305,9 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
           ) || (() => {}),
       },
       export: {
-        toHTML: async () => "",
-        toMarkdown: async () => "",
         toJSON: () => editor?.getEditorState().toJSON(),
       },
       import: {
-        fromHTML: async () => {},
-        fromMarkdown: async () => {},
         fromJSON: (json: unknown) => {
           if (!editor) {
             return;

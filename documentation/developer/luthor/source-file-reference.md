@@ -94,12 +94,8 @@ This file documents every code file in `packages/luthor/src`.
 
 - Purpose: source text formatting utilities.
 - Exports:
-  - `formatHTMLSource`
-  - `formatMarkdownSource`
   - `formatJSONBSource`
 - Key behavior:
-  - HTML pretty formatting in browser context.
-  - Markdown trimming normalization.
   - JSON parse/stringify fallback formatting.
 
 ### `core/layout.tsx`
@@ -194,7 +190,7 @@ This file documents every code file in `packages/luthor/src`.
   - `ExtensiveExtensions` type
 - Key behavior:
   - Composes most built-in headless extensions.
-  - Applies configuration for markdown transformers, embeds, image handling, typography/color options, custom node behavior.
+  - Applies configuration for embeds, image handling, typography/color options, and custom node behavior.
 
 ### `presets/extensive/ExtensiveEditor.tsx`
 
@@ -205,7 +201,7 @@ This file documents every code file in `packages/luthor/src`.
 - Key behavior:
   - Creates editor system provider and command wiring.
   - Integrates toolbar, floating toolbar, slash menu, emoji menu, and command palette.
-  - Supports visual/HTML/Markdown/JSONB mode switching with import/export conversion and validation.
+  - Supports visual/JSONB mode switching with conversion and validation.
   - Exposes imperative ref methods.
 
 ## Cross-file relationships

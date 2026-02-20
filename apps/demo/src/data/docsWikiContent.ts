@@ -34,7 +34,7 @@ export const DOCS_WIKI_SECTIONS: WikiSection[] = [
     summary: "Install preset or headless path depending on integration depth.",
     snippet: {
       language: "bash",
-      code: "pnpm add @lyfie/luthor react react-dom\n\n# Headless path\npnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/html @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom",
+      code: "pnpm add @lyfie/luthor react react-dom\n\n# Headless path\npnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom",
     },
     sourceRefs: [
       "documentation/user/luthor/getting-started.md",
@@ -47,7 +47,7 @@ export const DOCS_WIKI_SECTIONS: WikiSection[] = [
     summary: "Use ExtensiveEditor when you need immediate delivery with built-in UX modules.",
     bullets: [
       "Includes toolbar, floating toolbar, command palette, slash menu, emoji menu, and source modes.",
-      "Supports visual/html/markdown/jsonb mode switching.",
+      "Supports visual/jsonb mode switching.",
       "Use initialTheme and CSS overrides for branding.",
     ],
     snippet: {
@@ -94,20 +94,19 @@ export const DOCS_WIKI_SECTIONS: WikiSection[] = [
     id: "import-export",
     title: "Import / Export Strategy",
     summary:
-      "For production reliability, keep JSON as source-of-truth and add HTML or enhanced markdown for interop and human-readability.",
+      "For production reliability, keep JSON/JSONB as source-of-truth and use reversible visual ↔ JSONB editing.",
     bullets: [
       "Canonical: Lexical JSON for exact state fidelity.",
-      "Interop: HTML path for CMS/web channels.",
-      "Enhanced markdown: metadata comments preserve richer embedded node details.",
+      "Persist and restore JSONB payloads for exact round-trips.",
       "Validate untrusted import content before injection.",
     ],
     snippet: {
       language: "typescript",
-      code: "import { EnhancedMarkdownConvertor } from \"@lyfie/luthor-headless\";\n\nconst markdown = EnhancedMarkdownConvertor.lexicalNodesToEnhancedMarkdown(editorState.root.children);\nconst { cleanedMarkdown, metadata } = EnhancedMarkdownConvertor.parseEnhancedMarkdown(markdown);",
+      code: "const snapshot = JSON.stringify(editor.getJSONB());\neditor.injectJSONB(snapshot);",
     },
     sourceRefs: [
       "documentation/user/headless/import-export.md",
-      "documentation/tutorials/enhanced-markdown-quick-start.md",
+      "documentation/user/demo/usage-and-persistence.md",
       "documentation/PROJECT-DELIVERABLES.md",
     ],
   },
@@ -117,7 +116,7 @@ export const DOCS_WIKI_SECTIONS: WikiSection[] = [
     summary: "Use this checklist when shipping Luthor editors in production applications.",
     bullets: [
       "Choose package path: preset speed vs headless control.",
-      "Persist JSONB/JSON as primary state; keep markdown/html as secondary outputs.",
+      "Persist JSONB/JSON as primary state and keep imports strictly schema-validated.",
       "Enable URL validation and secure link defaults (noopener noreferrer).",
       "Use typed extension arrays and avoid runtime extension mutation.",
       "Profile large docs and keep conversion flows explicit in your persistence pipeline.",

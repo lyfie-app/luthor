@@ -9,7 +9,6 @@ import { BaseExtensionConfig } from "@lyfie/luthor-headless/extensions/types";
 import { ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
-import { markdownExtension } from "../export/MarkdownExtension";
 import { useBaseEditor as useEditor } from "../../core/createEditorSystem";
 import {
   TableNode,
@@ -57,8 +56,6 @@ export type TableConfig = BaseExtensionConfig & {
   contextMenuRenderer?: ContextMenuRenderer;
   /** Context menu extension used to register providers */
   contextMenuExtension?: typeof contextMenuExtension;
-  /** Markdown extension used to register transformers */
-  markdownExtension?: typeof markdownExtension;
   /** Custom table bubble menu renderer */
   tableBubbleRenderer?: (props: TableBubbleRenderProps) => ReactNode;
 };
@@ -480,14 +477,6 @@ export class TableExtension extends BaseExtension<
 
   register(editor: LexicalEditor): () => void {
     let unregisterContextMenuProvider: (() => void) | undefined;
-
-    // Register its markdown transformer with markdown extension
-    const mdExtension = this.config.markdownExtension || markdownExtension;
-    try {
-      mdExtension.registerTransformer?.(TABLE_MARKDOWN_TRANSFORMER as any);
-    } catch (e) {
-      console.warn('[TableExtension] failed to register table markdown transformer', e);
-    }
 
     // Register our context menu provider if context menu is enabled
     if (this.config.enableContextMenu) {

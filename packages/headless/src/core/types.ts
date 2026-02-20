@@ -65,19 +65,11 @@ export interface EditorContextType<Exts extends readonly Extension[]> {
   };
   /** Export functionality */
   export: {
-    /** Export editor content to HTML */
-    toHTML: () => Promise<string>;
-    /** Export editor content to Markdown */
-    toMarkdown: () => Promise<string>;
     /** Export editor content to JSON */
     toJSON: () => unknown;
   };
   /** Import functionality */
   import: {
-    /** Import HTML content into the editor */
-    fromHTML: (html: string) => Promise<void>;
-    /** Import Markdown content into the editor */
-    fromMarkdown: (md: string) => Promise<void>;
     /** Import JSON content into the editor */
     fromJSON: (json: unknown) => void;
   };

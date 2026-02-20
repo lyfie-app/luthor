@@ -8,7 +8,7 @@ The demo showcases:
 
 - `@lyfie/luthor` extensive preset integration
 - feature coverage visualization of installed extensions
-- markdown/JSONB persistence round-trip controls
+- visual/JSONB persistence round-trip controls
 - theme switching and copy/export helper actions
 
 ## Versions and dependencies
@@ -60,7 +60,7 @@ This runs build then `wrangler deploy`. Ensure Cloudflare auth and Wrangler envi
 
 ## Feature walkthrough
 
-1. Load seeded markdown content from top bar action.
+1. Load seeded JSONB content from top bar action.
 2. Explore feature coverage groups rendered from extension metadata.
 3. Save JSONB payload from persistence panel.
 4. Modify/copy payload and restore content to test round-trip behavior.

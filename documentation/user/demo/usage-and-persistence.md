@@ -5,7 +5,7 @@ This page explains the interactive flows available in `apps/demo`.
 ## Content loading
 
 - The top bar provides a "Load Demo Content" action.
-- This injects prepared markdown from `src/data/demoContent.ts` into the editor.
+- This injects prepared JSONB content from `src/data/demoContent.ts` into the editor.
 
 ## Feature coverage panel
 
@@ -29,8 +29,7 @@ The panel supports three common flows:
 ## Data fidelity expectations
 
 - JSONB payload is the fidelity-first path.
-- Markdown path is useful for readability and quick seed loading.
-- Restore behavior prefers JSON structure when available.
+- Restore behavior uses JSONB document content as the canonical source.
 
 ## Theme behavior
 

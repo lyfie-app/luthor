@@ -2,7 +2,7 @@ import {
   ExtensiveEditor,
   extensiveExtensions,
 } from "@lyfie/luthor";
-import { TRADITIONAL_TOOLBAR_LAYOUT, type ToolbarLayout } from "@lyfie/luthor";
+import { type ToolbarLayout } from "@lyfie/luthor";
 import type { ExtensiveEditorRef } from "@lyfie/luthor";
 import React from "react";
 import "@lyfie/luthor/styles.css";
@@ -14,7 +14,6 @@ import { ShowcaseHero } from "./components/ShowcaseHero";
 import {
   CATEGORY_BY_EXTENSION,
   CATEGORY_ORDER,
-  EXTENSIVE_DEMO_MARKDOWN,
   JOURNAL_SCENARIO_JSONB,
 } from "./data/demoContent";
 import { PACKAGE_DEFINITIONS, REPOSITORY_URL } from "./data/siteContent";
@@ -29,7 +28,6 @@ type PersistedJournalPayload = {
   extensions: string[];
   content: {
     jsonb: string;
-    markdown: string;
   };
 };
 
@@ -91,7 +89,7 @@ function App() {
   );
 
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    methods.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
+    methods.injectJSONB(JSON.stringify(JOURNAL_SCENARIO_JSONB));
   }, []);
 
   const handleLoadDemoContent = React.useCallback(() => {
@@ -100,8 +98,8 @@ function App() {
       return;
     }
 
-    editor.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
-    setPersistenceStatus("Loaded demo markdown content.");
+    editor.injectJSONB(JSON.stringify(JOURNAL_SCENARIO_JSONB));
+    setPersistenceStatus("Loaded demo JSONB content.");
   }, []);
 
   const handleLoadJournalScenario = React.useCallback(() => {
@@ -129,7 +127,6 @@ function App() {
       extensions: extensionNames,
       content: {
         jsonb: editor.getJSONB(),
-        markdown: editor.getMarkdown(),
       },
     };
 
@@ -147,7 +144,6 @@ function App() {
     try {
       const parsed = JSON.parse(payloadEditorValue) as Partial<PersistedJournalPayload>;
       const jsonb = parsed?.content?.jsonb;
-      const markdown = parsed?.content?.markdown;
 
       if (typeof jsonb === "string" && jsonb.trim().length > 0) {
         editor.injectJSONB(jsonb);
@@ -155,13 +151,7 @@ function App() {
         return;
       }
 
-      if (typeof markdown === "string" && markdown.trim().length > 0) {
-        editor.injectMarkdown(markdown);
-        setPersistenceStatus("Restored from payload markdown fallback.");
-        return;
-      }
-
-      setPersistenceStatus("Payload is valid JSON but missing content.jsonb/content.markdown.");
+      setPersistenceStatus("Payload is valid JSON but missing content.jsonb.");
     } catch {
       setPersistenceStatus("Payload is not valid JSON.");
     }
@@ -181,15 +171,15 @@ function App() {
     }
   }, [payloadEditorValue]);
 
-  const handleCopyMarkdown = React.useCallback(async () => {
+  const handleCopyJSONB = React.useCallback(async () => {
     try {
-      const markdown = editorRef.current?.getMarkdown();
-      if (!markdown) {
+      const jsonb = editorRef.current?.getJSONB();
+      if (!jsonb) {
         setCopiedState("error");
         window.setTimeout(() => setCopiedState("idle"), 1600);
         return;
       }
-      await navigator.clipboard.writeText(markdown);
+      await navigator.clipboard.writeText(jsonb);
       setCopiedState("done");
     } catch {
       setCopiedState("error");
@@ -198,7 +188,7 @@ function App() {
     window.setTimeout(() => setCopiedState("idle"), 1400);
   }, []);
 
-  const copyButtonLabel = copiedState === "done" ? "Copied" : copiedState === "error" ? "Copy failed" : "Copy Markdown";
+  const copyButtonLabel = copiedState === "done" ? "Copied" : copiedState === "error" ? "Copy failed" : "Copy JSONB";
 
   return (
     <div className="app-shell" data-theme={theme}>
@@ -248,7 +238,7 @@ function App() {
           extensionCount={extensionNames.length}
           totalFeatureGroups={totalFeatureGroups}
           groupedFeatures={groupedFeatures}
-          onCopyMarkdown={handleCopyMarkdown}
+          onCopyMarkdown={handleCopyJSONB}
           copyButtonLabel={copyButtonLabel}
           titleFromExtensionKey={titleFromExtensionKey}
         />

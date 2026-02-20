@@ -60,14 +60,6 @@ This is the canonical per-file reference for `packages/headless`.
 | `src/extensions/custom/CustomNodeExtension.tsx` | Factory for custom DecoratorNode-based extensions with React rendering hooks. |
 | `src/extensions/custom/index.ts` | Barrel for custom extension APIs. |
 
-## Export Extensions (`src/extensions/export`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/export/HTMLExtension.tsx` | HTML import/export commands; enhanced metadata handling for higher-fidelity round trips. |
-| `src/extensions/export/MarkdownExtension.tsx` | Markdown import/export commands using lexical transformers and extension-aware additions. |
-| `src/extensions/export/transformers.ts` | Consolidated markdown transformer list used by markdown extension workflows. |
-
 ## Formatting Extensions (`src/extensions/formatting`)
 
 | File | What it does |
@@ -108,10 +100,7 @@ This is the canonical per-file reference for `packages/headless`.
 
 | File | What it does |
 |---|---|
-| `src/utils/EnhancedHTMLConvertor.ts` | Enhanced HTML metadata append/strip/parse with integrity validation and code-block handling helpers. |
-| `src/utils/EnhancedMarkdownConvertor.ts` | Enhanced markdown metadata serialization/parsing and lexical JSON reconstruction helpers. |
-| `src/utils/EnhancedMarkdownTransformers.ts` | Extension transformer scaffolding and transformer collection exports. |
-| `src/utils/index.ts` | Utility barrel and convenience namespace exports for converter APIs. |
+| `src/utils/index.ts` | Utility barrel for package-level helper exports. |
 
 ## Contributor guidance
 

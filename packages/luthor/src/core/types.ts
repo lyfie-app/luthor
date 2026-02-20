@@ -1,6 +1,6 @@
 export type CoreTheme = "light" | "dark";
 
-export type CoreEditorMode = "visual" | "html" | "markdown" | "jsonb";
+export type CoreEditorMode = "visual" | "jsonb";
 
 export type BlockHeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 
@@ -118,10 +118,6 @@ export interface CoreEditorCommands {
   redo: () => void;
   showCommandPalette: () => void;
   hideCommandPalette: () => void;
-  importFromMarkdown: (content: string, options?: Record<string, unknown>) => void;
-  importFromHTML: (content: string, options?: Record<string, unknown>) => void;
-  exportToMarkdown: () => string;
-  exportToHTML: () => string;
   registerCommand: (command: Record<string, unknown>) => void;
   unregisterCommand: (commandId: string) => void;
   registerSlashCommand?: (command: Record<string, unknown>) => void;

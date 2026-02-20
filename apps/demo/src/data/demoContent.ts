@@ -91,7 +91,7 @@ Use "Load Journal Scenario" in the JSONB persistence panel to load a real YouTub
 
 ## 7) Import / Export + Custom Node
 
-- Switch between Visual / HTML / Markdown tabs to verify round-trips.
+- Switch between Visual / JSONB tabs to verify round-trips.
 - Insert a custom feature card from toolbar or command palette.
 
 Default filler paragraph:
@@ -129,8 +129,6 @@ export const CATEGORY_BY_EXTENSION: Record<string, string> = {
   image: "Media",
   iframeEmbed: "Media",
   youTubeEmbed: "Media",
-  markdown: "Import / Export",
-  html: "Import / Export",
   featureCard: "Custom",
 };
 
@@ -147,7 +145,7 @@ export const CATEGORY_ORDER = [
 ] as const;
 
 export const SHOWCASE_HIGHLIGHTS = [
-  "Visual + HTML + Markdown + JSONB mode switching",
+  "Visual + JSONB mode switching",
   "Command palette, slash menu, and context menu workflows",
   "Media tooling: image, iframe, and YouTube embeds",
   "Formatting depth: text, structure, code, and custom cards",

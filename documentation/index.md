@@ -12,7 +12,7 @@ This is the canonical documentation root for the monorepo.
 - Headless getting started: [user/headless/getting-started.md](user/headless/getting-started.md)
 - Headless extensions and configuration: [user/headless/extensions-and-configuration.md](user/headless/extensions-and-configuration.md)
 - Headless import/export: [user/headless/import-export.md](user/headless/import-export.md)
-- Tutorial: [tutorials/enhanced-markdown-quick-start.md](tutorials/enhanced-markdown-quick-start.md)
+- Tutorial: [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
 
 ## Developer Documentation
 

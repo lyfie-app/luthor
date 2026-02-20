@@ -12,7 +12,7 @@ import { ShowcaseHero } from "../components/ShowcaseHero";
 import {
   CATEGORY_BY_EXTENSION,
   CATEGORY_ORDER,
-  EXTENSIVE_DEMO_MARKDOWN,
+  JOURNAL_SCENARIO_JSONB,
 } from "../data/demoContent";
 import { PACKAGE_DEFINITIONS, REPOSITORY_URL } from "../data/siteContent";
 import { useDemoTheme } from "../hooks/useDemoTheme";
@@ -57,7 +57,7 @@ export function HomePage() {
   );
 
   const handleEditorReady = React.useCallback((methods: ExtensiveEditorRef) => {
-    methods.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
+    methods.injectJSONB(JSON.stringify(JOURNAL_SCENARIO_JSONB));
   }, []);
 
   const handleLoadDemoContent = React.useCallback(() => {
@@ -66,7 +66,7 @@ export function HomePage() {
       return;
     }
 
-    editor.injectMarkdown(EXTENSIVE_DEMO_MARKDOWN);
+    editor.injectJSONB(JSON.stringify(JOURNAL_SCENARIO_JSONB));
   }, []);
 
   return (
@@ -143,7 +143,7 @@ export function HomePage() {
               <ul className="wiki-list pricing-list">
                 <li>✔ Extensive Editor included</li>
                 <li>✔ Prebuilt toolbar + command UX</li>
-                <li>✔ Visual, HTML, Markdown, JSONB modes</li>
+                <li>✔ Visual and JSONB reversible modes</li>
                 <li>{luthorStats?.version ? `Latest version ${luthorStats.version}` : "Version tracked from npm"}</li>
               </ul>
               <div className="feature-panel__actions">

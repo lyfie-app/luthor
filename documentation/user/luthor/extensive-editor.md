@@ -24,7 +24,7 @@ export function EditorPage() {
 Typical use cases:
 
 - read/write editor content from parent controls
-- trigger conversion or export workflows
+- trigger JSONB conversion or export workflows
 - inspect current mode and change mode programmatically
 
 ## UX modules included
@@ -41,8 +41,6 @@ Typical use cases:
 The editor supports visual and source representations:
 
 - canonical editor state
-- HTML
-- enhanced markdown
 - JSONB
 
 Mode switching uses conversion utilities and error handling to avoid silently committing malformed source input.

@@ -49,7 +49,6 @@
   "dependencies": {
     "@lyfie/luthor-headless": "workspace:*",
     "@lexical/code": "^0.40.0",
-    "@lexical/html": "^0.40.0",
     "@lexical/link": "^0.40.0",
     "@lexical/list": "^0.40.0",
     "@lexical/markdown": "^0.40.0",

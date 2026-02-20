@@ -1,6 +1,4 @@
 import {
-  ALL_MARKDOWN_TRANSFORMERS,
-  MarkdownExtension,
   TableExtension,
   IframeEmbedExtension,
   YouTubeEmbedExtension,
@@ -27,7 +25,6 @@ import {
   listExtension,
   historyExtension,
   blockFormatExtension,
-  htmlExtension,
   codeExtension,
   codeIntelligenceExtension,
   codeFormatExtension,
@@ -134,12 +131,6 @@ const HeaderRowSvg = () => (
   </TableBubbleIcon>
 );
 
-const markdownExt = new MarkdownExtension();
-(markdownExt as any).config = {
-  ...(markdownExt as any).config,
-  customTransformers: ALL_MARKDOWN_TRANSFORMERS,
-};
-
 export const extensiveImageExtension = new ImageExtension();
 (extensiveImageExtension as any).config = {
   ...(extensiveImageExtension as any).config,
@@ -154,7 +145,6 @@ const tableExt = new TableExtension();
 (tableExt as any).config = {
   ...(tableExt as any).config,
   enableContextMenu: true,
-  markdownExtension: markdownExt,
   tableBubbleRenderer: ({ headersEnabled, setHeadersEnabled, actions }: any) => (
     <>
       <button
@@ -394,8 +384,6 @@ export const extensiveExtensions = [
   historyExtension,
   extensiveImageExtension,
   blockFormatExtension,
-  htmlExtension,
-  markdownExt,
   codeExtension,
   codeIntelligenceExtension,
   codeFormatExtension,

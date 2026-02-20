@@ -7,7 +7,7 @@ This document defines how `@lyfie/luthor-headless` is structured, why key design
 - Keep the package headless and lightweight.
 - Keep Lexical integrations in `@lyfie/luthor-headless` (not in presets).
 - Preserve type-safe command/state composition across arbitrary extension sets.
-- Support lossless import/export flows (JSON, HTML, enhanced Markdown).
+- Support lossless import/export flows (JSON/JSONB).
 
 ## Runtime Layers
 
@@ -16,11 +16,10 @@ This document defines how `@lyfie/luthor-headless` is structured, why key design
    - Extension factory (`createExtension`) for low-boilerplate extension authoring.
    - Theme contracts and merge helpers.
 2. `src/extensions/*`
-   - Feature modules (formatting, media, core UX, export, custom nodes).
+   - Feature modules (formatting, media, core UX, custom nodes).
    - Canonical extension type contracts in `src/extensions/types.ts`.
 3. `src/utils/*`
-   - Enhanced HTML and Markdown conversion pipelines.
-   - Metadata-preserving serialization helpers.
+   - Runtime utility surface for JSON/JSONB-first integrations.
 
 ## Why the extension model looks this way
 
@@ -43,8 +42,7 @@ This document defines how `@lyfie/luthor-headless` is structured, why key design
 ## Import / export strategy
 
 - JSON remains the source-of-truth round-trip format for exact editor state.
-- HTML path (`EnhancedHTMLConvertor`) embeds `LUTHOR_STATE` metadata so imports can restore full lexical state when possible.
-- Enhanced Markdown path (`EnhancedMarkdownConvertor`) embeds block metadata comments (`LUTHOR_BLOCK`) to preserve richer node details while keeping human-readable markdown.
+- JSONB is the recommended persistence target for production databases.
 
 ## Contribution rules for this package
 

@@ -22,14 +22,12 @@ export const DOCS_LINKS = {
   packageHeadlessReadme: "https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md",
   hub: "https://github.com/lyfie-app/luthor/blob/main/documentation/documentation-hub.md",
   index: "https://github.com/lyfie-app/luthor/blob/main/documentation/index.md",
-  markdownCatalog: "https://github.com/lyfie-app/luthor/blob/main/documentation/markdown-catalog.md",
   luthorGettingStarted: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/getting-started.md",
   luthorPresets: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/presets-and-configuration.md",
   extensiveEditorGuide: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/extensive-editor.md",
   headlessGettingStarted: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/getting-started.md",
   headlessExtensions: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/extensions-and-configuration.md",
   importExport: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/import-export.md",
-  markdownQuickStart: "https://github.com/lyfie-app/luthor/blob/main/documentation/tutorials/enhanced-markdown-quick-start.md",
   demoGettingStarted: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/demo/getting-started.md",
   demoPersistence: "https://github.com/lyfie-app/luthor/blob/main/documentation/user/demo/usage-and-persistence.md",
   developerDemoArchitecture: "https://github.com/lyfie-app/luthor/blob/main/documentation/developer/demo/architecture.md",
@@ -83,10 +81,10 @@ export const DOCS_AUDIENCE_TRACKS: Record<
   },
   tutorials: {
     title: "Tutorials & Reference",
-    subtitle: "Practical recipes and complete markdown catalog references.",
+    subtitle: "Practical recipes for persistence, import/export, and production rollouts.",
     links: [
-      { label: "Enhanced Markdown Quick Start", href: DOCS_LINKS.markdownQuickStart },
-      { label: "Markdown Catalog", href: DOCS_LINKS.markdownCatalog },
+      { label: "Headless Import / Export", href: DOCS_LINKS.importExport },
+      { label: "Demo Usage & Persistence", href: DOCS_LINKS.demoPersistence },
       { label: "Documentation Hub", href: DOCS_LINKS.hub },
       { label: "Repository README", href: `${REPOSITORY_URL}#readme` },
     ],
@@ -112,10 +110,10 @@ export const DOCS_START_HERE = [
   },
   {
     title: "I need robust persistence and conversion",
-    description: "Implement JSONB + markdown + HTML strategies with documented import/export safeguards.",
+    description: "Implement JSONB-first persistence with reversible visual/editor workflows.",
     links: [
       { label: "Import / Export Guide", href: DOCS_LINKS.importExport },
-      { label: "Enhanced Markdown Quick Start", href: DOCS_LINKS.markdownQuickStart },
+      { label: "Demo Usage & Persistence", href: DOCS_LINKS.demoPersistence },
     ],
   },
 ];
@@ -188,9 +186,9 @@ export const TRUST_PROOF_ITEMS = [
   },
   {
     title: "Performance and conversion fidelity",
-    summary: "Enhanced markdown and JSONB workflows are designed for reliable round-trips.",
+    summary: "Visual and JSONB workflows are designed for reliable round-trips.",
     references: [
-      { label: "Markdown quick start", href: DOCS_LINKS.markdownQuickStart },
+      { label: "Import / export guide", href: DOCS_LINKS.importExport },
       { label: "Extensive editor guide", href: DOCS_LINKS.extensiveEditorGuide },
     ],
   },

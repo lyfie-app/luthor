@@ -180,15 +180,11 @@ export interface EditorContextType<Exts extends readonly Extension[]> {
 
   /** Export helpers for formats */
   export: {
-    toHTML: () => Promise<string>;
-    toMarkdown: () => Promise<string>;
     toJSON: () => unknown;
   };
 
   /** Import helpers for formats */
   import: {
-    fromHTML: (html: string) => Promise<void>;
-    fromMarkdown: (md: string) => Promise<void>;
     fromJSON: (json: unknown) => void;
   };
 

@@ -33,7 +33,7 @@ export function App() {
 - floating toolbar and contextual actions
 - image, iframe, and YouTube embedding support
 - tables, lists, code/code-block, typography and color tools
-- visual/source mode switching (`visual`, `html`, `markdown`, `jsonb`)
+- visual/source mode switching (`visual`, `jsonb`)
 
 ## Headless access from the same package
 

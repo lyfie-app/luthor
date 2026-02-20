@@ -7,7 +7,6 @@ This guide lists the built-in extension groups and common options.
 - Core UX: `richTextExtension`, `historyExtension`, `slashCommandExtension`, `floatingToolbarExtension`, `contextMenuExtension`, `draggableBlockExtension`, `emojiExtension`, `tabIndentExtension`, `enterKeyBehaviorExtension`
 - Formatting: `boldExtension`, `italicExtension`, `underlineExtension`, `strikethroughExtension`, `subscriptExtension`, `superscriptExtension`, `codeFormatExtension`, `codeExtension`, `codeIntelligenceExtension`, `blockFormatExtension`, `listExtension`, `linkExtension`, `tableExtension`, `horizontalRuleExtension`, `fontFamilyExtension`, `fontSizeExtension`, `lineHeightExtension`, `textColorExtension`, `textHighlightExtension`
 - Media: `imageExtension`, `iframeEmbedExtension`, `youTubeEmbedExtension`
-- Export/import: `htmlExtension`, `markdownExtension`
 - Custom: `createCustomNodeExtension(...)`
 
 ## Common configuration patterns

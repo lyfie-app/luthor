@@ -143,28 +143,29 @@ function ContentCreatorEditor() {
 }
 ```
 
-## Custom Layout Example 4: Markdown-First Layout
+## Custom Layout Example 4: JSONB-First Compact Layout
 
-Minimal toolbar for users who prefer keyboard shortcuts and markdown syntax:
+Minimal toolbar for teams that persist JSONB and prefer compact editing controls:
 
 ```tsx
 import { ExtensiveEditor, type ToolbarLayout } from "@lyfie/luthor";
 
-const markdownLayout: ToolbarLayout = {
+const compactJsonbLayout: ToolbarLayout = {
   sections: [
-    // Only visual aids that complement markdown
+    // Keep only essential editing controls
     { items: ["bold", "italic", "code", "link"] },
     { items: ["unorderedList", "orderedList"] },
     { items: ["commandPalette", "themeToggle"] },
   ],
 };
 
-function MarkdownEditor() {
+function CompactJsonbEditor() {
   return (
     <ExtensiveEditor
-      placeholder="Type in markdown or use the minimal toolbar..."
-      toolbarLayout={markdownLayout}
-      initialMode="markdown" // Start in markdown mode
+      placeholder="Start writing with compact controls..."
+      toolbarLayout={compactJsonbLayout}
+      initialMode="visual"
+      availableModes={["visual", "jsonb"]}
     />
   );
 }
