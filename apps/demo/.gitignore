@@ -10,8 +10,6 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-build
-.docusaurus
 *.local
 
 # Editor directories and files

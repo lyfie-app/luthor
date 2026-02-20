@@ -1,23 +1,17 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "types": ["node", "@docusaurus/module-type-aliases"],
-    "noEmit": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
+      "@lyfie/luthor-headless": ["../../packages/headless/src"],
+      "@lyfie/luthor-headless/*": ["../../packages/headless/src/*"],
       "@lyfie/luthor": ["../../packages/luthor/src"],
       "@lyfie/luthor/*": ["../../packages/luthor/src/*"]
     }
   },
-  "include": ["src", "docusaurus.config.ts", "sidebars.ts"]
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
 }
