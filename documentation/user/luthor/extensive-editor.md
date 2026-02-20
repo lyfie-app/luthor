@@ -51,6 +51,30 @@ Mode switching uses conversion utilities and error handling to avoid silently co
 
 Use `initialTheme` and your host CSS overrides for light/dark and branding adaptation.
 
+## Toolbar Customization
+
+The `ExtensiveEditor` uses the `TRADITIONAL_TOOLBAR_LAYOUT` by default, which groups toolbar items in a familiar pattern similar to traditional word processors. You can customize this by passing a custom `toolbarLayout` prop:
+
+```tsx
+import { ExtensiveEditor, TRADITIONAL_TOOLBAR_LAYOUT } from "@lyfie/luthor";
+
+// Use the default traditional layout (explicit)
+<ExtensiveEditor toolbarLayout={TRADITIONAL_TOOLBAR_LAYOUT} />
+
+// Or create your own custom layout
+const myLayout = {
+  sections: [
+    { items: ["bold", "italic", "underline"] },
+    { items: ["link", "image", "table"] },
+    { items: ["undo", "redo"] },
+  ],
+};
+
+<ExtensiveEditor toolbarLayout={myLayout} />
+```
+
+For detailed information on creating custom toolbar layouts, see [toolbar-customization.md](toolbar-customization.md).
+
 ## Related docs
 
 - Getting started: [getting-started.md](getting-started.md)

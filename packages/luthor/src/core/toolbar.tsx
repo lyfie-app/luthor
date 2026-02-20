@@ -8,6 +8,7 @@ import {
   type CSSProperties,
   type ChangeEvent,
   type Dispatch,
+  type ReactElement,
   type SetStateAction,
 } from "react";
 import {
@@ -47,7 +48,8 @@ import {
   StrikethroughIcon,
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
-import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment } from "./types";
+import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment, ToolbarLayout, ToolbarItemType } from "./types";
+import { TRADITIONAL_TOOLBAR_LAYOUT } from "./types";
 
 type SelectOption = {
   value: string;
@@ -605,6 +607,7 @@ export interface ToolbarProps {
   onCommandPaletteOpen: () => void;
   imageUploadHandler?: (file: File) => Promise<string>;
   classNames?: CoreToolbarClassNames;
+  layout?: ToolbarLayout;
 }
 
 export function Toolbar({
@@ -616,6 +619,7 @@ export function Toolbar({
   onCommandPaletteOpen,
   imageUploadHandler,
   classNames,
+  layout,
 }: ToolbarProps) {
   const { handlers, fileInputRef, gifInputRef } = useImageHandlers(commands, imageUploadHandler);
   const embedHandlers = useEmbedHandlers(commands);
@@ -967,168 +971,274 @@ export function Toolbar({
     setTextHighlightValue(value);
   };
 
-  return (
-    <>
-      <div className={classNames?.toolbar ?? "luthor-toolbar"}>
-        <div className={classNames?.section ?? "luthor-toolbar-section"}>
-          {hasExtension("fontFamily") && (
-            <Select
-              value={fontFamilyValue}
-              onValueChange={handleFontFamilyChange}
-              options={fontFamilyOptions}
-              placeholder="Font"
-            />
-          )}
-          {hasExtension("fontSize") && (
-            <Select
-              value={fontSizeValue}
-              onValueChange={handleFontSizeChange}
-              options={fontSizeOptions}
-              placeholder="Size"
-            />
-          )}
-          {hasExtension("lineHeight") && (
-            <Select
-              value={lineHeightValue}
-              onValueChange={handleLineHeightChange}
-              options={lineHeightOptions}
-              placeholder="Line"
-            />
-          )}
-          {hasExtension("textColor") && (
-            <ColorPickerButton
-              title="Text Color"
-              value={textColorValue}
-              options={textColorOptions}
-              recentColors={recentTextColors}
-              active={activeStates.hasCustomTextColor}
-              fallbackColor="#0f172a"
-              onChange={handleTextColorChange}
-              onClear={() => handleTextColorChange("default")}
-              onAddRecent={(color) => pushRecentColor(setRecentTextColors, color)}
-            />
-          )}
-          {hasExtension("textHighlight") && (
-            <ColorPickerButton
-              title="Text Highlight"
-              value={textHighlightValue}
-              options={textHighlightOptions}
-              recentColors={recentHighlightColors}
-              active={activeStates.hasTextHighlight}
-              fallbackColor="#fef08a"
-              highlight
-              onChange={handleTextHighlightChange}
-              onClear={() => handleTextHighlightChange("default")}
-              onAddRecent={(color) => pushRecentColor(setRecentHighlightColors, color)}
-            />
-          )}
-          <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold (Ctrl+B)">
+  const renderToolbarItem = useCallback((itemType: ToolbarItemType): ReactElement | null => {
+    switch (itemType) {
+      case "fontFamily":
+        if (!hasExtension("fontFamily")) return null;
+        return (
+          <Select
+            key="fontFamily"
+            value={fontFamilyValue}
+            onValueChange={handleFontFamilyChange}
+            options={fontFamilyOptions}
+            placeholder="Font"
+          />
+        );
+
+      case "fontSize":
+        if (!hasExtension("fontSize")) return null;
+        return (
+          <Select
+            key="fontSize"
+            value={fontSizeValue}
+            onValueChange={handleFontSizeChange}
+            options={fontSizeOptions}
+            placeholder="Size"
+          />
+        );
+
+      case "lineHeight":
+        if (!hasExtension("lineHeight")) return null;
+        return (
+          <Select
+            key="lineHeight"
+            value={lineHeightValue}
+            onValueChange={handleLineHeightChange}
+            options={lineHeightOptions}
+            placeholder="Line"
+          />
+        );
+
+      case "textColor":
+        if (!hasExtension("textColor")) return null;
+        return (
+          <ColorPickerButton
+            key="textColor"
+            title="Text Color"
+            value={textColorValue}
+            options={textColorOptions}
+            recentColors={recentTextColors}
+            active={activeStates.hasCustomTextColor}
+            fallbackColor="#0f172a"
+            onChange={handleTextColorChange}
+            onClear={() => handleTextColorChange("default")}
+            onAddRecent={(color) => pushRecentColor(setRecentTextColors, color)}
+          />
+        );
+
+      case "textHighlight":
+        if (!hasExtension("textHighlight")) return null;
+        return (
+          <ColorPickerButton
+            key="textHighlight"
+            title="Text Highlight"
+            value={textHighlightValue}
+            options={textHighlightOptions}
+            recentColors={recentHighlightColors}
+            active={activeStates.hasTextHighlight}
+            fallbackColor="#fef08a"
+            highlight
+            onChange={handleTextHighlightChange}
+            onClear={() => handleTextHighlightChange("default")}
+            onAddRecent={(color) => pushRecentColor(setRecentHighlightColors, color)}
+          />
+        );
+
+      case "bold":
+        return (
+          <IconButton key="bold" onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold (Ctrl+B)">
             <BoldIcon size={16} />
           </IconButton>
-          <IconButton onClick={() => commands.toggleItalic()} active={activeStates.italic} title="Italic (Ctrl+I)">
+        );
+
+      case "italic":
+        return (
+          <IconButton key="italic" onClick={() => commands.toggleItalic()} active={activeStates.italic} title="Italic (Ctrl+I)">
             <ItalicIcon size={16} />
           </IconButton>
-          <IconButton onClick={() => commands.toggleUnderline()} active={activeStates.underline} title="Underline (Ctrl+U)">
+        );
+
+      case "underline":
+        return (
+          <IconButton key="underline" onClick={() => commands.toggleUnderline()} active={activeStates.underline} title="Underline (Ctrl+U)">
             <UnderlineIcon size={16} />
           </IconButton>
-          <IconButton onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
+        );
+
+      case "strikethrough":
+        return (
+          <IconButton key="strikethrough" onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
             <StrikethroughIcon size={16} />
           </IconButton>
-          {hasExtension("subscript") && (
-            <IconButton onClick={() => commands.toggleSubscript?.()} active={activeStates.subscript} title="Subscript">
-              <SubscriptIcon size={16} />
-            </IconButton>
-          )}
-          {hasExtension("superscript") && (
-            <IconButton onClick={() => commands.toggleSuperscript?.()} active={activeStates.superscript} title="Superscript">
-              <SuperscriptIcon size={16} />
-            </IconButton>
-          )}
-          <IconButton onClick={() => commands.formatText("code")} active={activeStates.code} title="Inline Code">
+        );
+
+      case "subscript":
+        if (!hasExtension("subscript")) return null;
+        return (
+          <IconButton key="subscript" onClick={() => commands.toggleSubscript?.()} active={activeStates.subscript} title="Subscript">
+            <SubscriptIcon size={16} />
+          </IconButton>
+        );
+
+      case "superscript":
+        if (!hasExtension("superscript")) return null;
+        return (
+          <IconButton key="superscript" onClick={() => commands.toggleSuperscript?.()} active={activeStates.superscript} title="Superscript">
+            <SuperscriptIcon size={16} />
+          </IconButton>
+        );
+
+      case "code":
+        return (
+          <IconButton key="code" onClick={() => commands.formatText("code")} active={activeStates.code} title="Inline Code">
             <CodeIcon size={16} />
           </IconButton>
+        );
+
+      case "link":
+        return (
           <IconButton
+            key="link"
             onClick={() => (activeStates.isLink ? commands.removeLink() : commands.insertLink())}
             active={activeStates.isLink}
             title={activeStates.isLink ? "Remove Link" : "Insert Link"}
           >
             {activeStates.isLink ? <UnlinkIcon size={16} /> : <LinkIcon size={16} />}
           </IconButton>
-        </div>
+        );
 
-        {hasExtension("blockFormat") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <Select value={currentBlockFormat} onValueChange={handleBlockFormatChange} options={blockFormatOptions} placeholder="Format" />
-            <IconButton onClick={() => commands.toggleQuote()} active={activeStates.isQuote} title="Quote">
-              <QuoteIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.setTextAlignment("left")} active={activeStates.isTextAlignedLeft} title="Align Left">
-              <AlignLeftIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.setTextAlignment("center")} active={activeStates.isTextAlignedCenter} title="Align Center">
-              <AlignCenterIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.setTextAlignment("right")} active={activeStates.isTextAlignedRight} title="Align Right">
-              <AlignRightIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.setTextAlignment("justify")} active={activeStates.isTextAlignedJustify} title="Justify">
-              <AlignJustifyIcon size={16} />
-            </IconButton>
-            {hasExtension("code") && (
-              <IconButton onClick={() => commands.toggleCodeBlock()} active={activeStates.isInCodeBlock} title="Code Block">
-                <CodeBlockIcon size={16} />
-              </IconButton>
-            )}
-          </div>
-        )}
+      case "blockFormat":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <Select
+            key="blockFormat"
+            value={currentBlockFormat}
+            onValueChange={handleBlockFormatChange}
+            options={blockFormatOptions}
+            placeholder="Format"
+          />
+        );
 
-        {hasExtension("list") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
-              <ListIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
-              <ListOrderedIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
-              <ListCheckIcon size={16} />
-            </IconButton>
-            <IconButton
-              onClick={() => commands.indentList()}
-              title="Indent List"
-              disabled={activeStates.checkList}
-            >
-              <IndentIcon size={14} />
-            </IconButton>
-            <IconButton
-              onClick={() => commands.outdentList()}
-              title="Outdent List"
-              disabled={activeStates.checkList}
-            >
-              <OutdentIcon size={14} />
-            </IconButton>
-          </div>
-        )}
+      case "quote":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <IconButton key="quote" onClick={() => commands.toggleQuote()} active={activeStates.isQuote} title="Quote">
+            <QuoteIcon size={16} />
+          </IconButton>
+        );
 
-        {hasExtension("horizontalRule") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <IconButton onClick={() => commands.insertHorizontalRule()} title="Insert Horizontal Rule">
-              <MinusIcon size={16} />
-            </IconButton>
-          </div>
-        )}
+      case "alignLeft":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <IconButton key="alignLeft" onClick={() => commands.setTextAlignment("left")} active={activeStates.isTextAlignedLeft} title="Align Left">
+            <AlignLeftIcon size={16} />
+          </IconButton>
+        );
 
-        {hasExtension("table") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <IconButton onClick={() => setShowTableDialog(true)} title="Insert Table">
-              <TableIcon size={16} />
-            </IconButton>
-          </div>
-        )}
+      case "alignCenter":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <IconButton key="alignCenter" onClick={() => commands.setTextAlignment("center")} active={activeStates.isTextAlignedCenter} title="Align Center">
+            <AlignCenterIcon size={16} />
+          </IconButton>
+        );
 
-        {hasExtension("image") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
+      case "alignRight":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <IconButton key="alignRight" onClick={() => commands.setTextAlignment("right")} active={activeStates.isTextAlignedRight} title="Align Right">
+            <AlignRightIcon size={16} />
+          </IconButton>
+        );
+
+      case "alignJustify":
+        if (!hasExtension("blockFormat")) return null;
+        return (
+          <IconButton key="alignJustify" onClick={() => commands.setTextAlignment("justify")} active={activeStates.isTextAlignedJustify} title="Justify">
+            <AlignJustifyIcon size={16} />
+          </IconButton>
+        );
+
+      case "codeBlock":
+        if (!hasExtension("code")) return null;
+        return (
+          <IconButton key="codeBlock" onClick={() => commands.toggleCodeBlock()} active={activeStates.isInCodeBlock} title="Code Block">
+            <CodeBlockIcon size={16} />
+          </IconButton>
+        );
+
+      case "unorderedList":
+        if (!hasExtension("list")) return null;
+        return (
+          <IconButton key="unorderedList" onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
+            <ListIcon size={16} />
+          </IconButton>
+        );
+
+      case "orderedList":
+        if (!hasExtension("list")) return null;
+        return (
+          <IconButton key="orderedList" onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
+            <ListOrderedIcon size={16} />
+          </IconButton>
+        );
+
+      case "checkList":
+        if (!hasExtension("list")) return null;
+        return (
+          <IconButton key="checkList" onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
+            <ListCheckIcon size={16} />
+          </IconButton>
+        );
+
+      case "indentList":
+        if (!hasExtension("list")) return null;
+        return (
+          <IconButton
+            key="indentList"
+            onClick={() => commands.indentList()}
+            title="Indent List"
+            disabled={activeStates.checkList}
+          >
+            <IndentIcon size={14} />
+          </IconButton>
+        );
+
+      case "outdentList":
+        if (!hasExtension("list")) return null;
+        return (
+          <IconButton
+            key="outdentList"
+            onClick={() => commands.outdentList()}
+            title="Outdent List"
+            disabled={activeStates.checkList}
+          >
+            <OutdentIcon size={14} />
+          </IconButton>
+        );
+
+      case "horizontalRule":
+        if (!hasExtension("horizontalRule")) return null;
+        return (
+          <IconButton key="horizontalRule" onClick={() => commands.insertHorizontalRule()} title="Insert Horizontal Rule">
+            <MinusIcon size={16} />
+          </IconButton>
+        );
+
+      case "table":
+        if (!hasExtension("table")) return null;
+        return (
+          <IconButton key="table" onClick={() => setShowTableDialog(true)} title="Insert Table">
+            <TableIcon size={16} />
+          </IconButton>
+        );
+
+      case "image":
+        if (!hasExtension("image")) return null;
+        return (
+          <>
             <Dropdown
+              key="image"
               trigger={
                 <button className={`luthor-toolbar-button ${activeStates.imageSelected ? "active" : ""}`} title="Insert Image">
                   <ImageIcon size={16} />
@@ -1156,6 +1266,7 @@ export function Toolbar({
             </Dropdown>
             {activeStates.imageSelected && (
               <Dropdown
+                key="imageAlign"
                 trigger={
                   <button className="luthor-toolbar-button" title="Align Image">
                     <AlignCenterIcon size={16} />
@@ -1182,92 +1293,172 @@ export function Toolbar({
                 </button>
               </Dropdown>
             )}
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlers.handleUpload} className="luthor-file-input" />
-            <input ref={gifInputRef} type="file" accept="image/gif" onChange={handlers.handleGifUpload} className="luthor-file-input" />
-          </div>
-        )}
+          </>
+        );
 
-        {hasExtension("emoji") && emojiOptions.length > 0 && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <Dropdown
-              trigger={
-                <button className="luthor-toolbar-button" title="Insert Emoji">
-                  <EmojiIcon size={16} />
+      case "emoji":
+        if (!hasExtension("emoji") || emojiOptions.length === 0) return null;
+        return (
+          <Dropdown
+            key="emoji"
+            trigger={
+              <button className="luthor-toolbar-button" title="Insert Emoji">
+                <EmojiIcon size={16} />
+              </button>
+            }
+            isOpen={showEmojiDropdown}
+            onOpenChange={setShowEmojiDropdown}
+          >
+            <div className="luthor-emoji-picker-grid" role="listbox" aria-label="Emoji picker">
+              {emojiOptions.map((item) => (
+                <button
+                  key={`${item.emoji}-${item.label}`}
+                  type="button"
+                  className="luthor-emoji-picker-item"
+                  title={item.shortcodes[0] ? `${item.label} (:${item.shortcodes[0]}:)` : item.label}
+                  onClick={() => {
+                    commands.insertEmoji?.(item.emoji);
+                    setShowEmojiDropdown(false);
+                  }}
+                >
+                  {item.emoji}
                 </button>
-              }
-              isOpen={showEmojiDropdown}
-              onOpenChange={setShowEmojiDropdown}
-            >
-              <div className="luthor-emoji-picker-grid" role="listbox" aria-label="Emoji picker">
-                {emojiOptions.map((item) => (
-                  <button
-                    key={`${item.emoji}-${item.label}`}
-                    type="button"
-                    className="luthor-emoji-picker-item"
-                    title={item.shortcodes[0] ? `${item.label} (:${item.shortcodes[0]}:)` : item.label}
-                    onClick={() => {
-                      commands.insertEmoji?.(item.emoji);
-                      setShowEmojiDropdown(false);
-                    }}
-                  >
-                    {item.emoji}
-                  </button>
-                ))}
-              </div>
-            </Dropdown>
-          </div>
-        )}
+              ))}
+            </div>
+          </Dropdown>
+        );
 
-        {hasAnyEmbedExtension && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <Dropdown
-              trigger={
-                <button className={`luthor-toolbar-button ${isAnyEmbedSelected ? "active" : ""}`} title="Insert Embed">
-                  <FileCodeIcon size={16} />
-                </button>
-              }
-              isOpen={showEmbedDropdown}
-              onOpenChange={setShowEmbedDropdown}
-            >
-              {hasExtension("iframeEmbed") ? (
-                <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertIframe(); setShowEmbedDropdown(false); }}>
-                  <LinkIcon size={16} />
-                  <span>Embed iframe</span>
-                </button>
-              ) : null}
-              {hasExtension("youtubeEmbed") ? (
-                <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertYouTube(); setShowEmbedDropdown(false); }}>
-                  <ImageIcon size={16} />
-                  <span>Embed YouTube Video</span>
-                </button>
-              ) : null}
-            </Dropdown>
-          </div>
-        )}
+      case "embed":
+        if (!hasAnyEmbedExtension) return null;
+        return (
+          <Dropdown
+            key="embed"
+            trigger={
+              <button className={`luthor-toolbar-button ${isAnyEmbedSelected ? "active" : ""}`} title="Insert Embed">
+                <FileCodeIcon size={16} />
+              </button>
+            }
+            isOpen={showEmbedDropdown}
+            onOpenChange={setShowEmbedDropdown}
+          >
+            {hasExtension("iframeEmbed") ? (
+              <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertIframe(); setShowEmbedDropdown(false); }}>
+                <LinkIcon size={16} />
+                <span>Embed iframe</span>
+              </button>
+            ) : null}
+            {hasExtension("youtubeEmbed") ? (
+              <button className="luthor-dropdown-item" onClick={() => { embedHandlers.insertYouTube(); setShowEmbedDropdown(false); }}>
+                <ImageIcon size={16} />
+                <span>Embed YouTube Video</span>
+              </button>
+            ) : null}
+          </Dropdown>
+        );
 
-        {hasExtension("history") && (
-          <div className={classNames?.section ?? "luthor-toolbar-section"}>
-            <IconButton onClick={() => commands.undo()} disabled={!activeStates.canUndo} title="Undo (Ctrl+Z)">
-              <UndoIcon size={16} />
-            </IconButton>
-            <IconButton onClick={() => commands.redo()} disabled={!activeStates.canRedo} title="Redo (Ctrl+Y)">
-              <RedoIcon size={16} />
-            </IconButton>
-          </div>
-        )}
+      case "undo":
+        if (!hasExtension("history")) return null;
+        return (
+          <IconButton key="undo" onClick={() => commands.undo()} disabled={!activeStates.canUndo} title="Undo (Ctrl+Z)">
+            <UndoIcon size={16} />
+          </IconButton>
+        );
 
-        <div className={classNames?.section ?? "luthor-toolbar-section"}>
-          <IconButton onClick={onCommandPaletteOpen} title="Command Palette (Ctrl+Shift+P)">
+      case "redo":
+        if (!hasExtension("history")) return null;
+        return (
+          <IconButton key="redo" onClick={() => commands.redo()} disabled={!activeStates.canRedo} title="Redo (Ctrl+Y)">
+            <RedoIcon size={16} />
+          </IconButton>
+        );
+
+      case "commandPalette":
+        return (
+          <IconButton key="commandPalette" onClick={onCommandPaletteOpen} title="Command Palette (Ctrl+Shift+P)">
             <CommandIcon size={16} />
           </IconButton>
-        </div>
+        );
 
-        <div className={classNames?.section ?? "luthor-toolbar-section"}>
-          <IconButton onClick={toggleTheme} title={isDark ? "Light Mode" : "Dark Mode"}>
+      case "themeToggle":
+        return (
+          <IconButton key="themeToggle" onClick={toggleTheme} title={isDark ? "Light Mode" : "Dark Mode"}>
             {isDark ? <SunIcon size={16} /> : <MoonIcon size={16} />}
           </IconButton>
-        </div>
+        );
+
+      default:
+        return null;
+    }
+  }, [
+    hasExtension,
+    fontFamilyValue,
+    fontFamilyOptions,
+    fontSizeValue,
+    fontSizeOptions,
+    lineHeightValue,
+    lineHeightOptions,
+    textColorValue,
+    textColorOptions,
+    recentTextColors,
+    textHighlightValue,
+    textHighlightOptions,
+    recentHighlightColors,
+    activeStates,
+    commands,
+    currentBlockFormat,
+    handleBlockFormatChange,
+    handleFontFamilyChange,
+    handleFontSizeChange,
+    handleLineHeightChange,
+    handleTextColorChange,
+    handleTextHighlightChange,
+    pushRecentColor,
+    setRecentTextColors,
+    setRecentHighlightColors,
+    showImageDropdown,
+    setShowImageDropdown,
+    handlers,
+    showAlignDropdown,
+    setShowAlignDropdown,
+    emojiOptions,
+    showEmojiDropdown,
+    setShowEmojiDropdown,
+    hasAnyEmbedExtension,
+    isAnyEmbedSelected,
+    showEmbedDropdown,
+    setShowEmbedDropdown,
+    embedHandlers,
+    setShowTableDialog,
+    onCommandPaletteOpen,
+    toggleTheme,
+    isDark,
+  ]);
+
+  // Use the provided layout or default to TRADITIONAL_TOOLBAR_LAYOUT
+  const activeLayout = layout ?? TRADITIONAL_TOOLBAR_LAYOUT;
+
+  return (
+    <>
+      <div className={classNames?.toolbar ?? "luthor-toolbar"}>
+        {activeLayout.sections.map((section, sectionIndex) => {
+          const renderedItems = section.items
+            .map((itemType) => renderToolbarItem(itemType))
+            .filter((item): item is ReactElement => item !== null);
+
+          // Only render section if it has at least one item
+          if (renderedItems.length === 0) return null;
+
+          return (
+            <div key={sectionIndex} className={classNames?.section ?? "luthor-toolbar-section"}>
+              {renderedItems}
+            </div>
+          );
+        })}
       </div>
+
+      {/* Hidden file inputs for image upload */}
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handlers.handleUpload} className="luthor-file-input" />
+      <input ref={gifInputRef} type="file" accept="image/gif" onChange={handlers.handleGifUpload} className="luthor-file-input" />
 
       <Dialog isOpen={showTableDialog} onClose={() => setShowTableDialog(false)} title="Insert Table">
         <div className="luthor-table-dialog">

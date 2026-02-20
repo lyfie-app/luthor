@@ -179,3 +179,125 @@ export interface CoreToolbarClassNames {
   toolbar?: string;
   section?: string;
 }
+
+export type ToolbarItemType =
+  // Typography
+  | "fontFamily"
+  | "fontSize"
+  | "lineHeight"
+  | "textColor"
+  | "textHighlight"
+  // Basic Formatting
+  | "bold"
+  | "italic"
+  | "underline"
+  | "strikethrough"
+  // Enhanced Formatting
+  | "subscript"
+  | "superscript"
+  | "code"
+  | "link"
+  // Block Format
+  | "blockFormat"
+  | "quote"
+  | "alignLeft"
+  | "alignCenter"
+  | "alignRight"
+  | "alignJustify"
+  | "codeBlock"
+  // Lists
+  | "unorderedList"
+  | "orderedList"
+  | "checkList"
+  | "indentList"
+  | "outdentList"
+  // Insert
+  | "horizontalRule"
+  | "table"
+  | "image"
+  | "emoji"
+  | "embed"
+  // History
+  | "undo"
+  | "redo"
+  // Utilities
+  | "commandPalette"
+  | "themeToggle";
+
+export type ToolbarSection = {
+  items: readonly ToolbarItemType[];
+};
+
+export type ToolbarLayout = {
+  sections: readonly ToolbarSection[];
+};
+
+export const DEFAULT_TOOLBAR_LAYOUT: ToolbarLayout = {
+  sections: [
+    {
+      items: ["fontFamily", "fontSize", "lineHeight", "textColor", "textHighlight", "bold", "italic", "underline", "strikethrough", "subscript", "superscript", "code", "link"],
+    },
+    {
+      items: ["blockFormat", "quote", "alignLeft", "alignCenter", "alignRight", "alignJustify", "codeBlock"],
+    },
+    {
+      items: ["unorderedList", "orderedList", "checkList", "indentList", "outdentList"],
+    },
+    {
+      items: ["horizontalRule"],
+    },
+    {
+      items: ["table"],
+    },
+    {
+      items: ["image"],
+    },
+    {
+      items: ["emoji"],
+    },
+    {
+      items: ["embed"],
+    },
+    {
+      items: ["undo", "redo"],
+    },
+    {
+      items: ["commandPalette"],
+    },
+    {
+      items: ["themeToggle"],
+    },
+  ],
+};
+
+export const TRADITIONAL_TOOLBAR_LAYOUT: ToolbarLayout = {
+  sections: [
+    {
+      items: ["fontFamily", "fontSize", "lineHeight"],
+    },
+    {
+      items: ["bold", "italic", "underline", "strikethrough", "textColor", "textHighlight"],
+    },
+    {
+      items: ["subscript", "superscript", "code", "link"],
+    },
+    {
+      items: ["blockFormat", "quote", "alignLeft", "alignCenter", "alignRight", "alignJustify"],
+    },
+    {
+      items: ["unorderedList", "orderedList", "checkList", "indentList", "outdentList"],
+    },
+    {
+      items: ["table", "image", "emoji", "embed", "horizontalRule"],
+    },
+    {
+      items: ["codeBlock"],
+    },
+    {
+      items: ["undo", "redo"],
+    },
+    {
+      items: ["commandPalette", "themeToggle"],
+    },
+  ],
+};

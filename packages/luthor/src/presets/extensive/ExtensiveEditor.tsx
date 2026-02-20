@@ -14,7 +14,9 @@ import {
   registerKeyboardShortcuts,
   SourceView,
   Toolbar,
+  TRADITIONAL_TOOLBAR_LAYOUT,
   type CoreEditorCommands,
+  type ToolbarLayout,
 } from "../../core";
 import type { CommandPaletteExtension, SlashCommandExtension, EmojiExtension, EmojiCatalogItem } from "@lyfie/luthor-headless";
 import "./styles.css";
@@ -86,6 +88,7 @@ function ExtensiveEditorContent({
   initialMode,
   availableModes,
   onReady,
+  toolbarLayout,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
@@ -93,6 +96,7 @@ function ExtensiveEditorContent({
   initialMode: ExtensiveEditorMode;
   availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
+  toolbarLayout?: ToolbarLayout;
 }) {
   const {
     commands,
@@ -369,6 +373,7 @@ function ExtensiveEditorContent({
             toggleTheme={toggleTheme}
             onCommandPaletteOpen={() => commands.showCommandPalette()}
             imageUploadHandler={(file) => ((extensiveExtensions.find((ext: any) => ext.name === "image") as any)?.config?.uploadHandler?.(file) ?? Promise.resolve(URL.createObjectURL(file)))}
+            layout={toolbarLayout ?? TRADITIONAL_TOOLBAR_LAYOUT}
           />
         )}
       </div>
@@ -449,10 +454,11 @@ export interface ExtensiveEditorProps {
   initialMode?: ExtensiveEditorMode;
   availableModes?: readonly ExtensiveEditorMode[];
   variantClassName?: string;
+  toolbarLayout?: ToolbarLayout;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
-  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true, placeholder = "Write anything...", initialMode = "visual", availableModes = ["visual", "html", "markdown", "jsonb"], variantClassName }, ref) => {
+  ({ className, onReady, initialTheme = "light", defaultContent, showDefaultContent = true, placeholder = "Write anything...", initialMode = "visual", availableModes = ["visual", "html", "markdown", "jsonb"], variantClassName, toolbarLayout }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
     const resolvedInitialMode = availableModes.includes(initialMode)
@@ -517,6 +523,7 @@ Start typing or use the toolbar above to format your text. Press \`Cmd+Shift+P\`
             initialMode={resolvedInitialMode}
             availableModes={availableModes}
             onReady={handleReady}
+            toolbarLayout={toolbarLayout}
           />
         </Provider>
       </div>

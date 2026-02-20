@@ -2,6 +2,7 @@ import {
   ExtensiveEditor,
   extensiveExtensions,
 } from "@lyfie/luthor";
+import { TRADITIONAL_TOOLBAR_LAYOUT, type ToolbarLayout } from "@lyfie/luthor";
 import type { ExtensiveEditorRef } from "@lyfie/luthor";
 import React from "react";
 import "@lyfie/luthor/styles.css";
@@ -44,6 +45,13 @@ function App() {
   const editorRef = React.useRef<ExtensiveEditorRef>(null);
   const { theme, toggleTheme } = useDemoTheme();
   const { totalWeeklyDownloads } = usePackageStats();
+
+  const myLayout: ToolbarLayout = {
+    sections: [
+      { items: ["undo", "redo"] },
+      { items: ["bold", "italic", "link"] },
+    ],
+  };
 
   const [copiedState, setCopiedState] = React.useState<"idle" | "done" | "error">("idle");
   const [payloadEditorValue, setPayloadEditorValue] = React.useState("");
@@ -222,6 +230,7 @@ function App() {
               onReady={handleEditorReady}
               initialTheme={theme}
               showDefaultContent={false}
+              toolbarLayout={myLayout} 
             />
           </EditorPlayground>
         </section>
