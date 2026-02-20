@@ -1,51 +1,60 @@
 ---
-import '@lyfie/luthor/styles.css';
-import { ExtensiveEditor } from '@lyfie/luthor';
-import { useState, useEffect } from 'react';
-const THEME_KEY = 'luthor-website-theme';
-let initialTheme = 'light';
-if (typeof window !== 'undefined') {
-  const stored = window.localStorage.getItem(THEME_KEY);
-  if (stored === 'dark' || stored === 'light') initialTheme = stored;
-  else initialTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  document.documentElement.dataset.theme = initialTheme;
-  document.documentElement.style.colorScheme = initialTheme;
-}
+import ExtensiveEditorIsland from './ExtensiveEditorIsland.tsx';
+---
 
----
-<script type="module" client:load>
-  let theme = initialTheme;
-  function toggleTheme() {
-    theme = theme === 'dark' ? 'light' : 'dark';
-    window.localStorage.setItem(THEME_KEY, theme);
-    document.documentElement.dataset.theme = theme;
-    document.documentElement.style.colorScheme = theme;
-    document.querySelector('[data-theme]')?.setAttribute('data-theme', theme);
-    document.body.setAttribute('data-theme', theme);
-    document.dispatchEvent(new CustomEvent('theme-changed', { detail: theme }));
-  }
-</script>
----
-<section style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;width:100%;background:var(--astro-bg, #f8fafc);transition:background 0.2s;">
-  <button
-    style="position:absolute;top:24px;right:24px;z-index:10;padding:8px 18px;border-radius:8px;border:none;background:var(--astro-btn-bg, #eee);color:var(--astro-btn-color, #222);cursor:pointer;font-weight:600;font-size:16px;"
-    onclick="toggleTheme()"
-    aria-label="Switch theme"
-  >
-    <span id="theme-label">🌙 Dark</span>
-  </button>
-  <h1 style="font-size:2.8rem;font-weight:800;margin:0 0 0.5rem;text-align:center;letter-spacing:-0.03em;color:var(--astro-h1, #18181b);">
-    Luthor – The Free, Ultra-Fast, Type-Safe, Open Source React Text Editor.
-  </h1>
-  <h2 style="font-size:1.3rem;font-weight:500;margin:0 0 1.5rem;text-align:center;color:var(--astro-h2, #334155);">
-    MIT licensed, free forever, built on Lexical, stable, secure, optimized, and developer-friendly.
-  </h2>
-  <div style="width:100%;max-width:720px;margin:0 auto 2.5rem;box-shadow:0 4px 32px #0002;border-radius:16px;overflow:hidden;background:var(--astro-editor-bg, #fff);padding:24px;">
-    <client:only fallback="Loading editor..." client:only="@lyfie/luthor">
-      <ExtensiveEditor initialTheme={initialTheme} placeholder="Try Luthor right here..." />
-    </client:only>
+<section class="section hero-stage">
+  <div class="container hero-grid">
+    <div>
+      <span class="eyebrow">Lexical-powered rich text editing</span>
+      <h1 class="hero-title">The performance of Lexical, the simplicity of a single import.</h1>
+      <p class="hero-copy">
+        Luthor is a free, MIT-licensed React editor with a plug-and-play extensive preset and a headless path for deeper customization.
+      </p>
+      <p class="hero-live-note">Try it right now with the Extensive Editor preset.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/docs/getting-started/">Read docs</a>
+        <a class="btn btn-muted" href="/demo">Open full demo</a>
+      </div>
+    </div>
+
+    <div class="browser-frame">
+      <div class="browser-frame-header">
+        <div class="window-dots" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="install-row">
+          <code class="install-chip">npm install @lyfie/luthor react react-dom</code>
+          <button class="copy-btn" id="copy-install-command" type="button">Copy Install Command</button>
+        </div>
+      </div>
+      <div class="editor-pane">
+        <ExtensiveEditorIsland client:load />
+      </div>
+    </div>
   </div>
-  <a href="/docs" style="margin-top:12px;padding:12px 32px;border-radius:8px;background:#2563eb;color:#fff;font-weight:700;font-size:18px;text-decoration:none;box-shadow:0 2px 8px #2563eb22;transition:background 0.2s;">
-    Get Started
-  </a>
 </section>
+
+<script>
+  const copyButton = document.getElementById('copy-install-command');
+  const installCommand = 'npm install @lyfie/luthor react react-dom';
+  const defaultLabel = 'Copy Install Command';
+
+  async function copyInstallCommand() {
+    if (!copyButton) return;
+
+    try {
+      await navigator.clipboard.writeText(installCommand);
+      copyButton.textContent = 'Copied';
+    } catch {
+      copyButton.textContent = 'Copy failed';
+    } finally {
+      window.setTimeout(() => {
+        copyButton.textContent = defaultLabel;
+      }, 1500);
+    }
+  }
+
+  copyButton?.addEventListener('click', copyInstallCommand);
+</script>

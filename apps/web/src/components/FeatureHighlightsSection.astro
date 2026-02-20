@@ -1,51 +1,49 @@
 ---
-const featureList = [
-  { icon: '🧩', title: 'Extensible', desc: 'Add or remove features with a powerful extension system.' },
-  { icon: '🎛️', title: 'Presets', desc: 'Plug-and-play presets for instant productivity or custom setups.' },
-  { icon: '🛠️', title: 'Toolbar Layouts', desc: 'Fully customizable toolbar layouts and grouping.' },
-  { icon: '🧑‍💻', title: 'Headless API', desc: 'Use the core logic without UI for ultimate flexibility.' },
-  { icon: '🔄', title: 'JSONB Conversion', desc: 'Import/export content as JSONB for persistence and integrations.' },
-  { icon: '🖼️', title: 'Embeds', desc: 'Supports images, iframes, YouTube, and more.' },
-  { icon: '⚡', title: 'Ultra Fast', desc: 'Built on Lexical for blazing performance.' },
-  { icon: '🔒', title: 'Secure', desc: 'Actively maintained with security patches.' },
-  { icon: '🧑‍🔬', title: 'Type Safe', desc: 'TypeScript-first, with full type safety throughout.' },
-  { icon: '🔁', title: 'React Compatible', desc: 'Works with React 18 and 19.' },
-];
-const trustBadges = [
-  { src: 'https://img.shields.io/badge/React-18%2F19-61dafb?logo=react&style=for-the-badge', alt: 'React 18/19' },
-  { src: 'https://img.shields.io/badge/Type%20Safe-3178c6?logo=typescript&logoColor=white&style=for-the-badge', alt: 'Type Safe' },
-  { src: 'https://img.shields.io/badge/Security%20Patched-10b981?style=for-the-badge', alt: 'Security Patched' },
-  { src: 'https://img.shields.io/badge/Ultra%20Fast-ffb300?style=for-the-badge', alt: 'Ultra Fast' },
-  { src: 'https://img.shields.io/badge/Open%20Source-MIT-18181b?style=for-the-badge', alt: 'MIT Open Source' },
+const valueProps = [
+  {
+    title: 'MIT Licensed and Free Forever',
+    description:
+      'Modify everything. Own your editor. Luthor is open source, commercially friendly, and built to stay out of paywalls.',
+    proof: 'Open forever, no lock-in',
+  },
+  {
+    title: 'Lexical Core Logic',
+    description:
+      'Luthor derives its runtime behavior from Meta\'s Lexical framework for fast input handling, predictable updates, and resilient editing state.',
+    proof: 'Engineered for responsiveness',
+  },
+  {
+    title: 'Type-Safe and Secure',
+    description:
+      'TypeScript-first APIs and regular maintenance updates keep integrations stable while reducing unexpected runtime drift.',
+    proof: 'Stable today, safer upgrades',
+  },
+  {
+    title: 'Headless or Plug-and-Play',
+    description:
+      'Use @lyfie/luthor-headless for full logic control, or @lyfie/luthor for a complete UI-first editor you can ship quickly.',
+    proof: 'Freedom to choose your layer',
+  },
 ];
 ---
 
-<section style="max-width:1100px;margin:3rem auto 2rem auto;padding:2rem 1rem 1rem 1rem;background:#fff;border-radius:14px;box-shadow:0 2px 16px #0001;">
-  <h2 style="font-size:1.7rem;font-weight:800;margin-bottom:1.2rem;text-align:center;">Feature Highlights</h2>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;">
-    {featureList.map(f => (
-      <div style="display:flex;align-items:flex-start;gap:1rem;background:#f8fafc;border-radius:10px;padding:1.2rem 1rem;min-height:110px;">
-        <span style="font-size:2rem;line-height:1;">{f.icon}</span>
-        <div>
-          <div style="font-weight:700;font-size:1.1rem;">{f.title}</div>
-          <div style="color:#64748b;font-size:1rem;">{f.desc}</div>
-        </div>
-      </div>
-    ))}
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Trust, freedom, and technical credibility.</h2>
+    <p class="section-copy">
+      Built for React developers who hate bloated editors. Start simple, then customize every part of the stack when you need deeper control.
+    </p>
+    <div class="value-grid">
+      {
+        valueProps.map((item) => (
+          <article class="value-card">
+            <p class="value-proof">{item.proof}</p>
+            <h3>{item.title}</h3>
+            <p>{item.description}</p>
+          </article>
+        ))
+      }
+    </div>
+    <p class="value-tailline">Free forever. Open forever. Stable today.</p>
   </div>
-</section>
-
-<section style="max-width:900px;margin:2rem auto 2rem auto;padding:2rem 1rem 1rem 1rem;background:#f8fafc;border-radius:14px;box-shadow:0 2px 16px #0001;display:flex;flex-direction:column;align-items:center;">
-  <div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-bottom:1.5rem;">
-    {trustBadges.map(b => <img src={b.src} alt={b.alt} loading="lazy" style="height:38px;" />)}
-  </div>
-  <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:0.7rem;text-align:center;">Why Luthor?</h2>
-  <ul style="font-size:1.1rem;color:#334155;max-width:700px;margin:0 auto 1.5rem auto;line-height:1.7;">
-    <li>100% open source, MIT licensed, free forever</li>
-    <li>No vendor lock-in, fully self-hostable</li>
-    <li>Stable, secure, and actively maintained</li>
-    <li>Ultra-fast, optimized for performance</li>
-    <li>Easy to modify, extend, and integrate</li>
-    <li>Type-safe and developer-friendly</li>
-  </ul>
 </section>

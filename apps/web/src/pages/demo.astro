@@ -1,23 +1,11 @@
 ---
+import MarketingLayout from '../layouts/MarketingLayout.astro';
 import DemoShowcase from '../components/DemoShowcase.astro';
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Luthor Demo Playground</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta property="og:title" content="Luthor Demo Playground" />
-    <meta property="og:description" content="Try Luthor, the free, open source, ultra-fast, type-safe React text editor, live in your browser." />
-    <meta property="og:image" content="/social-card.svg" />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://luthor.lyfie.app/demo" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Luthor Demo Playground" />
-    <meta name="twitter:description" content="Try Luthor, the free, open source, ultra-fast, type-safe React text editor, live in your browser." />
-    <meta name="twitter:image" content="/social-card.svg" />
-  </head>
-  <body style="margin:0;padding:0;background:#f8fafc;min-height:100vh;" aria-label="Luthor demo playground">
-    <DemoShowcase />
-  </body>
-</html>
+<MarketingLayout
+  title="Luthor Demo Playground"
+  description="Try the Extensive Editor preset live and evaluate performance and UX before integrating."
+>
+  <DemoShowcase />
+</MarketingLayout>

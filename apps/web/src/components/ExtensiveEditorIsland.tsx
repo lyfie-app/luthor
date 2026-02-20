@@ -1,9 +1,10 @@
 import React from 'react';
 import { ExtensiveEditor } from '@lyfie/luthor/presets/extensive';
+import '@lyfie/luthor/styles.css';
 
 export default function ExtensiveEditorIsland() {
   return (
-    <div style={{ maxWidth: 800, margin: '0 auto', padding: 24 }}>
+    <div>
       <ExtensiveEditor />
     </div>
   );

@@ -3,8 +3,14 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
+    "sync:docs": "node ./scripts/sync-docs.mjs",
+    "sync:metadata": "node ./scripts/fetch-package-metadata.mjs",
+    "sync:llms": "node ./scripts/generate-llms.mjs",
+    "sync:content": "npm run sync:docs && npm run sync:metadata && npm run sync:llms",
+    "predev": "npm run sync:content",
+    "prebuild": "npm run sync:content",
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node ./scripts/run-astro-build.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "deploy": "npm run build && wrangler deploy"

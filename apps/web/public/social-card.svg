@@ -1,5 +1,30 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#18181b"/>
-  <text x="50%" y="45%" text-anchor="middle" fill="#fff" font-size="80" font-family="Segoe UI, Arial, sans-serif" font-weight="bold">Luthor</text>
-  <text x="50%" y="60%" text-anchor="middle" fill="#60a5fa" font-size="38" font-family="Segoe UI, Arial, sans-serif">Ultra-Fast Open Source Editor</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#020617"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="300" y1="220" x2="900" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1f2937"/>
+      <stop offset="1" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="220" cy="90" r="220" fill="#4f46e5" fill-opacity="0.25"/>
+  <circle cx="1020" cy="540" r="240" fill="#22d3ee" fill-opacity="0.15"/>
+  <text x="90" y="120" fill="#c7d2fe" font-size="30" font-family="Inter, Segoe UI, Arial, sans-serif">Luthor</text>
+  <text x="90" y="190" fill="#ffffff" font-size="62" font-family="Lexend, Segoe UI, Arial, sans-serif" font-weight="700">Extensive Editor</text>
+  <text x="90" y="238" fill="#94a3b8" font-size="30" font-family="Inter, Segoe UI, Arial, sans-serif">Live React Rich Text Demo</text>
+
+  <rect x="90" y="280" width="1020" height="260" rx="28" fill="url(#frame)" stroke="#334155"/>
+  <rect x="90" y="280" width="1020" height="44" rx="28" fill="#111827"/>
+  <circle cx="122" cy="302" r="6" fill="#ef4444"/>
+  <circle cx="142" cy="302" r="6" fill="#f59e0b"/>
+  <circle cx="162" cy="302" r="6" fill="#22c55e"/>
+  <rect x="740" y="292" width="338" height="20" rx="6" fill="#312e81"/>
+  <text x="752" y="306" fill="#c7d2fe" font-size="12" font-family="Inter, Segoe UI, Arial, sans-serif">npm install @lyfie/luthor react react-dom</text>
+
+  <rect x="118" y="352" width="964" height="162" rx="14" fill="#0b1220" stroke="#334155"/>
+  <text x="150" y="395" fill="#e2e8f0" font-size="22" font-family="Inter, Segoe UI, Arial, sans-serif">The performance of Lexical, the simplicity of a single import.</text>
+  <text x="150" y="440" fill="#64748b" font-size="18" font-family="Inter, Segoe UI, Arial, sans-serif">Free forever. Open forever. Stable today.</text>
 </svg>
