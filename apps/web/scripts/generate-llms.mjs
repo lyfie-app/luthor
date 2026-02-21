@@ -8,7 +8,7 @@ const PUBLIC_DIR = path.join(WEB_ROOT, 'public');
 const LLMS_FILE = path.join(PUBLIC_DIR, 'llms.txt');
 const LLMS_FULL_FILE = path.join(PUBLIC_DIR, 'llms-full.txt');
 
-const SITE_URL = 'https://luthor.lyfie.app';
+const SITE_URL = 'https://www.luthor.fyi';
 
 function isMarkdownFile(filename) {
   return filename.endsWith('.md') || filename.endsWith('.mdx');

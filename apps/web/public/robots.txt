@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://luthor.lyfie.app/sitemap-index.xml
+Sitemap: https://www.luthor.fyi/sitemap-index.xml

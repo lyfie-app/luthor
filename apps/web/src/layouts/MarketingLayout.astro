@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { title, description, ogImage = '/social-card.svg' } = Astro.props;
-const siteUrl = 'https://luthor.lyfie.app';
+const siteUrl = 'https://www.luthor.fyi';
 const pageUrl = new URL(Astro.url.pathname, siteUrl).toString();
 const ogImageUrl = new URL(ogImage, siteUrl).toString();
 ---

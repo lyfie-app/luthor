@@ -7,7 +7,7 @@ Generated at: 2026-02-21T13:39:41.253Z
 
 ---
 ## FILE: demo-app/website-development-phased-plan.md
-## URL: https://luthor.lyfie.app/docs/reference/demo-app/website-development-phased-plan/
+## URL: https://www.luthor.fyi/docs/reference/demo-app/website-development-phased-plan/
 ---
 
 # Demo App Website Development Plan
@@ -213,7 +213,7 @@ Use this narrative pattern across hero and sections:
 
 ---
 ## FILE: developer_notes/readme-map.md
-## URL: https://luthor.lyfie.app/docs/reference/developer_notes/readme-map/
+## URL: https://www.luthor.fyi/docs/reference/developer_notes/readme-map/
 ---
 
 # Developer Notes
@@ -261,7 +261,7 @@ This index groups every README used by contributors so you can quickly jump to i
 
 ---
 ## FILE: developer/demo/architecture.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/demo/architecture/
+## URL: https://www.luthor.fyi/docs/reference/developer/demo/architecture/
 ---
 
 # Demo App Architecture (`apps/demo`)
@@ -351,7 +351,7 @@ Theme is stored in local storage; persistence payload is intentionally user-driv
 
 ---
 ## FILE: developer/demo/maintainer-notes.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/demo/maintainer-notes/
+## URL: https://www.luthor.fyi/docs/reference/developer/demo/maintainer-notes/
 ---
 
 # Demo Maintainer Notes
@@ -396,7 +396,7 @@ From repo root:
 
 ---
 ## FILE: developer/demo/source-file-reference.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/demo/source-file-reference/
+## URL: https://www.luthor.fyi/docs/reference/developer/demo/source-file-reference/
 ---
 
 # Demo Source File Reference (`apps/demo`)
@@ -567,7 +567,7 @@ When touching `apps/demo` files:
 
 ---
 ## FILE: developer/headless/architecture.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/headless/architecture/
+## URL: https://www.luthor.fyi/docs/reference/developer/headless/architecture/
 ---
 
 # Headless Architecture (Developer)
@@ -625,7 +625,7 @@ This document defines how `@lyfie/luthor-headless` is structured, why key design
 
 ---
 ## FILE: developer/headless/maintainer-notes.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/headless/maintainer-notes/
+## URL: https://www.luthor.fyi/docs/reference/developer/headless/maintainer-notes/
 ---
 
 # Headless Maintainer Notes (Developer)
@@ -667,7 +667,7 @@ For any source change in `packages/headless`:
 
 ---
 ## FILE: developer/headless/source-file-reference.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/headless/source-file-reference/
+## URL: https://www.luthor.fyi/docs/reference/developer/headless/source-file-reference/
 ---
 
 # Headless Source File Reference (Developer)
@@ -781,7 +781,7 @@ This is the canonical per-file reference for `packages/headless`.
 
 ---
 ## FILE: developer/luthor/architecture.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/luthor/architecture/
+## URL: https://www.luthor.fyi/docs/reference/developer/luthor/architecture/
 ---
 
 # Luthor (`@lyfie/luthor`) Architecture
@@ -867,7 +867,7 @@ From `packages/luthor/package.json`:
 
 ---
 ## FILE: developer/luthor/maintainer-notes.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/luthor/maintainer-notes/
+## URL: https://www.luthor.fyi/docs/reference/developer/luthor/maintainer-notes/
 ---
 
 # Luthor Maintainer Notes
@@ -925,7 +925,7 @@ When adding capabilities to the extensive preset:
 
 ---
 ## FILE: developer/luthor/source-file-reference.md
-## URL: https://luthor.lyfie.app/docs/reference/developer/luthor/source-file-reference/
+## URL: https://www.luthor.fyi/docs/reference/developer/luthor/source-file-reference/
 ---
 
 # Luthor Source File Reference (`packages/luthor/src`)
@@ -1155,7 +1155,7 @@ When modifying any file in `packages/luthor/src`:
 
 ---
 ## FILE: documentation-hub.md
-## URL: https://luthor.lyfie.app/docs/reference/documentation-hub/
+## URL: https://www.luthor.fyi/docs/reference/documentation-hub/
 ---
 
 # Documentation Hub
@@ -1210,7 +1210,7 @@ This folder is the single source of truth for project documentation.
 
 ---
 ## FILE: index.md
-## URL: https://luthor.lyfie.app/docs/reference/index/
+## URL: https://www.luthor.fyi/docs/reference/index/
 ---
 
 # Luthor Documentation Index
@@ -1250,7 +1250,7 @@ This is the canonical documentation root for the monorepo.
 
 ---
 ## FILE: markdown-catalog.md
-## URL: https://luthor.lyfie.app/docs/reference/markdown-catalog/
+## URL: https://www.luthor.fyi/docs/reference/markdown-catalog/
 ---
 
 # Markdown Catalog
@@ -1321,7 +1321,7 @@ Project-authored markdown catalog.
 
 ---
 ## FILE: PROJECT-DELIVERABLES.md
-## URL: https://luthor.lyfie.app/docs/reference/PROJECT-DELIVERABLES/
+## URL: https://www.luthor.fyi/docs/reference/PROJECT-DELIVERABLES/
 ---
 
 # Project Deliverables Summary
@@ -1355,7 +1355,7 @@ Historical enhanced-markdown and HTML conversion guidance is archived and no lon
 
 ---
 ## FILE: readmes/apps/demo-readme.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/apps/demo-readme/
+## URL: https://www.luthor.fyi/docs/reference/readmes/apps/demo-readme/
 ---
 
 # Demo App Documentation Redirect
@@ -1378,7 +1378,7 @@ Related package docs:
 
 ---
 ## FILE: readmes/packages/custom-markdown-convertor-readme.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/custom-markdown-convertor-readme/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/custom-markdown-convertor-readme/
 ---
 
 # Legacy Converter Note
@@ -1404,7 +1404,7 @@ This document previously described the enhanced markdown converter workflow.
 
 ---
 ## FILE: readmes/packages/eslint-config-readme.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/eslint-config-readme/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/eslint-config-readme/
 ---
 
 # @repo/eslint-config
@@ -1428,7 +1428,7 @@ In a package `eslint.config.js`, import and apply one of the shared presets.
 
 ---
 ## FILE: readmes/packages/luthor-docs/architecture-map.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/architecture-map/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/architecture-map/
 ---
 
 # Core + Preset System Map
@@ -1448,7 +1448,7 @@ For file-by-file responsibilities across all 21 source files, use the canonical 
 
 ---
 ## FILE: readmes/packages/luthor-docs/customization-guide.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/customization-guide/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/customization-guide/
 ---
 
 # Customization Guide
@@ -1588,7 +1588,7 @@ const configuredFontExtension = fontFamilyExtension.configure({
 
 ---
 ## FILE: readmes/packages/luthor-docs/README.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/README/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/README/
 ---
 
 # Luthor Package Documentation Redirect
@@ -1608,7 +1608,7 @@ Legacy pages in this folder are intentionally kept and linked to canonical sourc
 
 ---
 ## FILE: readmes/packages/typescript-config-readme.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/packages/typescript-config-readme/
+## URL: https://www.luthor.fyi/docs/reference/readmes/packages/typescript-config-readme/
 ---
 
 # @repo/typescript-config
@@ -1638,7 +1638,7 @@ In a package `tsconfig.json`:
 
 ---
 ## FILE: readmes/presets/extensive-preset-readme.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/presets/extensive-preset-readme/
+## URL: https://www.luthor.fyi/docs/reference/readmes/presets/extensive-preset-readme/
 ---
 
 # Extensive preset
@@ -1702,7 +1702,7 @@ export function ExtensivePage() {
 
 ---
 ## FILE: readmes/presets/README.md
-## URL: https://luthor.lyfie.app/docs/reference/readmes/presets/README/
+## URL: https://www.luthor.fyi/docs/reference/readmes/presets/README/
 ---
 
 # Presets Documentation
@@ -1732,7 +1732,7 @@ This keeps the package clean today while preserving a predictable path for futur
 
 ---
 ## FILE: tutorials/enhanced-markdown-quick-start.md
-## URL: https://luthor.lyfie.app/docs/reference/tutorials/enhanced-markdown-quick-start/
+## URL: https://www.luthor.fyi/docs/reference/tutorials/enhanced-markdown-quick-start/
 ---
 
 # JSONB Persistence Quick Start (Replaces Legacy Enhanced Markdown Tutorial)
@@ -1774,7 +1774,7 @@ Use JSONB for deterministic round-trips and production persistence.
 
 ---
 ## FILE: user/demo/getting-started.md
-## URL: https://luthor.lyfie.app/docs/reference/user/demo/getting-started/
+## URL: https://www.luthor.fyi/docs/reference/user/demo/getting-started/
 ---
 
 # Demo App Getting Started (`apps/demo`)
@@ -1852,7 +1852,7 @@ This runs build then `wrangler deploy`. Ensure Cloudflare auth and Wrangler envi
 
 ---
 ## FILE: user/demo/toolbar-customization-examples.md
-## URL: https://luthor.lyfie.app/docs/reference/user/demo/toolbar-customization-examples/
+## URL: https://www.luthor.fyi/docs/reference/user/demo/toolbar-customization-examples/
 ---
 
 # Toolbar Layout Customization Examples for Demo App
@@ -2093,7 +2093,7 @@ Items automatically hide if their corresponding extension is not available.
 
 ---
 ## FILE: user/demo/usage-and-persistence.md
-## URL: https://luthor.lyfie.app/docs/reference/user/demo/usage-and-persistence/
+## URL: https://www.luthor.fyi/docs/reference/user/demo/usage-and-persistence/
 ---
 
 # Demo Usage and Persistence Guide
@@ -2147,7 +2147,7 @@ The panel supports three common flows:
 
 ---
 ## FILE: user/headless/extensions-and-configuration.md
-## URL: https://luthor.lyfie.app/docs/reference/user/headless/extensions-and-configuration/
+## URL: https://www.luthor.fyi/docs/reference/user/headless/extensions-and-configuration/
 ---
 
 # Extensions and Configuration (User)
@@ -2236,7 +2236,7 @@ Pass theme through provider config:
 
 ---
 ## FILE: user/headless/getting-started.md
-## URL: https://luthor.lyfie.app/docs/reference/user/headless/getting-started/
+## URL: https://www.luthor.fyi/docs/reference/user/headless/getting-started/
 ---
 
 # @lyfie/luthor-headless: Getting Started (User)
@@ -2308,7 +2308,7 @@ export function Editor() {
 
 ---
 ## FILE: user/headless/import-export.md
-## URL: https://luthor.lyfie.app/docs/reference/user/headless/import-export/
+## URL: https://www.luthor.fyi/docs/reference/user/headless/import-export/
 ---
 
 # Import and Export (User)
@@ -2352,7 +2352,7 @@ These APIs are lossless for supported nodes and extension state.
 
 ---
 ## FILE: user/luthor/extensive-editor.md
-## URL: https://luthor.lyfie.app/docs/reference/user/luthor/extensive-editor/
+## URL: https://www.luthor.fyi/docs/reference/user/luthor/extensive-editor/
 ---
 
 # Extensive Editor Guide
@@ -2438,7 +2438,7 @@ For detailed information on creating custom toolbar layouts, see [toolbar-custom
 
 ---
 ## FILE: user/luthor/getting-started.md
-## URL: https://luthor.lyfie.app/docs/reference/user/luthor/getting-started/
+## URL: https://www.luthor.fyi/docs/reference/user/luthor/getting-started/
 ---
 
 # `@lyfie/luthor` Getting Started
@@ -2496,7 +2496,7 @@ Use this when you want gradual migration from preset usage to custom extension c
 
 ---
 ## FILE: user/luthor/presets-and-configuration.md
-## URL: https://luthor.lyfie.app/docs/reference/user/luthor/presets-and-configuration/
+## URL: https://www.luthor.fyi/docs/reference/user/luthor/presets-and-configuration/
 ---
 
 # `@lyfie/luthor` Presets and Configuration
@@ -2578,7 +2578,7 @@ For contributor-level details, see [../../developer/luthor/source-file-reference
 
 ---
 ## FILE: user/luthor/toolbar-customization.md
-## URL: https://luthor.lyfie.app/docs/reference/user/luthor/toolbar-customization/
+## URL: https://www.luthor.fyi/docs/reference/user/luthor/toolbar-customization/
 ---
 
 # Toolbar Layout Customization

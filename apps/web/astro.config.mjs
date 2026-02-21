@@ -7,7 +7,7 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://luthor.lyfie.app',
+  site: 'https://www.luthor.fyi',
   integrations: [
     starlight({
       title: 'Luthor Docs',
@@ -51,14 +51,14 @@ export default defineConfig({
           tag: 'meta',
           attrs: {
             property: 'og:image',
-            content: 'https://luthor.lyfie.app/social-card.svg',
+            content: 'https://www.luthor.fyi/social-card.svg',
           },
         },
         {
           tag: 'meta',
           attrs: {
             name: 'twitter:image',
-            content: 'https://luthor.lyfie.app/social-card.svg',
+            content: 'https://www.luthor.fyi/social-card.svg',
           },
         },
       ],
