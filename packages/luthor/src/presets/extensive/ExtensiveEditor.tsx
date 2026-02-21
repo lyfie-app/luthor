@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
+import { $setSelection } from "lexical";
 import { extensiveExtensions, setFloatingToolbarContext } from "./extensions";
 import {
   CommandPalette,
@@ -279,6 +280,13 @@ function ExtensiveEditorContent({
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
 
+      if (mode === "visual" && newMode !== "visual") {
+        editor?.update(() => {
+          $setSelection(null);
+        });
+        editor?.getRootElement()?.blur();
+      }
+
       // Immediately switch mode so UI shows new view
       setMode(newMode);
 
@@ -332,19 +340,17 @@ function ExtensiveEditorContent({
         )}
       </div>
       <div className="luthor-editor" data-mode={mode}>
-        {mode === "visual" && (
-          <>
-            <div className="luthor-editor-visual-gutter" aria-hidden="true" />
-            <RichText
-              placeholder={placeholder}
-              classNames={{
-                container: "luthor-richtext-container luthor-preset-extensive__container",
-                contentEditable: "luthor-content-editable luthor-preset-extensive__content",
-                placeholder: "luthor-placeholder luthor-preset-extensive__placeholder",
-              }}
-            />
-          </>
-        )}
+        <div className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}`} aria-hidden={mode !== "visual"}>
+          <div className="luthor-editor-visual-gutter" aria-hidden="true" />
+          <RichText
+            placeholder={placeholder}
+            classNames={{
+              container: "luthor-richtext-container luthor-preset-extensive__container",
+              contentEditable: "luthor-content-editable luthor-preset-extensive__content",
+              placeholder: "luthor-placeholder luthor-preset-extensive__placeholder",
+            }}
+          />
+        </div>
         {mode !== "visual" && (
           <div className="luthor-source-panel">
             {sourceError && sourceError.mode === mode && (

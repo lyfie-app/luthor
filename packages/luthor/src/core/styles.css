@@ -525,10 +525,19 @@
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
-.luthor-editor[data-mode="visual"] {
+.luthor-editor-visual-shell {
 	display: grid;
 	grid-template-columns: var(--luthor-drag-gutter-width) minmax(0, 1fr);
 	grid-template-rows: minmax(0, 1fr);
+	flex: 1;
+	min-height: 0;
+}
+
+.luthor-editor-visual-shell.is-hidden {
+	position: absolute;
+	inset: 0;
+	visibility: hidden;
+	pointer-events: none;
 }
 
 .luthor-editor-visual-gutter {
@@ -546,7 +555,7 @@
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
-.luthor-editor[data-mode="visual"] .luthor-richtext-container {
+.luthor-editor-visual-shell .luthor-richtext-container {
 	grid-column: 2;
 	grid-row: 1;
 	min-width: 0;
