@@ -33,6 +33,7 @@ import {
   codeFormatExtension,
   tabIndentExtension,
   enterKeyBehaviorExtension,
+  type CodeHighlightProvider,
 } from "@lyfie/luthor-headless";
 import type { ReactNode } from "react";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
@@ -44,6 +45,10 @@ export type ExtensiveExtensionsConfig = {
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
   scaleByRatio?: boolean;
+  syntaxHighlighting?: "auto" | "disabled";
+  codeHighlightProvider?: CodeHighlightProvider | null;
+  loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
+  maxAutoDetectCodeLength?: number;
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -581,6 +586,10 @@ function buildExtensiveExtensions({
   fontSizeOptions,
   lineHeightOptions,
   scaleByRatio,
+  syntaxHighlighting,
+  codeHighlightProvider,
+  loadCodeHighlightProvider,
+  maxAutoDetectCodeLength,
 }: ExtensiveExtensionsConfig = {}) {
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -594,6 +603,16 @@ function buildExtensiveExtensions({
   });
   extensiveImageExtension.configure({
     scaleByRatio: scaleByRatio ?? false,
+  });
+  codeExtension.configure({
+    syntaxHighlighting: syntaxHighlighting ?? "auto",
+    provider: codeHighlightProvider ?? undefined,
+    loadProvider: loadCodeHighlightProvider,
+  });
+  codeIntelligenceExtension.configure({
+    provider: codeHighlightProvider ?? undefined,
+    loadProvider: loadCodeHighlightProvider,
+    maxAutoDetectLength: maxAutoDetectCodeLength,
   });
 
   return [

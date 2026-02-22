@@ -29,6 +29,9 @@ importers:
       '@lyfie/luthor':
         specifier: workspace:*
         version: link:../../packages/luthor
+      highlight.js:
+        specifier: '>=11.0.0'
+        version: 11.11.1
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -198,6 +201,9 @@ importers:
       typescript:
         specifier: ^5.7.3
         version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@20.19.33)(jiti@2.6.1)(jsdom@26.1.0)(lightningcss@1.30.2)(tsx@4.21.0)
     optionalDependencies:
       highlight.js:
         specifier: '>=11.0.0'
@@ -9572,8 +9578,7 @@ snapshots:
       property-information: 7.1.0
       space-separated-tokens: 2.0.2
 
-  highlight.js@11.11.1:
-    optional: true
+  highlight.js@11.11.1: {}
 
   html-encoding-sniffer@4.0.0:
     dependencies:

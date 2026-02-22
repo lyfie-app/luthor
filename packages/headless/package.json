@@ -22,7 +22,8 @@
   "scripts": {
     "build": "tsup",
     "lint": "eslint . --max-warnings 0",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "vitest run"
   },
   "keywords": [
     "editor",
@@ -51,7 +52,8 @@
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.32.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "@lexical/code": ">=0.40.0",

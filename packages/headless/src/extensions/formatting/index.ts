@@ -10,7 +10,15 @@ export {
   BlockFormatExtension,
   blockFormatExtension,
 } from "./BlockFormatExtension";
-export { CodeExtension, codeExtension } from "./CodeExtension";
+export {
+  CodeExtension,
+  codeExtension,
+  type CodeExtensionConfig,
+} from "./CodeExtension";
+export {
+  type CodeHighlightProvider,
+  type CodeHighlightProviderConfig,
+} from "./codeHighlightProvider";
 export {
   FontFamilyExtension,
   fontFamilyExtension,
@@ -54,6 +62,12 @@ export {
   CodeFormatExtension,
   codeFormatExtension,
 } from "./CodeFormatExtension";
+export {
+  CodeIntelligenceExtension,
+  codeIntelligenceExtension,
+  type CodeIntelligenceConfig,
+  type CodeIntelligenceCommands,
+} from "./CodeIntelligenceExtension";
 export { LinkExtension, linkExtension } from "./LinkExtension";
 export {
   HorizontalRuleExtension,

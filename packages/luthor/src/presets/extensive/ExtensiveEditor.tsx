@@ -32,6 +32,7 @@ import type {
   SlashCommandExtension,
   EmojiExtension,
   EmojiCatalogItem,
+  CodeHighlightProvider,
   FontFamilyOption,
   FontSizeOption,
   LineHeightOption,
@@ -647,6 +648,10 @@ export interface ExtensiveEditorProps {
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  syntaxHighlighting?: "auto" | "disabled";
+  codeHighlightProvider?: CodeHighlightProvider | null;
+  loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
+  maxAutoDetectCodeLength?: number;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -679,6 +684,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
     slashCommandVisibility,
+    syntaxHighlighting,
+    codeHighlightProvider,
+    loadCodeHighlightProvider,
+    maxAutoDetectCodeLength,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -704,17 +713,32 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeLineHeightOptionsKey(lineHeightOptions),
       [lineHeightOptions],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}`;
+    const syntaxHighlightKey = syntaxHighlighting ?? "unset";
+    const maxAutoDetectKey =
+      typeof maxAutoDetectCodeLength === "number"
+        ? maxAutoDetectCodeLength.toString()
+        : "unset";
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
+    const stableCodeHighlightProviderRef = useRef<CodeHighlightProvider | null | undefined>(codeHighlightProvider);
+    const stableLoadCodeHighlightProviderRef = useRef<
+      (() => Promise<CodeHighlightProvider | null>) | undefined
+    >(loadCodeHighlightProvider);
     const stableExtensionsKeyRef = useRef(extensionsKey);
 
-    if (stableExtensionsKeyRef.current !== extensionsKey) {
+    if (
+      stableExtensionsKeyRef.current !== extensionsKey ||
+      stableCodeHighlightProviderRef.current !== codeHighlightProvider ||
+      stableLoadCodeHighlightProviderRef.current !== loadCodeHighlightProvider
+    ) {
       stableExtensionsKeyRef.current = extensionsKey;
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
       stableFontSizeOptionsRef.current = fontSizeOptions;
       stableLineHeightOptionsRef.current = lineHeightOptions;
+      stableCodeHighlightProviderRef.current = codeHighlightProvider;
+      stableLoadCodeHighlightProviderRef.current = loadCodeHighlightProvider;
     }
 
     const memoizedExtensionsRef = useRef<{
@@ -723,14 +747,28 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     } | null>(null);
 
     if (!memoizedExtensionsRef.current || memoizedExtensionsRef.current.key !== extensionsKey) {
+      const nextConfig = {
+        fontFamilyOptions: stableFontFamilyOptionsRef.current,
+        fontSizeOptions: stableFontSizeOptionsRef.current,
+        lineHeightOptions: stableLineHeightOptionsRef.current,
+        scaleByRatio,
+        ...(syntaxHighlighting !== undefined
+          ? { syntaxHighlighting }
+          : {}),
+        ...(stableCodeHighlightProviderRef.current !== undefined
+          ? { codeHighlightProvider: stableCodeHighlightProviderRef.current }
+          : {}),
+        ...(stableLoadCodeHighlightProviderRef.current !== undefined
+          ? { loadCodeHighlightProvider: stableLoadCodeHighlightProviderRef.current }
+          : {}),
+        ...(maxAutoDetectCodeLength !== undefined
+          ? { maxAutoDetectCodeLength }
+          : {}),
+      };
+
       memoizedExtensionsRef.current = {
         key: extensionsKey,
-        value: createExtensiveExtensions({
-          fontFamilyOptions: stableFontFamilyOptionsRef.current,
-          fontSizeOptions: stableFontSizeOptionsRef.current,
-          lineHeightOptions: stableLineHeightOptionsRef.current,
-          scaleByRatio,
-        }),
+        value: createExtensiveExtensions(nextConfig),
       };
     }
     const memoizedExtensions = memoizedExtensionsRef.current.value;

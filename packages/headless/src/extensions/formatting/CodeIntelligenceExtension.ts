@@ -27,13 +27,12 @@ import {
   useState,
 } from "react";
 import { BaseExtension } from "../base/BaseExtension";
-
-type HighlightJsLike = {
-  highlightAuto: (
-    code: string,
-    languageSubset?: string[],
-  ) => { language?: string };
-};
+import {
+  type CodeHighlightProvider,
+  type CodeHighlightProviderConfig,
+  getFallbackCodeTheme,
+  resolveCodeHighlightProvider,
+} from "./codeHighlightProvider";
 
 const COPY_ICON_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V9Zm2 0h8v10h-8V9Zm-6 8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v1h-2V5H5v10h1v2H5Z"/></svg>';
@@ -69,9 +68,15 @@ const DEFAULT_LANGUAGE_OPTIONS = [
   "markdown",
 ] as const;
 
+const DEFAULT_MAX_AUTODETECT_LENGTH = 12_000;
+
+export type CodeIntelligenceConfig = CodeHighlightProviderConfig & {
+  maxAutoDetectLength?: number;
+};
+
 export class CodeIntelligenceExtension extends BaseExtension<
   "codeIntelligence",
-  Record<string, never>,
+  CodeIntelligenceConfig,
   CodeIntelligenceCommands,
   Record<string, never>,
   ReactNode[]
@@ -80,10 +85,13 @@ export class CodeIntelligenceExtension extends BaseExtension<
   private failedDetectionTextByNodeKey = new Map<string, string>();
   private autoDetectScheduled = false;
   private languageOptions: string[] = [];
-  private highlightJsPromise: Promise<HighlightJsLike | null> | null = null;
+  private codeHighlightProviderPromise: Promise<CodeHighlightProvider | null> | null = null;
 
   constructor() {
     super("codeIntelligence");
+    this.config = {
+      maxAutoDetectLength: DEFAULT_MAX_AUTODETECT_LENGTH,
+    };
   }
 
   register(editor: LexicalEditor): () => void {
@@ -107,9 +115,17 @@ export class CodeIntelligenceExtension extends BaseExtension<
           });
         }
 
+        if (hasContentChanges) {
+          this.ensureCodeBlockThemes(editor);
+        }
+
         this.pruneTransientNodeState(editor);
       },
     );
+
+    queueMicrotask(() => {
+      this.ensureCodeBlockThemes(editor);
+    });
 
     return () => {
       unregisterMarkdownShortcuts();
@@ -330,13 +346,44 @@ export class CodeIntelligenceExtension extends BaseExtension<
   }
 
   private getThemeForLanguage(language: string | null | undefined): string | null {
-    if (!language) {
-      return null;
-    }
-
     const normalized = normalizeLanguage(language) ?? "plain";
     const family = resolveLanguageFamily(normalized);
     return `lang-${family}`;
+  }
+
+  private ensureCodeBlockThemes(editor: LexicalEditor): void {
+    const updates = editor.getEditorState().read(() => {
+      return $nodesOfType(CodeNode)
+        .map((node) => {
+          const currentTheme =
+            (
+              node as unknown as {
+                getTheme?: () => string | null | undefined;
+              }
+            ).getTheme?.() ?? "";
+          const theme = this.getThemeForLanguage(node.getLanguage());
+          return {
+            key: node.getKey(),
+            nextTheme: theme ?? getFallbackCodeTheme(),
+            currentTheme,
+          };
+        })
+        .filter((entry) => entry.currentTheme !== entry.nextTheme);
+    });
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    editor.update(() => {
+      updates.forEach((entry) => {
+        const node = $getNodeByKey(entry.key);
+        if (!node || !$isCodeNode(node)) {
+          return;
+        }
+        node.setTheme(entry.nextTheme);
+      });
+    });
   }
 
   private pruneTransientNodeState(editor: LexicalEditor): void {
@@ -412,13 +459,21 @@ export class CodeIntelligenceExtension extends BaseExtension<
       return null;
     }
 
-    const highlightJs = await this.loadHighlightJs();
-    if (!highlightJs) {
+    const maxLength = this.config.maxAutoDetectLength ?? DEFAULT_MAX_AUTODETECT_LENGTH;
+    if (source.length > maxLength) {
+      return null;
+    }
+
+    const provider = await this.loadCodeHighlightProvider();
+    if (!provider?.highlightAuto) {
       return null;
     }
 
     try {
-      const result = highlightJs.highlightAuto(source, this.getLanguageOptions());
+      const result = await provider.highlightAuto(
+        source,
+        this.getLanguageOptions(),
+      );
       return normalizeLanguage(result?.language ?? null);
     } catch {
       return null;
@@ -442,30 +497,17 @@ export class CodeIntelligenceExtension extends BaseExtension<
     return Array.from(normalizedUnique).sort((a, b) => a.localeCompare(b));
   }
 
-  private async loadHighlightJs(): Promise<HighlightJsLike | null> {
-    if (this.highlightJsPromise) {
-      return this.highlightJsPromise;
+  private async loadCodeHighlightProvider(): Promise<CodeHighlightProvider | null> {
+    if (this.config.provider) {
+      return this.config.provider;
     }
 
-    this.highlightJsPromise = (async () => {
-      try {
-        const dynamicImport = new Function(
-          "moduleName",
-          "return import(moduleName)",
-        ) as (moduleName: string) => Promise<Record<string, unknown>>;
+    if (this.codeHighlightProviderPromise) {
+      return this.codeHighlightProviderPromise;
+    }
 
-        const module = await dynamicImport("highlight.js/lib/core");
-        const candidate = (module.default ?? module) as HighlightJsLike;
-        if (candidate && typeof candidate.highlightAuto === "function") {
-          return candidate;
-        }
-        return null;
-      } catch {
-        return null;
-      }
-    })();
-
-    return this.highlightJsPromise;
+    this.codeHighlightProviderPromise = resolveCodeHighlightProvider(this.config);
+    return this.codeHighlightProviderPromise;
   }
 
 }
