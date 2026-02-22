@@ -111,6 +111,8 @@ export type ImageCommands = {
   setImageAlignment: (alignment: Alignment) => void;
   /** Set caption for the selected image */
   setImageCaption: (caption: string) => void;
+  /** Read caption for the selected image */
+  getImageCaption: () => Promise<string>;
   /** Set the CSS class name on the selected image */
   setImageClassName: (className: string) => void;
   /** Set inline styles on the selected image */

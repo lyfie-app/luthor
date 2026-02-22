@@ -648,6 +648,8 @@ export class ImageExtension extends BaseExtension<
 > {
   /** Track recent image sources to avoid duplicate inserts */
   private recentImages: Set<string> = new Set();
+  /** Last selected image key for toolbar edits while focus moves to external inputs */
+  private lastSelectedImageNodeKey: NodeKey | null = null;
 
   constructor() {
     super("image", [ExtensionCategory.Toolbar]);
@@ -705,6 +707,20 @@ export class ImageExtension extends BaseExtension<
   }
 
   register(editor: LexicalEditor): () => void {
+    const removeSelectionTracker = editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        if (!$isNodeSelection(selection)) {
+          return;
+        }
+
+        const node = selection.getNodes().find((current) => current instanceof ImageNode) as ImageNode | undefined;
+        if (node) {
+          this.lastSelectedImageNodeKey = node.getKey();
+        }
+      });
+    });
+
     const removeCommand = editor.registerCommand<ImagePayload>(
       INSERT_IMAGE_COMMAND,
       (payload) => {
@@ -954,6 +970,7 @@ export class ImageExtension extends BaseExtension<
     }
 
     return () => {
+      removeSelectionTracker();
       removeCommand();
       removeDelete();
       removeBackspace();
@@ -993,9 +1010,42 @@ export class ImageExtension extends BaseExtension<
                 node.setCaption(caption);
               }
             }
+            return;
+          }
+
+          if (this.lastSelectedImageNodeKey) {
+            const fallbackNode = $getNodeByKey(this.lastSelectedImageNodeKey);
+            if (fallbackNode instanceof ImageNode) {
+              fallbackNode.setCaption(caption);
+            } else {
+              this.lastSelectedImageNodeKey = null;
+            }
           }
         });
       },
+      getImageCaption: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if ($isNodeSelection(selection)) {
+              const node = selection.getNodes().find((current) => current instanceof ImageNode) as ImageNode | undefined;
+              if (node) {
+                resolve(node.__caption ?? "");
+                return;
+              }
+            }
+
+            if (this.lastSelectedImageNodeKey) {
+              const fallbackNode = $getNodeByKey(this.lastSelectedImageNodeKey);
+              if (fallbackNode instanceof ImageNode) {
+                resolve(fallbackNode.__caption ?? "");
+                return;
+              }
+            }
+
+            resolve("");
+          });
+        }),
       setImageClassName: (className: string) => {
         editor.update(() => {
           const selection = $getSelection();

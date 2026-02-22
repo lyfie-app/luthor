@@ -44,6 +44,8 @@ export function FloatingToolbar({
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [iframeUrlDraft, setIframeUrlDraft] = useState("");
   const [iframeCaptionDraft, setIframeCaptionDraft] = useState("");
+  const [imageCaptionDraft, setImageCaptionDraft] = useState("");
+  const [youTubeCaptionDraft, setYouTubeCaptionDraft] = useState("");
   const [iframeUrlError, setIframeUrlError] = useState<string | null>(null);
   const iframeEmbedSelected = !!activeStates.isIframeEmbedSelected;
   const youTubeEmbedSelected = !!activeStates.isYouTubeEmbedSelected;
@@ -95,6 +97,44 @@ export function FloatingToolbar({
     };
   }, [commands, iframeEmbedSelected, isVisible]);
 
+  useEffect(() => {
+    if (!isVisible || !activeStates.imageSelected) {
+      return;
+    }
+
+    let disposed = false;
+    if (typeof commands.getImageCaption === "function") {
+      void commands.getImageCaption().then((caption) => {
+        if (!disposed) {
+          setImageCaptionDraft(caption ?? "");
+        }
+      });
+    }
+
+    return () => {
+      disposed = true;
+    };
+  }, [activeStates.imageSelected, commands, isVisible]);
+
+  useEffect(() => {
+    if (!isVisible || !youTubeEmbedSelected) {
+      return;
+    }
+
+    let disposed = false;
+    if (typeof commands.getYouTubeEmbedCaption === "function") {
+      void commands.getYouTubeEmbedCaption().then((caption) => {
+        if (!disposed) {
+          setYouTubeCaptionDraft(caption ?? "");
+        }
+      });
+    }
+
+    return () => {
+      disposed = true;
+    };
+  }, [commands, isVisible, youTubeEmbedSelected]);
+
   if (!isVisible || !selectionRect) return null;
 
   const style: CSSProperties = {
@@ -128,15 +168,22 @@ export function FloatingToolbar({
       ? activeStates.isIframeEmbedAlignedRight
       : activeStates.isYouTubeEmbedAlignedRight;
 
-    const canEditIframeCaption =
-      iframeEmbedSelected && typeof commands.setIframeEmbedCaption === "function";
+    const canEditCaption = iframeEmbedSelected
+      ? typeof commands.setIframeEmbedCaption === "function"
+      : typeof commands.setYouTubeEmbedCaption === "function";
     const canEditIframeUrl =
       iframeEmbedSelected && typeof commands.updateIframeEmbedUrl === "function";
-    const commitIframeCaption = () => {
-      if (!canEditIframeCaption) {
+    const captionDraft = iframeEmbedSelected ? iframeCaptionDraft : youTubeCaptionDraft;
+    const setCaptionDraft = iframeEmbedSelected ? setIframeCaptionDraft : setYouTubeCaptionDraft;
+    const commitEmbedCaption = () => {
+      if (!canEditCaption) {
         return;
       }
-      commands.setIframeEmbedCaption?.(iframeCaptionDraft);
+      if (iframeEmbedSelected) {
+        commands.setIframeEmbedCaption?.(iframeCaptionDraft);
+        return;
+      }
+      commands.setYouTubeEmbedCaption?.(youTubeCaptionDraft);
     };
     const commitIframeUrl = () => {
       if (!canEditIframeUrl) {
@@ -164,7 +211,7 @@ export function FloatingToolbar({
         <IconButton onClick={() => setAlignment("right")} active={isRightAligned} title="Align Right">
           <AlignRightIcon size={14} />
         </IconButton>
-        {canEditIframeCaption || canEditIframeUrl ? (
+        {canEditCaption || canEditIframeUrl ? (
           <>
             <div className="luthor-floating-toolbar-separator" />
             <div className="luthor-floating-toolbar-fields">
@@ -193,12 +240,12 @@ export function FloatingToolbar({
               ) : null}
               <input
                 type="text"
-                value={iframeCaptionDraft}
+                value={captionDraft}
                 className="luthor-floating-toolbar-input"
                 placeholder="Add caption"
-                aria-label="Iframe caption"
-                onChange={(event) => setIframeCaptionDraft(event.target.value)}
-                onBlur={commitIframeCaption}
+                aria-label={iframeEmbedSelected ? "Iframe caption" : "YouTube caption"}
+                onChange={(event) => setCaptionDraft(event.target.value)}
+                onBlur={commitEmbedCaption}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
                     event.preventDefault();
@@ -214,6 +261,14 @@ export function FloatingToolbar({
   }
 
   if (activeStates.imageSelected) {
+    const canEditImageCaption = typeof commands.setImageCaption === "function";
+    const commitImageCaption = () => {
+      if (!canEditImageCaption) {
+        return;
+      }
+      commands.setImageCaption(imageCaptionDraft);
+    };
+
     return (
       <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
         <IconButton onClick={() => commands.setImageAlignment("left")} active={activeStates.isImageAlignedLeft} title="Align Left">
@@ -225,10 +280,26 @@ export function FloatingToolbar({
         <IconButton onClick={() => commands.setImageAlignment("right")} active={activeStates.isImageAlignedRight} title="Align Right">
           <AlignRightIcon size={14} />
         </IconButton>
-        <div className="luthor-floating-toolbar-separator" />
-        <IconButton onClick={() => commands.setImageCaption(prompt("Enter caption:") || "")} title="Edit Caption">
-          <QuoteIcon size={14} />
-        </IconButton>
+        {canEditImageCaption ? (
+          <>
+            <div className="luthor-floating-toolbar-separator" />
+            <input
+              type="text"
+              value={imageCaptionDraft}
+              className="luthor-floating-toolbar-input"
+              placeholder="Add caption"
+              aria-label="Image caption"
+              onChange={(event) => setImageCaptionDraft(event.target.value)}
+              onBlur={commitImageCaption}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  (event.target as HTMLInputElement).blur();
+                }
+              }}
+            />
+          </>
+        ) : null}
       </div>
     );
   }

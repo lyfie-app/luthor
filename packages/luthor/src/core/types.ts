@@ -110,6 +110,7 @@ export interface CoreEditorCommands {
   }[];
   setImageAlignment: (alignment: ImageAlignment) => void;
   setImageCaption: (caption: string) => void;
+  getImageCaption?: () => Promise<string>;
   insertIframeEmbed?: (inputUrl: string, width?: number, height?: number, title?: string) => void;
   setIframeEmbedAlignment?: (alignment: ImageAlignment) => void;
   resizeIframeEmbed?: (width: number, height: number) => void;
@@ -120,6 +121,8 @@ export interface CoreEditorCommands {
   insertYouTubeEmbed?: (inputUrl: string, width?: number, height?: number, start?: number) => void;
   setYouTubeEmbedAlignment?: (alignment: ImageAlignment) => void;
   resizeYouTubeEmbed?: (width: number, height: number) => void;
+  setYouTubeEmbedCaption?: (caption: string) => void;
+  getYouTubeEmbedCaption?: () => Promise<string>;
   undo: () => void;
   redo: () => void;
   showCommandPalette: () => void;
