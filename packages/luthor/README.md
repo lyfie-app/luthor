@@ -86,6 +86,9 @@ export function App() {
 - `toolbarVisibility`: `Partial<Record<ToolbarItemType, boolean>>`. Set an item to `false` to hide it; unsupported items are auto-hidden even if set to `true`.
 - `toolbarClassName`: optional class appended to the toolbar root (`.luthor-toolbar`) for CSS overrides.
 - `toolbarStyleVars`: optional map of `--luthor-toolbar-*` custom properties applied to the toolbar root.
+- `theme`: optional `Partial<LuthorTheme>` merged into the editor theme config.
+- `quoteClassName`: optional class appended to the quote node class (default base class is `.luthor-quote`).
+- `quoteStyleVars`: optional map of `--luthor-quote-*` custom properties applied to the editor wrapper.
 - `fontFamilyOptions`: optional per-editor font-family option list for the `fontFamily` toolbar select.
 - `fontSizeOptions`: optional per-editor font-size option list for the `fontSize` toolbar select.
 - `lineHeightOptions`: optional per-editor line-height option list for the `lineHeight` toolbar select. Non-default options should use unitless numeric ratios (for example `"1.5"`).
@@ -169,6 +172,42 @@ Toolbar CSS variable contract:
 - `--luthor-toolbar-button-active-overlay`
 - `--luthor-toolbar-color-indicator-border`
 - `--luthor-toolbar-highlight-bg`
+
+## Quote style customization (TSX + CSS)
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      quoteClassName="docs-quote"
+      quoteStyleVars={{
+        "--luthor-quote-bg": "#fff7ed",
+        "--luthor-quote-fg": "#7c2d12",
+        "--luthor-quote-border": "#ea580c",
+      }}
+      theme={{
+        quote: "docs-quote-theme",
+      }}
+    />
+  );
+}
+```
+
+```css
+/* Class override API */
+.docs-quote,
+.docs-quote-theme {
+  border-left-width: 6px;
+  border-radius: 0 8px 8px 0;
+}
+```
+
+Quote CSS variable contract:
+- `--luthor-quote-bg`
+- `--luthor-quote-fg`
+- `--luthor-quote-border`
 
 ## Primary exports
 

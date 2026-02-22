@@ -25,6 +25,9 @@
   --luthor-toolbar-button-active-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
   --luthor-toolbar-color-indicator-border: var(--luthor-border);
   --luthor-toolbar-highlight-bg: var(--luthor-muted);
+  --luthor-quote-bg: var(--luthor-muted);
+  --luthor-quote-fg: var(--luthor-fg);
+  --luthor-quote-border: var(--luthor-accent);
 	--luthor-syntax-comment: #64748b;
 	--luthor-syntax-keyword: #7c3aed;
 	--luthor-syntax-string: #0f766e;
@@ -60,6 +63,9 @@
   --luthor-toolbar-button-active-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
   --luthor-toolbar-color-indicator-border: var(--luthor-border);
   --luthor-toolbar-highlight-bg: var(--luthor-muted);
+  --luthor-quote-bg: color-mix(in srgb, var(--luthor-muted) 92%, #ffffff 8%);
+  --luthor-quote-fg: var(--luthor-fg);
+  --luthor-quote-border: color-mix(in srgb, var(--luthor-accent) 78%, #ffffff 22%);
 	--luthor-syntax-comment: #94a3b8;
 	--luthor-syntax-keyword: #c084fc;
 	--luthor-syntax-string: #5eead4;
@@ -1707,11 +1713,11 @@
 }
 
 .luthor-quote {
-	border-left: 4px solid var(--luthor-accent);
-	background-color: var(--luthor-muted);
+	border-left: 4px solid var(--luthor-quote-border, var(--luthor-accent));
+	background-color: var(--luthor-quote-bg, var(--luthor-muted));
 	padding: 10px 14px;
 	margin: 12px 0;
-	color: var(--luthor-fg);
+	color: var(--luthor-quote-fg, var(--luthor-fg));
 }
 
 .luthor-link {

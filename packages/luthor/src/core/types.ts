@@ -196,6 +196,12 @@ export type ToolbarStyleVars = Partial<{
   "--luthor-toolbar-highlight-bg": string;
 }>;
 
+export type QuoteStyleVars = Partial<{
+  "--luthor-quote-bg": string;
+  "--luthor-quote-fg": string;
+  "--luthor-quote-border": string;
+}>;
+
 export type ToolbarPosition = "top" | "bottom";
 
 export type ToolbarAlignment = "left" | "center" | "right";

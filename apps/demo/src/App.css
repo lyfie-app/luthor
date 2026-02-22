@@ -8,3 +8,9 @@
   --luthor-toolbar-button-active-border: #ea580c;
   --luthor-toolbar-button-active-fg: #ffffff;
 }
+
+.docs-quote,
+.docs-quote-theme {
+  border-left-width: 6px;
+  border-radius: 0 8px 8px 0;
+}

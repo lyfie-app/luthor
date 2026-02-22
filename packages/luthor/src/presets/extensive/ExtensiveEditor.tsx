@@ -1,5 +1,5 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { createEditorSystem, RichText } from "@lyfie/luthor-headless";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createEditorSystem, defaultLuthorTheme, mergeThemes, RichText, type LuthorTheme } from "@lyfie/luthor-headless";
 import { $setSelection } from "lexical";
 import { createExtensiveExtensions, extensiveExtensions, setFloatingToolbarContext } from "./extensions";
 import {
@@ -19,6 +19,7 @@ import {
   type BlockHeadingLevel,
   type ToolbarAlignment,
   type ToolbarStyleVars,
+  type QuoteStyleVars,
   type ToolbarLayout,
   type ToolbarVisibility,
   type ToolbarPosition,
@@ -527,6 +528,7 @@ export interface ExtensiveEditorProps {
   className?: string;
   onReady?: (methods: ExtensiveEditorRef) => void;
   initialTheme?: "light" | "dark";
+  theme?: Partial<LuthorTheme>;
   defaultContent?: string;
   showDefaultContent?: boolean;
   placeholder?: string;
@@ -539,6 +541,8 @@ export interface ExtensiveEditorProps {
   toolbarAlignment?: ToolbarAlignment;
   toolbarClassName?: string;
   toolbarStyleVars?: ToolbarStyleVars;
+  quoteClassName?: string;
+  quoteStyleVars?: QuoteStyleVars;
   isToolbarEnabled?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
@@ -553,6 +557,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     className,
     onReady,
     initialTheme = "light",
+    theme,
     defaultContent,
     showDefaultContent = true,
     placeholder = "Write anything...",
@@ -565,6 +570,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     toolbarAlignment = "left",
     toolbarClassName,
     toolbarStyleVars,
+    quoteClassName,
+    quoteStyleVars,
     isToolbarEnabled = true,
     fontFamilyOptions,
     fontSizeOptions,
@@ -626,6 +633,17 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       };
     }
     const memoizedExtensions = memoizedExtensionsRef.current.value;
+    const editorThemeConfig = useMemo(() => {
+      const mergedTheme = mergeThemes(defaultLuthorTheme, theme ?? {});
+      if (!quoteClassName) {
+        return mergedTheme;
+      }
+
+      return {
+        ...mergedTheme,
+        quote: `${mergedTheme.quote ?? ""} ${quoteClassName}`.trim(),
+      };
+    }, [theme, quoteClassName]);
 
     const [methods, setMethods] = useState<ExtensiveEditorRef | null>(null);
     useImperativeHandle(ref, () => methods as ExtensiveEditorRef, [methods]);
@@ -642,8 +660,12 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     };
 
     return (
-      <div className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper ${variantClassName || ""} ${className || ""}`.trim()} data-editor-theme={editorTheme}>
-        <Provider extensions={memoizedExtensions}>
+      <div
+        className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper ${variantClassName || ""} ${className || ""}`.trim()}
+        data-editor-theme={editorTheme}
+        style={quoteStyleVars as CSSProperties | undefined}
+      >
+        <Provider extensions={memoizedExtensions} config={{ theme: editorThemeConfig }}>
           <ExtensiveEditorContent
             isDark={isDark}
             toggleTheme={toggleTheme}

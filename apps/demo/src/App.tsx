@@ -48,6 +48,12 @@ function App() {
           toolbarAlignment="center"
           toolbarVisibility={{ fontFamily: true }}         
           toolbarClassName="docs-toolbar"
+          quoteClassName="docs-quote"
+          quoteStyleVars={{
+            "--luthor-quote-bg": "#fff7ed",
+            "--luthor-quote-fg": "#7c2d12",
+            "--luthor-quote-border": "#ea580c",
+          }}
           fontFamilyOptions={fontFamilyOptions}
           fontSizeOptions={[
             { value: "default", label: "Default", fontSize: "inherit" },

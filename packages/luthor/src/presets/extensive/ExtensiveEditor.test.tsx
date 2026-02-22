@@ -9,6 +9,7 @@ const {
   commandsToSlashCommandItemsMock,
   toolbarMock,
   createExtensiveExtensionsMock,
+  providerMock,
 } = vi.hoisted(() => ({
   registerKeyboardShortcutsMock: vi.fn(() => vi.fn()),
   commandsToCommandPaletteItemsMock: vi.fn(() => [{ id: "mock-command" }]),
@@ -17,6 +18,7 @@ const {
     <div data-testid="toolbar" className={classNames?.toolbar} style={toolbarStyleVars} />
   )),
   createExtensiveExtensionsMock: vi.fn(() => []),
+  providerMock: vi.fn(),
 }));
 
 vi.mock("lexical", () => ({
@@ -78,10 +80,18 @@ const mockEditorApi = {
 
 vi.mock("@lyfie/luthor-headless", () => ({
   createEditorSystem: () => ({
-    Provider: ({ children }: { children: ReactNode }) => <>{children}</>,
+    Provider: ({ children, config }: { children: ReactNode; config?: unknown }) => {
+      providerMock(config);
+      return <>{children}</>;
+    },
     useEditor: () => mockEditorApi,
   }),
   RichText: () => <div data-testid="richtext" />,
+  defaultLuthorTheme: { quote: "luthor-quote" },
+  mergeThemes: (_base: unknown, override: Record<string, unknown>) => ({
+    quote: "luthor-quote",
+    ...override,
+  }),
 }));
 
 import { ExtensiveEditor } from "./ExtensiveEditor";
@@ -250,6 +260,51 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       fontFamilyOptions,
       fontSizeOptions: undefined,
       lineHeightOptions: undefined,
+    });
+  });
+
+  it("applies quoteClassName through editor theme config", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        quoteClassName="brand-quote"
+      />,
+    );
+
+    const providerConfig = providerMock.mock.calls.at(-1)?.[0] as { theme?: { quote?: string } };
+    expect(providerConfig.theme?.quote).toBe("luthor-quote brand-quote");
+  });
+
+  it("merges theme quote override with quoteClassName", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        theme={{ quote: "custom-quote" }}
+        quoteClassName="brand-quote"
+      />,
+    );
+
+    const providerConfig = providerMock.mock.calls.at(-1)?.[0] as { theme?: { quote?: string } };
+    expect(providerConfig.theme?.quote).toBe("custom-quote brand-quote");
+  });
+
+  it("applies quoteStyleVars on editor wrapper", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        quoteStyleVars={{
+          "--luthor-quote-bg": "#fef3c7",
+          "--luthor-quote-fg": "#78350f",
+          "--luthor-quote-border": "#d97706",
+        }}
+      />,
+    );
+
+    const wrapper = document.querySelector(".luthor-editor-wrapper");
+    expect(wrapper).toHaveStyle({
+      "--luthor-quote-bg": "#fef3c7",
+      "--luthor-quote-fg": "#78350f",
+      "--luthor-quote-border": "#d97706",
     });
   });
 
