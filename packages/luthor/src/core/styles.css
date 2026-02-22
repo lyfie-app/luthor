@@ -46,12 +46,12 @@
   --luthor-floating-border-active: var(--luthor-border-active);
   --luthor-floating-accent: var(--luthor-accent);
   --luthor-floating-accent-fg: var(--luthor-bg);
-	--luthor-syntax-comment: #64748b;
-	--luthor-syntax-keyword: #7c3aed;
-	--luthor-syntax-string: #0f766e;
-	--luthor-syntax-number: #b45309;
-	--luthor-syntax-function: #1d4ed8;
-	--luthor-syntax-variable: #be185d;
+	--luthor-syntax-comment: #6e7781;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 /* Dark theme variables */
@@ -102,12 +102,12 @@
   --luthor-floating-border-active: var(--luthor-border-active);
   --luthor-floating-accent: var(--luthor-accent);
   --luthor-floating-accent-fg: var(--luthor-bg);
-	--luthor-syntax-comment: #94a3b8;
-	--luthor-syntax-keyword: #c084fc;
-	--luthor-syntax-string: #5eead4;
-	--luthor-syntax-number: #fbbf24;
-	--luthor-syntax-function: #60a5fa;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-comment: #8b949e;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper {
@@ -1501,131 +1501,131 @@
 }
 
 .luthor-code-block[data-theme="lang-default"] {
-	--luthor-syntax-keyword: #7c3aed;
-	--luthor-syntax-string: #0f766e;
-	--luthor-syntax-number: #b45309;
-	--luthor-syntax-function: #1d4ed8;
-	--luthor-syntax-variable: #be185d;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-javascript"] {
-	--luthor-syntax-keyword: #c026d3;
-	--luthor-syntax-string: #059669;
-	--luthor-syntax-number: #d97706;
-	--luthor-syntax-function: #2563eb;
-	--luthor-syntax-variable: #db2777;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-markup"] {
-	--luthor-syntax-keyword: #0e7490;
-	--luthor-syntax-string: #15803d;
-	--luthor-syntax-number: #a16207;
-	--luthor-syntax-function: #0369a1;
-	--luthor-syntax-variable: #be123c;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-styles"] {
-	--luthor-syntax-keyword: #7c2d12;
-	--luthor-syntax-string: #0f766e;
-	--luthor-syntax-number: #ca8a04;
-	--luthor-syntax-function: #1d4ed8;
-	--luthor-syntax-variable: #c026d3;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-python"] {
-	--luthor-syntax-keyword: #7c3aed;
-	--luthor-syntax-string: #047857;
-	--luthor-syntax-number: #b45309;
-	--luthor-syntax-function: #0f766e;
-	--luthor-syntax-variable: #be185d;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-shell"] {
-	--luthor-syntax-keyword: #0f766e;
-	--luthor-syntax-string: #15803d;
-	--luthor-syntax-number: #a16207;
-	--luthor-syntax-function: #1d4ed8;
-	--luthor-syntax-variable: #7c3aed;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-sql"] {
-	--luthor-syntax-keyword: #9333ea;
-	--luthor-syntax-string: #0f766e;
-	--luthor-syntax-number: #b45309;
-	--luthor-syntax-function: #1d4ed8;
-	--luthor-syntax-variable: #be185d;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-code-block[data-theme="lang-systems"] {
-	--luthor-syntax-keyword: #7c3aed;
-	--luthor-syntax-string: #0f766e;
-	--luthor-syntax-number: #c2410c;
-	--luthor-syntax-function: #1e40af;
-	--luthor-syntax-variable: #db2777;
+	--luthor-syntax-keyword: #cf222e;
+	--luthor-syntax-string: #0a3069;
+	--luthor-syntax-number: #0550ae;
+	--luthor-syntax-function: #8250df;
+	--luthor-syntax-variable: #953800;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-default"] {
-	--luthor-syntax-keyword: #c084fc;
-	--luthor-syntax-string: #5eead4;
-	--luthor-syntax-number: #fbbf24;
-	--luthor-syntax-function: #60a5fa;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-javascript"] {
-	--luthor-syntax-keyword: #e879f9;
-	--luthor-syntax-string: #34d399;
-	--luthor-syntax-number: #f59e0b;
-	--luthor-syntax-function: #93c5fd;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-markup"] {
-	--luthor-syntax-keyword: #67e8f9;
-	--luthor-syntax-string: #4ade80;
-	--luthor-syntax-number: #facc15;
-	--luthor-syntax-function: #7dd3fc;
-	--luthor-syntax-variable: #fb7185;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-styles"] {
-	--luthor-syntax-keyword: #fdba74;
-	--luthor-syntax-string: #5eead4;
-	--luthor-syntax-number: #facc15;
-	--luthor-syntax-function: #93c5fd;
-	--luthor-syntax-variable: #f0abfc;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-python"] {
-	--luthor-syntax-keyword: #c084fc;
-	--luthor-syntax-string: #34d399;
-	--luthor-syntax-number: #fbbf24;
-	--luthor-syntax-function: #67e8f9;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-shell"] {
-	--luthor-syntax-keyword: #2dd4bf;
-	--luthor-syntax-string: #4ade80;
-	--luthor-syntax-number: #facc15;
-	--luthor-syntax-function: #93c5fd;
-	--luthor-syntax-variable: #c4b5fd;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-sql"] {
-	--luthor-syntax-keyword: #d8b4fe;
-	--luthor-syntax-string: #5eead4;
-	--luthor-syntax-number: #fbbf24;
-	--luthor-syntax-function: #93c5fd;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 .luthor-preset-extensive.luthor-editor-wrapper[data-editor-theme="dark"] .luthor-code-block[data-theme="lang-systems"] {
-	--luthor-syntax-keyword: #c084fc;
-	--luthor-syntax-string: #5eead4;
-	--luthor-syntax-number: #fb923c;
-	--luthor-syntax-function: #93c5fd;
-	--luthor-syntax-variable: #f472b6;
+	--luthor-syntax-keyword: #ff7b72;
+	--luthor-syntax-string: #a5d6ff;
+	--luthor-syntax-number: #79c0ff;
+	--luthor-syntax-function: #d2a8ff;
+	--luthor-syntax-variable: #ffa657;
 }
 
 

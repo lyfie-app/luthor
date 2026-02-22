@@ -536,6 +536,26 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     }));
   });
 
+  it("passes code language options to extension factory", () => {
+    const languageOptions = {
+      mode: "replace",
+      values: ["typescript", "javascript", "sql"],
+    } as const;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        languageOptions={languageOptions}
+      />,
+    );
+
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        languageOptions,
+      }),
+    );
+  });
+
   it("passes scaleByRatio to extension factory", () => {
     render(
       <ExtensiveEditor

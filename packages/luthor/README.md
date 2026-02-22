@@ -137,6 +137,7 @@ export function App() {
 - `loadCodeHighlightProvider`: optional async loader for provider injection (lazy-load path).
 - `maxAutoDetectCodeLength`: optional guard for language auto-detect input size (default `12000` characters).
 - `isCopyAllowed`: `true` by default. Set `false` to hide code-block copy buttons and disable code-block copy command execution.
+- `languageOptions`: optional per-editor code language list config for code block controls. Use array form to append, or object form with `mode: "append" | "replace"` and `values`.
 - `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
 - `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
 - `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.
@@ -359,6 +360,23 @@ export function App() {
   );
 }
 ```
+
+Customize code language options:
+
+```tsx
+<ExtensiveEditor
+  languageOptions={{
+    mode: "replace",
+    values: ["plaintext", "typescript", "javascript", "sql", "bash"],
+  }}
+/>
+```
+
+Notes:
+- `mode: "append"` keeps built-in defaults and adds your values.
+- `mode: "replace"` uses only your values (the UI still includes `auto`).
+- Aliases are normalized (for example `js` -> `javascript`).
+- Duplicate normalized entries are rejected (for example `["js", "javascript"]`).
 
 ### Font family options
 

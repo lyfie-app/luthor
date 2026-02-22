@@ -21,6 +21,16 @@ function App() {
     },
   ];
 
+  const codeLanguageOptions = {
+    mode: "replace" as const,
+    values: [
+      "plaintext",
+      "typescript",
+      "javascript",
+      "tsx",
+    ],
+  };
+
   return (
     <div className="app-shell" data-theme={theme}>
       <button
@@ -87,6 +97,7 @@ function App() {
             { "block.heading1": true },
           ]}
           isCopyAllowed={true}
+          languageOptions={codeLanguageOptions}
           featureFlags={{
             emoji: false,
           }}
@@ -96,13 +107,11 @@ function App() {
           }}
           isDraggableBoxEnabled={true}
           defaultSettings={{
-            font: { color: "#1f2937", boldColor: "#0f172a" },
             link: { color: "#1d4ed8"},
             list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
             table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
             hr: { color: "#cbd5e1" },
             placeholder: { color: "#94a3b8" },
-            codeblock: { backgroundColor: "#f8fafc" },
             toolbar: { backgroundColor: "#f8fafc" },
           }}
         />

@@ -146,6 +146,26 @@ export function Editor() {
 - `scaleByRatio: false` (default): free resize by default, hold `Shift` to keep aspect ratio.
 - `scaleByRatio: true`: keep aspect ratio by default, hold `Shift` to temporarily free resize.
 
+## Code language options
+
+`CodeIntelligenceExtension` supports per-instance language option control for code block selectors:
+
+```tsx
+import { CodeIntelligenceExtension } from "@lyfie/luthor-headless";
+
+const codeIntelligence = new CodeIntelligenceExtension().configure({
+  languageOptions: {
+    mode: "replace",
+    values: ["plaintext", "typescript", "javascript", "sql"],
+  },
+});
+```
+
+- `mode: "append"`: add to built-in options.
+- `mode: "replace"`: use only configured options.
+- Aliases are normalized (for example `js` becomes `javascript`).
+- Duplicate normalized entries throw validation errors.
+
 ## Editor theme CSS variables helper
 
 For custom UIs, headless exposes the same editor token contract used by `@lyfie/luthor`:

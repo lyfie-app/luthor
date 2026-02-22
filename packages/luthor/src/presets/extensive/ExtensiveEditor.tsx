@@ -45,6 +45,7 @@ import type {
   EmojiExtension,
   EmojiCatalogItem,
   CodeHighlightProvider,
+  CodeLanguageOptionsConfig,
   FontFamilyOption,
   FontSizeOption,
   LineHeightOption,
@@ -199,6 +200,29 @@ function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): 
     .sort(([left], [right]) => left.localeCompare(right));
 
   return entries.length > 0 ? JSON.stringify(entries) : "__default__";
+}
+
+function normalizeLanguageOptionsKey(
+  options?: readonly string[] | CodeLanguageOptionsConfig,
+): string {
+  if (!options) {
+    return "__default__";
+  }
+
+  if (Array.isArray(options)) {
+    return JSON.stringify({
+      mode: "append",
+      values: options.map((option) => option.trim()),
+    });
+  }
+
+  const config = options as CodeLanguageOptionsConfig;
+  const values = Array.isArray(config.values) ? config.values : [];
+
+  return JSON.stringify({
+    mode: config.mode ?? "append",
+    values: values.map((option) => option.trim()),
+  });
 }
 
 function createDefaultSettingsStyleVarRecord(defaultSettings?: DefaultSettings): Record<string, string> | undefined {
@@ -1065,6 +1089,7 @@ export interface ExtensiveEditorProps {
   loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
   maxAutoDetectCodeLength?: number;
   isCopyAllowed?: boolean;
+  languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -1105,6 +1130,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     loadCodeHighlightProvider,
     maxAutoDetectCodeLength,
     isCopyAllowed = true,
+    languageOptions,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -1148,6 +1174,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       typeof maxAutoDetectCodeLength === "number"
         ? maxAutoDetectCodeLength.toString()
         : "unset";
+    const languageOptionsKey = useMemo(
+      () => normalizeLanguageOptionsKey(languageOptions),
+      [languageOptions],
+    );
     const copyAllowedKey = isCopyAllowed ? "copy-on" : "copy-off";
     const effectiveFeatureFlags = useMemo<FeatureFlagOverrides | undefined>(() => {
       if (typeof isDraggableBoxEnabled !== "boolean") {
@@ -1167,11 +1197,14 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => resolveFeatureFlags(effectiveFeatureFlags),
       [featureFlagsKey],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${featureFlagsKey}`;
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${languageOptionsKey}::${featureFlagsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
     const stableFeatureFlagsRef = useRef<FeatureFlagOverrides | undefined>(effectiveFeatureFlags);
+    const stableLanguageOptionsRef = useRef<
+      readonly string[] | CodeLanguageOptionsConfig | undefined
+    >(languageOptions);
     const stableCodeHighlightProviderRef = useRef<CodeHighlightProvider | null | undefined>(codeHighlightProvider);
     const stableLoadCodeHighlightProviderRef = useRef<
       (() => Promise<CodeHighlightProvider | null>) | undefined
@@ -1188,6 +1221,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       stableFontSizeOptionsRef.current = fontSizeOptions;
       stableLineHeightOptionsRef.current = lineHeightOptions;
       stableFeatureFlagsRef.current = effectiveFeatureFlags;
+      stableLanguageOptionsRef.current = languageOptions;
       stableCodeHighlightProviderRef.current = codeHighlightProvider;
       stableLoadCodeHighlightProviderRef.current = loadCodeHighlightProvider;
     }
@@ -1216,6 +1250,9 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
           ? { maxAutoDetectCodeLength }
           : {}),
         isCopyAllowed,
+        ...(stableLanguageOptionsRef.current !== undefined
+          ? { languageOptions: stableLanguageOptionsRef.current }
+          : {}),
         ...(typeof isDraggableBoxEnabled === "boolean"
           ? { isDraggableBoxEnabled }
           : {}),

@@ -2,7 +2,12 @@ import type { EditorPreset } from "..";
 import { createExtensiveExtensions, extensiveExtensions } from "./extensions";
 import { ExtensiveEditor } from "./ExtensiveEditor";
 import { createPresetEditorConfig } from "../../core/preset-config";
-import type { FontFamilyOption, FontSizeOption, LineHeightOption } from "@lyfie/luthor-headless";
+import type {
+  FontFamilyOption,
+  FontSizeOption,
+  LineHeightOption,
+  CodeLanguageOptionsConfig,
+} from "@lyfie/luthor-headless";
 
 export const extensiveToolbar = [
   "undo",
@@ -58,6 +63,7 @@ export type ExtensivePresetConfig = {
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
   isCopyAllowed?: boolean;
+  languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
 };
 
 export function createExtensivePreset(
@@ -70,6 +76,7 @@ export function createExtensivePreset(
       fontSizeOptions: config.fontSizeOptions,
       lineHeightOptions: config.lineHeightOptions,
       isCopyAllowed: config.isCopyAllowed,
+      languageOptions: config.languageOptions,
     })],
   };
 }

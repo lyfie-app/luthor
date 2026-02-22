@@ -34,6 +34,7 @@ import {
   tabIndentExtension,
   enterKeyBehaviorExtension,
   type CodeHighlightProvider,
+  type CodeLanguageOptionsConfig,
   type Extension,
 } from "@lyfie/luthor-headless";
 import type { ReactNode } from "react";
@@ -148,6 +149,7 @@ export type ExtensiveExtensionsConfig = {
   loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
   maxAutoDetectCodeLength?: number;
   isCopyAllowed?: boolean;
+  languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -692,6 +694,7 @@ function buildExtensiveExtensions({
   loadCodeHighlightProvider,
   maxAutoDetectCodeLength,
   isCopyAllowed,
+  languageOptions,
 }: ExtensiveExtensionsConfig = {}) {
   const resolvedFeatureFlags = resolveFeatureFlags(featureFlags);
   const enabled = (feature: FeatureFlag) => isFeatureEnabled(resolvedFeatureFlags, feature);
@@ -721,6 +724,7 @@ function buildExtensiveExtensions({
     loadProvider: loadCodeHighlightProvider,
     maxAutoDetectLength: maxAutoDetectCodeLength,
     isCopyAllowed: isCopyAllowed ?? true,
+    languageOptions,
   });
 
   const extensions: Extension[] = [];

@@ -85,6 +85,8 @@ export {
   codeIntelligenceExtension,
   type CodeIntelligenceConfig,
   type CodeIntelligenceCommands,
+  type CodeLanguageOptionsMode,
+  type CodeLanguageOptionsConfig,
 } from "./formatting/CodeIntelligenceExtension";
 export {
   CodeFormatExtension,

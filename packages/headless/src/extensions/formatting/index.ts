@@ -67,6 +67,8 @@ export {
   codeIntelligenceExtension,
   type CodeIntelligenceConfig,
   type CodeIntelligenceCommands,
+  type CodeLanguageOptionsMode,
+  type CodeLanguageOptionsConfig,
 } from "./CodeIntelligenceExtension";
 export { LinkExtension, linkExtension } from "./LinkExtension";
 export {

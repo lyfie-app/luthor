@@ -9,25 +9,23 @@
     "sync:content": "npm run sync:docs && npm run sync:metadata && npm run sync:llms",
     "predev": "npm run sync:content",
     "prebuild": "npm run sync:content",
-    "dev": "astro dev",
-    "build": "node ./scripts/run-astro-build.mjs",
-    "preview": "astro preview",
-    "astro": "astro",
-    "deploy": "npm run build && wrangler deploy"
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "next start",
+    "deploy": "npm run build"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^12.6.12",
-    "@astrojs/react": "^4.4.2",
-    "@astrojs/starlight": "^0.37.6",
     "@lyfie/luthor": "workspace:*",
-    "astro": "^5.17.1",
+    "gray-matter": "^4.0.3",
+    "next": "^15.5.2",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.9",
     "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "wrangler": "^4.67.0"
+    "@types/react-dom": "^19.2.3"
   }
 }

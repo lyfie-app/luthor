@@ -48,6 +48,13 @@ export type CodeIntelligenceCommands = {
   copySelectedCodeBlock: () => Promise<boolean>;
 };
 
+export type CodeLanguageOptionsMode = "append" | "replace";
+
+export type CodeLanguageOptionsConfig = {
+  mode?: CodeLanguageOptionsMode;
+  values: readonly string[];
+};
+
 const DEFAULT_LANGUAGE_OPTIONS = [
   "plaintext",
   "typescript",
@@ -74,6 +81,7 @@ const DEFAULT_MAX_AUTODETECT_LENGTH = 12_000;
 export type CodeIntelligenceConfig = CodeHighlightProviderConfig & {
   maxAutoDetectLength?: number;
   isCopyAllowed?: boolean;
+  languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
 };
 
 export class CodeIntelligenceExtension extends BaseExtension<
@@ -501,19 +509,33 @@ export class CodeIntelligenceExtension extends BaseExtension<
 
   private getLanguageOptions(): string[] {
     const lexicalLanguages = Object.keys(CODE_LANGUAGE_MAP || {});
-    const merged = new Set<string>([
+    const defaultLanguages = new Set<string>([
       ...DEFAULT_LANGUAGE_OPTIONS,
       ...lexicalLanguages,
     ]);
-
-    const normalizedUnique = new Set<string>();
-
-    Array.from(merged)
+    const normalizedDefaultLanguages = Array.from(defaultLanguages)
       .map((lang) => normalizeLanguage(lang))
-      .filter((lang): lang is string => !!lang)
-      .forEach((lang) => normalizedUnique.add(lang));
+      .filter((lang): lang is string => !!lang);
 
-    return Array.from(normalizedUnique).sort((a, b) => a.localeCompare(b));
+    const languageOptionsConfig = resolveLanguageOptionsConfig(
+      this.config.languageOptions,
+    );
+    if (!languageOptionsConfig) {
+      return toSortedUniqueLanguageOptions(normalizedDefaultLanguages);
+    }
+
+    const configuredOptions = normalizeConfiguredLanguageOptions(
+      languageOptionsConfig.values,
+    );
+
+    if (languageOptionsConfig.mode === "replace") {
+      return toSortedUniqueLanguageOptions(configuredOptions);
+    }
+
+    return toSortedUniqueLanguageOptions([
+      ...normalizedDefaultLanguages,
+      ...configuredOptions,
+    ]);
   }
 
   private async loadCodeHighlightProvider(): Promise<CodeHighlightProvider | null> {
@@ -979,3 +1001,68 @@ function normalizeLanguage(language: string | null | undefined): string | null {
 }
 
 export const codeIntelligenceExtension = new CodeIntelligenceExtension();
+
+function resolveLanguageOptionsConfig(
+  languageOptions:
+    | readonly string[]
+    | CodeLanguageOptionsConfig
+    | undefined,
+): CodeLanguageOptionsConfig | null {
+  if (!languageOptions) {
+    return null;
+  }
+
+  if (Array.isArray(languageOptions)) {
+    return {
+      mode: "append",
+      values: languageOptions,
+    };
+  }
+
+  const config = languageOptions as CodeLanguageOptionsConfig;
+
+  return {
+    mode: config.mode ?? "append",
+    values: Array.isArray(config.values) ? config.values : [],
+  };
+}
+
+function normalizeConfiguredLanguageOptions(
+  languageOptions: readonly string[],
+): string[] {
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+
+  for (const option of languageOptions) {
+    const rawValue = option.trim();
+    if (!rawValue) {
+      continue;
+    }
+
+    const normalizedValue = normalizeLanguage(rawValue);
+    if (!normalizedValue) {
+      throw new Error(
+        `[CodeIntelligenceExtension] Invalid language option "${option}". ` +
+          `Use a supported language ID or alias (excluding "auto").`,
+      );
+    }
+
+    if (seen.has(normalizedValue)) {
+      throw new Error(
+        `[CodeIntelligenceExtension] Duplicate language option "${option}". ` +
+          `It resolves to "${normalizedValue}", which is already configured.`,
+      );
+    }
+
+    seen.add(normalizedValue);
+    normalized.push(normalizedValue);
+  }
+
+  return normalized;
+}
+
+function toSortedUniqueLanguageOptions(languageOptions: readonly string[]): string[] {
+  return Array.from(new Set(languageOptions)).sort((left, right) =>
+    left.localeCompare(right),
+  );
+}
