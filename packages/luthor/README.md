@@ -124,6 +124,7 @@ export function App() {
 - `toolbarVisibility`: `Partial<Record<ToolbarItemType, boolean>>`. Set an item to `false` to hide it; unsupported items are auto-hidden even if set to `true`.
 - `toolbarClassName`: optional class appended to the toolbar root (`.luthor-toolbar`) for CSS overrides.
 - `toolbarStyleVars`: optional map of `--luthor-toolbar-*` custom properties applied to the toolbar root.
+- `defaultSettings`: optional grouped visual defaults (`font`, `link`, `list`, `quote`, `table`, `hr`, `placeholder`, `codeblock`, `toolbar`) mapped to CSS variables.
 - `editorThemeOverrides`: optional map of `--luthor-*` custom properties applied to the editor wrapper for per-instance theme injection.
 - `theme`: optional `Partial<LuthorTheme>` merged into the editor theme config.
 - `quoteClassName`: optional class appended to the quote node class (default base class is `.luthor-quote`).
@@ -145,6 +146,46 @@ export function App() {
   - `denylist`: exclude these command IDs (applied after allowlist)
   - enabled-id list form: pass `[{ "block.quote": true }, { "block.heading1": true }]` to show only selected slash IDs
   - command ordering remains the preset default for deterministic menus
+
+### Default visual settings (`defaultSettings`)
+
+Use `defaultSettings` for a typed visual-default API without mixing structural behavior props:
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      defaultSettings={{
+        font: { color: "#1f2937", boldColor: "#0f172a" },
+        link: { color: "#1d4ed8" },
+        list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
+        quote: {
+          backgroundColor: "#f8fafc",
+          color: "#334155",
+          indicatorColor: "#2563eb",
+        },
+        table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
+        hr: { color: "#cbd5e1" },
+        placeholder: { color: "#94a3b8" },
+        codeblock: { backgroundColor: "#f8fafc" },
+        toolbar: { backgroundColor: "#f8fafc" },
+      }}
+    />
+  );
+}
+```
+
+Precedence (highest to lowest):
+- `toolbarStyleVars` (toolbar element only) and `quoteStyleVars` (quote tokens)
+- `editorThemeOverrides`
+- `defaultSettings`
+- CSS variables from your stylesheet/theme classes
+
+Notes:
+- `defaultSettings` is style-only; structural/editor behavior props remain separate.
+- Since TSX styles are inline on the editor instance, stylesheet overrides need higher specificity or `!important` when overriding the same token.
 
 ### Slash command visibility (enabled IDs, allowlist / denylist)
 
@@ -428,6 +469,15 @@ Editor theme CSS variable contract (`editorThemeOverrides`):
 - `--luthor-quote-bg`
 - `--luthor-quote-fg`
 - `--luthor-quote-border`
+- `--luthor-text-bold-color`
+- `--luthor-link-color`
+- `--luthor-list-marker-color`
+- `--luthor-list-checkbox-color`
+- `--luthor-table-border-color`
+- `--luthor-table-header-bg`
+- `--luthor-hr-color`
+- `--luthor-placeholder-color`
+- `--luthor-codeblock-bg`
 - `--luthor-syntax-comment`
 - `--luthor-syntax-keyword`
 - `--luthor-syntax-string`

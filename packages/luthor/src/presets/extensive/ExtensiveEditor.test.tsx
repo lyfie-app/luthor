@@ -9,6 +9,7 @@ const {
   commandsToSlashCommandItemsMock,
   toolbarMock,
   createExtensiveExtensionsMock,
+  createEditorThemeStyleVarsMock,
   providerMock,
   richTextMock,
   sourceViewMock,
@@ -20,6 +21,7 @@ const {
     <div data-testid="toolbar" className={classNames?.toolbar} style={toolbarStyleVars} />
   )),
   createExtensiveExtensionsMock: vi.fn(() => []),
+  createEditorThemeStyleVarsMock: vi.fn((overrides?: Record<string, string>) => overrides),
   providerMock: vi.fn(),
   richTextMock: vi.fn(({ placeholder, classNames }: { placeholder?: string; classNames?: { placeholder?: string } }) => (
     <div data-testid="richtext" data-placeholder-class={classNames?.placeholder}>{placeholder}</div>
@@ -173,7 +175,7 @@ vi.mock("@lyfie/luthor-headless", () => ({
     quote: "luthor-quote",
     ...override,
   }),
-  createEditorThemeStyleVars: vi.fn(() => undefined),
+  createEditorThemeStyleVars: createEditorThemeStyleVarsMock,
 }));
 
 import { ExtensiveEditor } from "./ExtensiveEditor";
@@ -422,6 +424,69 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       "--luthor-quote-bg": "#fef3c7",
       "--luthor-quote-fg": "#78350f",
       "--luthor-quote-border": "#d97706",
+    });
+  });
+
+  it("applies defaultSettings tokens on editor wrapper", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        defaultSettings={{
+          font: { color: "#111827", boldColor: "#0f172a" },
+          link: { color: "#1d4ed8" },
+          list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
+          quote: {
+            backgroundColor: "#f8fafc",
+            color: "#334155",
+            indicatorColor: "#2563eb",
+          },
+          table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
+          hr: { color: "#cbd5e1" },
+          placeholder: { color: "#94a3b8" },
+          codeblock: { backgroundColor: "#f8fafc" },
+          toolbar: { backgroundColor: "#f8fafc" },
+        }}
+      />,
+    );
+
+    const wrapper = document.querySelector(".luthor-editor-wrapper");
+    expect(wrapper).toHaveStyle({
+      "--luthor-fg": "#111827",
+      "--luthor-text-bold-color": "#0f172a",
+      "--luthor-link-color": "#1d4ed8",
+      "--luthor-list-marker-color": "#1f2937",
+      "--luthor-list-checkbox-color": "#2563eb",
+      "--luthor-quote-bg": "#f8fafc",
+      "--luthor-quote-fg": "#334155",
+      "--luthor-quote-border": "#2563eb",
+      "--luthor-table-border-color": "#cbd5e1",
+      "--luthor-table-header-bg": "#f1f5f9",
+      "--luthor-hr-color": "#cbd5e1",
+      "--luthor-placeholder-color": "#94a3b8",
+      "--luthor-codeblock-bg": "#f8fafc",
+      "--luthor-toolbar-bg": "#f8fafc",
+    });
+  });
+
+  it("prioritizes editorThemeOverrides over defaultSettings for overlapping tokens", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        defaultSettings={{
+          font: { color: "#111827" },
+          quote: { indicatorColor: "#2563eb" },
+        }}
+        editorThemeOverrides={{
+          "--luthor-fg": "#14532d",
+          "--luthor-quote-border": "#16a34a",
+        }}
+      />,
+    );
+
+    const wrapper = document.querySelector(".luthor-editor-wrapper");
+    expect(wrapper).toHaveStyle({
+      "--luthor-fg": "#14532d",
+      "--luthor-quote-border": "#16a34a",
     });
   });
 

@@ -95,6 +95,16 @@ function App() {
             jsonb: "Paste JSONB document...",
           }}
           isDraggableBoxEnabled={true}
+          defaultSettings={{
+            font: { color: "#1f2937", boldColor: "#0f172a" },
+            link: { color: "#1d4ed8"},
+            list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
+            table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
+            hr: { color: "#cbd5e1" },
+            placeholder: { color: "#94a3b8" },
+            codeblock: { backgroundColor: "#f8fafc" },
+            toolbar: { backgroundColor: "#f8fafc" },
+          }}
         />
       </div>
     </div>

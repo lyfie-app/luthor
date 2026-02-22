@@ -228,6 +228,41 @@ export type QuoteStyleVars = Partial<{
   "--luthor-quote-border": string;
 }>;
 
+export interface DefaultSettings {
+  font?: {
+    color?: string;
+    boldColor?: string;
+  };
+  link?: {
+    color?: string;
+  };
+  list?: {
+    markerColor?: string;
+    checkboxColor?: string;
+  };
+  quote?: {
+    backgroundColor?: string;
+    color?: string;
+    indicatorColor?: string;
+  };
+  table?: {
+    borderColor?: string;
+    headerBackgroundColor?: string;
+  };
+  hr?: {
+    color?: string;
+  };
+  placeholder?: {
+    color?: string;
+  };
+  codeblock?: {
+    backgroundColor?: string;
+  };
+  toolbar?: {
+    backgroundColor?: string;
+  };
+}
+
 export type EditorThemeOverrides = LuthorEditorThemeOverrides;
 
 export type ToolbarPosition = "top" | "bottom";

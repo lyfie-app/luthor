@@ -28,6 +28,15 @@
   --luthor-quote-bg: var(--luthor-muted);
   --luthor-quote-fg: var(--luthor-fg);
   --luthor-quote-border: var(--luthor-accent);
+  --luthor-text-bold-color: var(--luthor-fg);
+  --luthor-link-color: var(--luthor-accent);
+  --luthor-list-marker-color: var(--luthor-fg);
+  --luthor-list-checkbox-color: var(--luthor-accent);
+  --luthor-table-border-color: var(--luthor-border);
+  --luthor-table-header-bg: var(--luthor-muted);
+  --luthor-hr-color: var(--luthor-border);
+  --luthor-placeholder-color: var(--luthor-muted-fg);
+  --luthor-codeblock-bg: var(--luthor-muted);
   --luthor-floating-bg: var(--luthor-bg);
   --luthor-floating-fg: var(--luthor-fg);
   --luthor-floating-border: var(--luthor-border);
@@ -75,6 +84,15 @@
   --luthor-quote-bg: color-mix(in srgb, var(--luthor-muted) 92%, #ffffff 8%);
   --luthor-quote-fg: var(--luthor-fg);
   --luthor-quote-border: color-mix(in srgb, var(--luthor-accent) 78%, #ffffff 22%);
+  --luthor-text-bold-color: var(--luthor-fg);
+  --luthor-link-color: var(--luthor-accent);
+  --luthor-list-marker-color: var(--luthor-fg);
+  --luthor-list-checkbox-color: var(--luthor-accent);
+  --luthor-table-border-color: var(--luthor-border);
+  --luthor-table-header-bg: var(--luthor-muted);
+  --luthor-hr-color: var(--luthor-border);
+  --luthor-placeholder-color: var(--luthor-muted-fg);
+  --luthor-codeblock-bg: var(--luthor-muted);
   --luthor-floating-bg: var(--luthor-bg);
   --luthor-floating-fg: var(--luthor-fg);
   --luthor-floating-border: var(--luthor-border);
@@ -678,7 +696,7 @@
 }
 
 .luthor-placeholder {
-	color: var(--luthor-muted-fg);
+	color: var(--luthor-placeholder-color, var(--luthor-muted-fg));
 	pointer-events: none;
 	position: absolute;
 	top: calc(var(--luthor-editor-content-padding-y) + var(--luthor-first-block-offset));
@@ -1312,6 +1330,7 @@
 
 .luthor-text-bold {
 	font-weight: 700;
+	color: var(--luthor-text-bold-color, var(--luthor-fg));
 }
 
 .luthor-text-italic {
@@ -1331,7 +1350,7 @@
 
 .luthor-code-block {
 	font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-	background-color: var(--luthor-muted);
+	background-color: var(--luthor-codeblock-bg, var(--luthor-muted));
 	border: 1px solid var(--luthor-border);
 	color: var(--luthor-syntax-string);
 	border-radius: 4px;
@@ -1389,7 +1408,7 @@
 	border-top-left-radius: 8px;
 	border-top-right-radius: 8px;
 	border-bottom: 1px solid var(--luthor-border);
-	background: var(--luthor-muted);
+	background: var(--luthor-codeblock-bg, var(--luthor-muted));
 }
 
 .luthor-codeblock-controls-left,
@@ -1468,12 +1487,12 @@
 .luthor-codeblock-copy:hover,
 .luthor-codeblock-language:hover {
 	border-color: var(--luthor-border-hover);
-	background: var(--luthor-muted);
+	background: var(--luthor-codeblock-bg, var(--luthor-muted));
 }
 
 .luthor-codeblock-copy.is-copied {
 	border-color: var(--luthor-border-hover);
-	background: var(--luthor-muted);
+	background: var(--luthor-codeblock-bg, var(--luthor-muted));
 }
 
 .luthor-codeblock-copy.is-copy-error {
@@ -1691,6 +1710,11 @@
 	margin: calc(4px * var(--luthor-line-height-ratio, 1)) 0;
 }
 
+.luthor-list-ul .luthor-list-li::marker,
+.luthor-list-ol .luthor-list-li::marker {
+	color: var(--luthor-list-marker-color, var(--luthor-fg));
+}
+
 .luthor-list-item-unchecked,
 .luthor-list-item-checked {
 	position: relative;
@@ -1715,14 +1739,14 @@
 	width: 16px;
 	height: 16px;
 	border-radius: 4px;
-	border: 1.5px solid var(--luthor-border-active);
+	border: 1.5px solid var(--luthor-list-checkbox-color, var(--luthor-accent));
 	background-color: var(--luthor-bg);
 	box-sizing: border-box;
 	transition: all 0.15s ease;
 }
 
 .luthor-list-item-unchecked:hover::before {
-	border-color: var(--luthor-accent);
+	border-color: var(--luthor-list-checkbox-color, var(--luthor-accent));
 }
 
 .luthor-list-item-checked::before {
@@ -1734,8 +1758,8 @@
 	font-weight: 700;
 	line-height: 1;
 	color: var(--luthor-bg);
-	border-color: var(--luthor-accent);
-	background-color: var(--luthor-accent);
+	border-color: var(--luthor-list-checkbox-color, var(--luthor-accent));
+	background-color: var(--luthor-list-checkbox-color, var(--luthor-accent));
 }
 
 .luthor-list-item-checked {
@@ -1758,7 +1782,7 @@
 }
 
 .luthor-link {
-	color: var(--luthor-accent);
+	color: var(--luthor-link-color, var(--luthor-accent));
 	text-decoration: underline;
 }
 
@@ -1769,7 +1793,7 @@
 .luthor-hr {
 	margin: 16px 0;
 	border: none;
-	border-top: 1px solid var(--luthor-border);
+	border-top: 1px solid var(--luthor-hr-color, var(--luthor-border));
 	height: 1px;
 }
 
@@ -1837,12 +1861,12 @@
 	border-collapse: collapse;
 	width: 100%;
 	margin: 16px 0;
-	border: 1px solid var(--luthor-border);
+	border: 1px solid var(--luthor-table-border-color, var(--luthor-border));
 }
 
 .luthor-table-cell,
 .luthor-table-cell-header {
-	border: 1px solid var(--luthor-border);
+	border: 1px solid var(--luthor-table-border-color, var(--luthor-border));
 	padding: 8px 12px;
 	text-align: left;
 	min-width: 80px;
@@ -1850,7 +1874,7 @@
 }
 
 .luthor-table-cell-header {
-	background-color: var(--luthor-muted);
+	background-color: var(--luthor-table-header-bg, var(--luthor-muted));
 	font-weight: 600;
 }
 

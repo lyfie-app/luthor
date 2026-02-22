@@ -30,6 +30,7 @@ import {
   type ToolbarAlignment,
   type ToolbarStyleVars,
   type QuoteStyleVars,
+  type DefaultSettings,
   type EditorThemeOverrides,
   type ToolbarLayout,
   type ToolbarItemType,
@@ -198,6 +199,36 @@ function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): 
     .sort(([left], [right]) => left.localeCompare(right));
 
   return entries.length > 0 ? JSON.stringify(entries) : "__default__";
+}
+
+function createDefaultSettingsStyleVarRecord(defaultSettings?: DefaultSettings): Record<string, string> | undefined {
+  if (!defaultSettings) {
+    return undefined;
+  }
+
+  const styleVars: Record<string, string> = {};
+  const assign = (token: string, value: string | undefined) => {
+    if (typeof value === "string" && value.trim().length > 0) {
+      styleVars[token] = value.trim();
+    }
+  };
+
+  assign("--luthor-fg", defaultSettings.font?.color);
+  assign("--luthor-text-bold-color", defaultSettings.font?.boldColor);
+  assign("--luthor-link-color", defaultSettings.link?.color);
+  assign("--luthor-list-marker-color", defaultSettings.list?.markerColor);
+  assign("--luthor-list-checkbox-color", defaultSettings.list?.checkboxColor);
+  assign("--luthor-quote-bg", defaultSettings.quote?.backgroundColor);
+  assign("--luthor-quote-fg", defaultSettings.quote?.color);
+  assign("--luthor-quote-border", defaultSettings.quote?.indicatorColor);
+  assign("--luthor-table-border-color", defaultSettings.table?.borderColor);
+  assign("--luthor-table-header-bg", defaultSettings.table?.headerBackgroundColor);
+  assign("--luthor-hr-color", defaultSettings.hr?.color);
+  assign("--luthor-placeholder-color", defaultSettings.placeholder?.color);
+  assign("--luthor-codeblock-bg", defaultSettings.codeblock?.backgroundColor);
+  assign("--luthor-toolbar-bg", defaultSettings.toolbar?.backgroundColor);
+
+  return Object.keys(styleVars).length > 0 ? styleVars : undefined;
 }
 
 function normalizeFeatureFlagsKey(overrides?: FeatureFlagOverrides): string {
@@ -1016,6 +1047,7 @@ export interface ExtensiveEditorProps {
   toolbarStyleVars?: ToolbarStyleVars;
   quoteClassName?: string;
   quoteStyleVars?: QuoteStyleVars;
+  defaultSettings?: DefaultSettings;
   editorThemeOverrides?: EditorThemeOverrides;
   isToolbarEnabled?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
@@ -1055,6 +1087,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     toolbarStyleVars,
     quoteClassName,
     quoteStyleVars,
+    defaultSettings,
     editorThemeOverrides,
     isToolbarEnabled = true,
     fontFamilyOptions,
@@ -1214,10 +1247,25 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeStyleVarsKey(quoteStyleVars),
       [quoteStyleVars],
     );
+    const defaultSettingsVars = useMemo(
+      () => createDefaultSettingsStyleVarRecord(defaultSettings),
+      [defaultSettings],
+    );
+    const defaultSettingsKey = useMemo(
+      () => normalizeStyleVarsKey(defaultSettingsVars),
+      [defaultSettingsVars],
+    );
+    const stableDefaultSettingsRef = useRef<Record<string, string> | undefined>(defaultSettingsVars);
     const stableEditorThemeOverridesRef = useRef<EditorThemeOverrides | undefined>(editorThemeOverrides);
     const stableQuoteStyleVarsRef = useRef<QuoteStyleVars | undefined>(quoteStyleVars);
+    const stableDefaultSettingsKeyRef = useRef(defaultSettingsKey);
     const stableEditorThemeOverridesKeyRef = useRef(editorThemeOverridesKey);
     const stableQuoteStyleVarsKeyRef = useRef(quoteStyleVarsKey);
+
+    if (stableDefaultSettingsKeyRef.current !== defaultSettingsKey) {
+      stableDefaultSettingsKeyRef.current = defaultSettingsKey;
+      stableDefaultSettingsRef.current = defaultSettingsVars;
+    }
 
     if (stableEditorThemeOverridesKeyRef.current !== editorThemeOverridesKey) {
       stableEditorThemeOverridesKeyRef.current = editorThemeOverridesKey;
@@ -1230,17 +1278,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     }
 
     const wrapperStyleVars = useMemo(() => {
+      const defaultVars = stableDefaultSettingsRef.current as CSSProperties | undefined;
       const editorThemeVars = createEditorThemeStyleVars(stableEditorThemeOverridesRef.current);
       const quoteVars = stableQuoteStyleVarsRef.current as CSSProperties | undefined;
-      if (!editorThemeVars && !quoteVars) {
+      if (!defaultVars && !editorThemeVars && !quoteVars) {
         return undefined;
       }
 
       return {
+        ...(defaultVars ?? {}),
         ...(editorThemeVars as CSSProperties | undefined),
         ...(quoteVars ?? {}),
       };
-    }, [editorThemeOverridesKey, quoteStyleVarsKey]);
+    }, [defaultSettingsKey, editorThemeOverridesKey, quoteStyleVarsKey]);
 
     const [methods, setMethods] = useState<ExtensiveEditorRef | null>(null);
     useImperativeHandle(ref, () => methods as ExtensiveEditorRef, [methods]);
