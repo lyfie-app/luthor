@@ -1,9 +1,20 @@
 export { extensivePreset, extensiveToolbar, createExtensivePreset } from "./preset";
-export { extensiveExtensions, createExtensiveExtensions } from "./extensions";
+export {
+  extensiveExtensions,
+  createExtensiveExtensions,
+  resolveFeatureFlags,
+  DEFAULT_FEATURE_FLAGS,
+  isFeatureEnabled,
+} from "./extensions";
 export { ExtensiveEditor } from "./ExtensiveEditor";
 export type { 
     ExtensiveEditorRef, 
     ExtensiveEditorProps, 
     ExtensiveEditorMode } from "./ExtensiveEditor";
-export type { ExtensiveExtensionsConfig } from "./extensions";
+export type {
+  ExtensiveExtensionsConfig,
+  FeatureFlag,
+  FeatureFlags,
+  FeatureFlagOverrides,
+} from "./extensions";
 export type { ExtensivePresetConfig } from "./preset";

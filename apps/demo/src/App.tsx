@@ -13,6 +13,12 @@ function App() {
       fontFamily: "'Geist', 'Segoe UI', Arial, sans-serif",
       cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
     },
+    {
+      value: "comfortaa",
+      label: "Comfortaa",
+      fontFamily: "'Comfortaa', 'Segoe UI', Arial, sans-serif",
+      cssImportUrl: "https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap",
+    },
   ];
 
   return (
@@ -81,6 +87,9 @@ function App() {
             { "block.heading1": true },
           ]}
           isCopyAllowed={true}
+          featureFlags={{
+            emoji: false,
+          }}
         />
       </div>
     </div>

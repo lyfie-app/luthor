@@ -56,6 +56,7 @@ export type CommandGenerationOptions = {
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   slashCommandVisibility?: SlashCommandVisibility;
+  isFeatureEnabled?: (feature: string) => boolean;
 };
 
 function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
@@ -131,6 +132,13 @@ function resolveAvailableCommands(
   return generateCommands(options).filter((command) => !command.condition || command.condition(commands));
 }
 
+function isCommandAvailable(
+  commands: CoreEditorCommands,
+  key: keyof CoreEditorCommands,
+): boolean {
+  return typeof commands[key] === "function";
+}
+
 function normalizeCommandIdList(ids?: readonly string[]): Set<string> {
   if (!ids || ids.length === 0) {
     return new Set();
@@ -163,13 +171,19 @@ function resolveSlashCommandVisibility(
     return { allowlist: normalizeCommandIdList(allowlist), denylist: new Set() };
   }
 
+  const visibilityFilters = visibility as {
+    allowlist?: readonly string[];
+    denylist?: readonly string[];
+  };
+
   return {
-    allowlist: normalizeCommandIdList(visibility.allowlist),
-    denylist: normalizeCommandIdList(visibility.denylist),
+    allowlist: normalizeCommandIdList(visibilityFilters.allowlist),
+    denylist: normalizeCommandIdList(visibilityFilters.denylist),
   };
 }
 
 export function generateCommands(options?: CommandGenerationOptions): CommandConfig[] {
+  const isFeatureEnabled = options?.isFeatureEnabled ?? (() => true);
   const resolvedHeadingOptions = resolveHeadingOptions(options?.headingOptions);
   const resolvedParagraphLabel = options?.paragraphLabel?.trim() || "Paragraph";
   const headingCommands: CommandConfig[] = resolvedHeadingOptions.map((heading) => {
@@ -180,9 +194,10 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
       label: `Heading ${headingLevel}`,
       description: getHeadingDescription(heading),
       category: "Block",
-      action: (commands) => commands.toggleHeading(heading),
+      action: (commands) => commands.toggleHeading?.(heading),
       shortcuts: [{ key: headingLevel, ctrlKey: true, altKey: true }],
       keywords: ["heading", heading],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "toggleHeading"),
     };
   });
 
@@ -192,35 +207,39 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
       label: "Toggle Bold",
       description: "Make text bold or remove bold formatting",
       category: "Format",
-      action: (commands) => commands.toggleBold(),
+      action: (commands) => commands.toggleBold?.(),
       shortcuts: [{ key: "b", ctrlKey: true }],
       keywords: ["bold", "strong", "format"],
+      condition: (commands) => isFeatureEnabled("bold") && isCommandAvailable(commands, "toggleBold"),
     },
     {
       id: "format.italic",
       label: "Toggle Italic",
       description: "Make text italic or remove italic formatting",
       category: "Format",
-      action: (commands) => commands.toggleItalic(),
+      action: (commands) => commands.toggleItalic?.(),
       shortcuts: [{ key: "i", ctrlKey: true }],
       keywords: ["italic", "emphasis", "format"],
+      condition: (commands) => isFeatureEnabled("italic") && isCommandAvailable(commands, "toggleItalic"),
     },
     {
       id: "format.underline",
       label: "Toggle Underline",
       description: "Add or remove underline formatting",
       category: "Format",
-      action: (commands) => commands.toggleUnderline(),
+      action: (commands) => commands.toggleUnderline?.(),
       shortcuts: [{ key: "u", ctrlKey: true }],
       keywords: ["underline", "format"],
+      condition: (commands) => isFeatureEnabled("underline") && isCommandAvailable(commands, "toggleUnderline"),
     },
     {
       id: "format.strikethrough",
       label: "Toggle Strikethrough",
       description: "Add or remove strikethrough formatting",
       category: "Format",
-      action: (commands) => commands.toggleStrikethrough(),
+      action: (commands) => commands.toggleStrikethrough?.(),
       keywords: ["strikethrough", "format"],
+      condition: (commands) => isFeatureEnabled("strikethrough") && isCommandAvailable(commands, "toggleStrikethrough"),
     },
     {
       id: "format.subscript",
@@ -229,7 +248,7 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
       category: "Format",
       action: (commands) => commands.toggleSubscript?.(),
       keywords: ["subscript", "format"],
-      condition: supportsSubscript,
+      condition: (commands) => isFeatureEnabled("subscript") && supportsSubscript(commands),
     },
     {
       id: "format.superscript",
@@ -238,25 +257,27 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
       category: "Format",
       action: (commands) => commands.toggleSuperscript?.(),
       keywords: ["superscript", "format"],
-      condition: supportsSuperscript,
+      condition: (commands) => isFeatureEnabled("superscript") && supportsSuperscript(commands),
     },
     {
       id: "format.code",
       label: "Toggle Inline Code",
       description: "Format text as inline code",
       category: "Format",
-      action: (commands) => commands.formatText("code"),
+      action: (commands) => commands.formatText?.("code"),
       shortcuts: [{ key: "`", ctrlKey: true }],
       keywords: ["code", "inline", "format"],
+      condition: (commands) => isFeatureEnabled("codeFormat") && isCommandAvailable(commands, "formatText"),
     },
     {
       id: "block.paragraph",
       label: resolvedParagraphLabel,
       description: "Convert to paragraph",
       category: "Block",
-      action: (commands) => commands.toggleParagraph(),
+      action: (commands) => commands.toggleParagraph?.(),
       shortcuts: [{ key: "0", ctrlKey: true, altKey: true }],
       keywords: ["paragraph", "text"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "toggleParagraph"),
     },
     ...headingCommands,
     {
@@ -264,49 +285,55 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
       label: "Quote",
       description: "Convert to blockquote",
       category: "Block",
-      action: (commands) => commands.toggleQuote(),
+      action: (commands) => commands.toggleQuote?.(),
       keywords: ["quote", "blockquote"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "toggleQuote"),
     },
     {
       id: "block.align-left",
       label: "Align Left",
       description: "Align selected blocks to the left",
       category: "Block",
-      action: (commands) => commands.setTextAlignment("left"),
+      action: (commands) => commands.setTextAlignment?.("left"),
       keywords: ["align", "left", "text"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "setTextAlignment"),
     },
     {
       id: "block.align-center",
       label: "Align Center",
       description: "Center-align selected blocks",
       category: "Block",
-      action: (commands) => commands.setTextAlignment("center"),
+      action: (commands) => commands.setTextAlignment?.("center"),
       keywords: ["align", "center", "text"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "setTextAlignment"),
     },
     {
       id: "block.align-right",
       label: "Align Right",
       description: "Align selected blocks to the right",
       category: "Block",
-      action: (commands) => commands.setTextAlignment("right"),
+      action: (commands) => commands.setTextAlignment?.("right"),
       keywords: ["align", "right", "text"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "setTextAlignment"),
     },
     {
       id: "block.align-justify",
       label: "Justify",
       description: "Justify selected blocks",
       category: "Block",
-      action: (commands) => commands.setTextAlignment("justify"),
+      action: (commands) => commands.setTextAlignment?.("justify"),
       keywords: ["align", "justify", "text"],
+      condition: (commands) => isFeatureEnabled("blockFormat") && isCommandAvailable(commands, "setTextAlignment"),
     },
     {
       id: "block.codeblock",
       label: "Code Block",
       description: "Convert to code block",
       category: "Block",
-      action: (commands) => commands.toggleCodeBlock(),
+      action: (commands) => commands.toggleCodeBlock?.(),
       shortcuts: [{ key: "`", ctrlKey: true, shiftKey: true }],
       keywords: ["code", "block"],
+      condition: (commands) => isFeatureEnabled("code") && isCommandAvailable(commands, "toggleCodeBlock"),
     },
     {
       id: "block.code-language",
@@ -320,7 +347,7 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         commands.setCodeLanguage(language);
       },
       keywords: ["code", "language", "syntax"],
-      condition: supportsCodeLanguageCommands,
+      condition: (commands) => isFeatureEnabled("codeIntelligence") && supportsCodeLanguageCommands(commands),
     },
     {
       id: "block.code-language.auto",
@@ -331,60 +358,66 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         void commands.autoDetectCodeLanguage?.();
       },
       keywords: ["code", "language", "auto", "detect"],
-      condition: supportsCodeLanguageCommands,
+      condition: (commands) => isFeatureEnabled("codeIntelligence") && supportsCodeLanguageCommands(commands),
     },
     {
       id: "list.bullet",
       label: "Bullet List",
       description: "Create or toggle bullet list",
       category: "List",
-      action: (commands) => commands.toggleUnorderedList(),
+      action: (commands) => commands.toggleUnorderedList?.(),
       shortcuts: [{ key: "l", ctrlKey: true, shiftKey: true }],
       keywords: ["list", "bullet"],
+      condition: (commands) => isFeatureEnabled("list") && isCommandAvailable(commands, "toggleUnorderedList"),
     },
     {
       id: "list.numbered",
       label: "Numbered List",
       description: "Create or toggle numbered list",
       category: "List",
-      action: (commands) => commands.toggleOrderedList(),
+      action: (commands) => commands.toggleOrderedList?.(),
       shortcuts: [{ key: "l", ctrlKey: true, altKey: true }],
       keywords: ["list", "numbered"],
+      condition: (commands) => isFeatureEnabled("list") && isCommandAvailable(commands, "toggleOrderedList"),
     },
     {
       id: "list.check",
       label: "Checklist",
       description: "Create or toggle checklist",
       category: "List",
-      action: (commands) => commands.toggleCheckList(),
+      action: (commands) => commands.toggleCheckList?.(),
       shortcuts: [{ key: "x", ctrlKey: true, shiftKey: true }],
       keywords: ["list", "check", "todo", "task"],
+      condition: (commands) => isFeatureEnabled("list") && isCommandAvailable(commands, "toggleCheckList"),
     },
     {
       id: "link.insert",
       label: "Insert Link",
       description: "Insert or edit a link",
       category: "Insert",
-      action: (commands) => commands.insertLink(),
+      action: (commands) => commands.insertLink?.(),
       shortcuts: [{ key: "k", ctrlKey: true }],
       keywords: ["link", "url"],
+      condition: (commands) => isFeatureEnabled("link") && isCommandAvailable(commands, "insertLink"),
     },
     {
       id: "link.remove",
       label: "Remove Link",
       description: "Remove link formatting",
       category: "Format",
-      action: (commands) => commands.removeLink(),
+      action: (commands) => commands.removeLink?.(),
       shortcuts: [{ key: "k", ctrlKey: true, shiftKey: true }],
       keywords: ["unlink", "remove", "link"],
+      condition: (commands) => isFeatureEnabled("link") && isCommandAvailable(commands, "removeLink"),
     },
     {
       id: "insert.horizontal-rule",
       label: "Insert Horizontal Rule",
       description: "Insert a horizontal line separator",
       category: "Insert",
-      action: (commands) => commands.insertHorizontalRule(),
+      action: (commands) => commands.insertHorizontalRule?.(),
       keywords: ["horizontal", "rule", "hr", "divider", "separator"],
+      condition: (commands) => isFeatureEnabled("horizontalRule") && isCommandAvailable(commands, "insertHorizontalRule"),
     },
     {
       id: "insert.image",
@@ -395,10 +428,11 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         const src = prompt("Enter image URL:");
         if (src) {
           const alt = prompt("Enter alt text:") || "";
-          commands.insertImage({ src, alt });
+          commands.insertImage?.({ src, alt });
         }
       },
       keywords: ["image", "photo"],
+      condition: (commands) => isFeatureEnabled("image") && isCommandAvailable(commands, "insertImage"),
     },
     {
       id: "insert.gif",
@@ -410,9 +444,10 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         if (!src) {
           return;
         }
-        commands.insertImage({ src, alt: "GIF" });
+        commands.insertImage?.({ src, alt: "GIF" });
       },
       keywords: ["gif", "animated", "image"],
+      condition: (commands) => isFeatureEnabled("image") && isCommandAvailable(commands, "insertImage"),
     },
     {
       id: "insert.emoji",
@@ -437,15 +472,16 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         commands.insertEmoji(value);
       },
       keywords: ["emoji", "reaction", "symbol", "smile"],
-      condition: supportsEmoji,
+      condition: (commands) => isFeatureEnabled("emoji") && supportsEmoji(commands),
     },
     {
       id: "insert.table",
       label: "Insert Table",
       description: "Insert a 3x3 table",
       category: "Insert",
-      action: (commands) => commands.insertTable({ rows: 3, columns: 3, includeHeaders: true }),
+      action: (commands) => commands.insertTable?.({ rows: 3, columns: 3, includeHeaders: true }),
       keywords: ["table", "grid"],
+      condition: (commands) => isFeatureEnabled("table") && isCommandAvailable(commands, "insertTable"),
     },
     {
       id: "insert.iframe",
@@ -463,7 +499,7 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         commands.insertIframeEmbed(inputUrl);
       },
       keywords: ["iframe", "embed", "url"],
-      condition: supportsIframeEmbed,
+      condition: (commands) => isFeatureEnabled("iframeEmbed") && supportsIframeEmbed(commands),
     },
     {
       id: "insert.youtube",
@@ -481,37 +517,40 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         commands.insertYouTubeEmbed(inputUrl);
       },
       keywords: ["youtube", "video", "embed"],
-      condition: supportsYouTubeEmbed,
+      condition: (commands) => isFeatureEnabled("youTubeEmbed") && supportsYouTubeEmbed(commands),
     },
     {
       id: "edit.undo",
       label: "Undo",
       description: "Undo the last action",
       category: "Edit",
-      action: (commands) => commands.undo(),
+      action: (commands) => commands.undo?.(),
       shortcuts: [{ key: "z", ctrlKey: true }],
       keywords: ["undo", "revert"],
+      condition: (commands) => isFeatureEnabled("history") && isCommandAvailable(commands, "undo"),
     },
     {
       id: "edit.redo",
       label: "Redo",
       description: "Redo the last undone action",
       category: "Edit",
-      action: (commands) => commands.redo(),
+      action: (commands) => commands.redo?.(),
       shortcuts: [
         { key: "y", ctrlKey: true },
         { key: "z", ctrlKey: true, shiftKey: true },
       ],
       keywords: ["redo", "repeat"],
+      condition: (commands) => isFeatureEnabled("history") && isCommandAvailable(commands, "redo"),
     },
     {
       id: "palette.show",
       label: "Show Command Palette",
       description: "Open the command palette",
       category: "View",
-      action: (commands) => commands.showCommandPalette(),
+      action: (commands) => commands.showCommandPalette?.(),
       shortcuts: [{ key: "p", ctrlKey: true, shiftKey: true }],
       keywords: ["command", "palette"],
+      condition: (commands) => isFeatureEnabled("commandPalette") && isCommandAvailable(commands, "showCommandPalette"),
     },
   ];
 }

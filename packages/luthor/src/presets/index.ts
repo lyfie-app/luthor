@@ -15,6 +15,9 @@ import type {
 	ExtensiveEditorProps,
 	ExtensiveEditorRef,
 	ExtensiveExtensionsConfig,
+	FeatureFlag,
+	FeatureFlags,
+	FeatureFlagOverrides,
 	ExtensivePresetConfig,
 } from "./extensive";
 export { createPresetEditorConfig } from "../core/preset-config";
@@ -44,6 +47,9 @@ export type {
 	ExtensiveEditorProps,
 	ExtensiveEditorRef,
 	ExtensiveExtensionsConfig,
+	FeatureFlag,
+	FeatureFlags,
+	FeatureFlagOverrides,
 	ExtensivePresetConfig,
 };
 

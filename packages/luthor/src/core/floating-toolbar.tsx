@@ -32,6 +32,7 @@ export interface FloatingToolbarProps {
   activeStates: CoreEditorActiveStates;
   editorTheme?: CoreTheme;
   hide?: () => void;
+  isFeatureEnabled?: (feature: string) => boolean;
 }
 
 export function FloatingToolbar({
@@ -41,6 +42,7 @@ export function FloatingToolbar({
   activeStates,
   editorTheme = "light",
   hide,
+  isFeatureEnabled = () => true,
 }: FloatingToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [iframeUrlDraft, setIframeUrlDraft] = useState("");
@@ -52,7 +54,12 @@ export function FloatingToolbar({
   const [youTubeUrlError, setYouTubeUrlError] = useState<string | null>(null);
   const iframeEmbedSelected = !!activeStates.isIframeEmbedSelected;
   const youTubeEmbedSelected = !!activeStates.isYouTubeEmbedSelected;
-  const embedSelected = iframeEmbedSelected || youTubeEmbedSelected;
+  const iframeEmbedEnabled = isFeatureEnabled("iframeEmbed");
+  const youTubeEmbedEnabled = isFeatureEnabled("youTubeEmbed");
+  const imageEnabled = isFeatureEnabled("image");
+  const embedSelected =
+    (iframeEmbedEnabled && iframeEmbedSelected) ||
+    (youTubeEmbedEnabled && youTubeEmbedSelected);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -295,7 +302,7 @@ export function FloatingToolbar({
     );
   }
 
-  if (activeStates.imageSelected) {
+  if (imageEnabled && activeStates.imageSelected) {
     const canEditImageCaption = typeof commands.setImageCaption === "function";
     const commitImageCaption = () => {
       if (!canEditImageCaption) {
@@ -339,44 +346,86 @@ export function FloatingToolbar({
     );
   }
 
+  const canShowBold = isFeatureEnabled("bold");
+  const canShowItalic = isFeatureEnabled("italic");
+  const canShowUnderline = isFeatureEnabled("underline");
+  const canShowStrikethrough = isFeatureEnabled("strikethrough");
+  const canShowInlineCode = isFeatureEnabled("codeFormat");
+  const canShowQuote = isFeatureEnabled("blockFormat");
+  const canShowLink = isFeatureEnabled("link");
+  const canShowList = isFeatureEnabled("list");
+  const showFormattingGroup = canShowBold || canShowItalic || canShowUnderline || canShowStrikethrough;
+  const showBlockGroup = canShowInlineCode || canShowQuote || canShowLink;
+  const showListGroup = canShowList;
+
+  if (!showFormattingGroup && !showBlockGroup && !showListGroup) {
+    return null;
+  }
+
   return (
     <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
-      <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold">
-        <BoldIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleItalic()} active={activeStates.italic} title="Italic">
-        <ItalicIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleUnderline()} active={activeStates.underline} title="Underline">
-        <UnderlineIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
-        <StrikethroughIcon size={14} />
-      </IconButton>
-      <div className="luthor-floating-toolbar-separator" />
-      <IconButton onClick={() => commands.formatText("code")} active={activeStates.code} title="Inline Code">
-        <CodeIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleQuote()} active={activeStates.isQuote} title="Quote">
-        <QuoteIcon size={14} />
-      </IconButton>
-      <IconButton
-        onClick={() => (activeStates.isLink ? commands.removeLink() : commands.insertLink())}
-        active={activeStates.isLink}
-        title={activeStates.isLink ? "Remove Link" : "Insert Link"}
-      >
-        {activeStates.isLink ? <UnlinkIcon size={14} /> : <LinkIcon size={14} />}
-      </IconButton>
-      <div className="luthor-floating-toolbar-separator" />
-      <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
-        <ListIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
-        <ListOrderedIcon size={14} />
-      </IconButton>
-      <IconButton onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
-        <ListCheckIcon size={14} />
-      </IconButton>
+      {showFormattingGroup ? (
+        <>
+          {canShowBold ? (
+            <IconButton onClick={() => commands.toggleBold()} active={activeStates.bold} title="Bold">
+              <BoldIcon size={14} />
+            </IconButton>
+          ) : null}
+          {canShowItalic ? (
+            <IconButton onClick={() => commands.toggleItalic()} active={activeStates.italic} title="Italic">
+              <ItalicIcon size={14} />
+            </IconButton>
+          ) : null}
+          {canShowUnderline ? (
+            <IconButton onClick={() => commands.toggleUnderline()} active={activeStates.underline} title="Underline">
+              <UnderlineIcon size={14} />
+            </IconButton>
+          ) : null}
+          {canShowStrikethrough ? (
+            <IconButton onClick={() => commands.toggleStrikethrough()} active={activeStates.strikethrough} title="Strikethrough">
+              <StrikethroughIcon size={14} />
+            </IconButton>
+          ) : null}
+        </>
+      ) : null}
+      {showFormattingGroup && showBlockGroup ? <div className="luthor-floating-toolbar-separator" /> : null}
+      {showBlockGroup ? (
+        <>
+          {canShowInlineCode ? (
+            <IconButton onClick={() => commands.formatText("code")} active={activeStates.code} title="Inline Code">
+              <CodeIcon size={14} />
+            </IconButton>
+          ) : null}
+          {canShowQuote ? (
+            <IconButton onClick={() => commands.toggleQuote()} active={activeStates.isQuote} title="Quote">
+              <QuoteIcon size={14} />
+            </IconButton>
+          ) : null}
+          {canShowLink ? (
+            <IconButton
+              onClick={() => (activeStates.isLink ? commands.removeLink() : commands.insertLink())}
+              active={activeStates.isLink}
+              title={activeStates.isLink ? "Remove Link" : "Insert Link"}
+            >
+              {activeStates.isLink ? <UnlinkIcon size={14} /> : <LinkIcon size={14} />}
+            </IconButton>
+          ) : null}
+        </>
+      ) : null}
+      {(showFormattingGroup || showBlockGroup) && showListGroup ? <div className="luthor-floating-toolbar-separator" /> : null}
+      {showListGroup ? (
+        <>
+          <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
+            <ListIcon size={14} />
+          </IconButton>
+          <IconButton onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
+            <ListOrderedIcon size={14} />
+          </IconButton>
+          <IconButton onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
+            <ListCheckIcon size={14} />
+          </IconButton>
+        </>
+      ) : null}
     </div>
   );
 }

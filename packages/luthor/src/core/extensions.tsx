@@ -7,22 +7,26 @@ type FloatingToolbarContext = {
   commands: CoreEditorCommands;
   activeStates: CoreEditorActiveStates;
   editorTheme: CoreTheme;
+  isFeatureEnabled: (feature: string) => boolean;
 };
 
 const floatingToolbarContext: FloatingToolbarContext = {
   commands: {} as CoreEditorCommands,
   activeStates: {},
   editorTheme: "light",
+  isFeatureEnabled: () => true,
 };
 
 export function setFloatingToolbarContext(
   commands: CoreEditorCommands,
   activeStates: CoreEditorActiveStates,
   editorTheme: CoreTheme,
+  isFeatureEnabled: (feature: string) => boolean = () => true,
 ) {
   floatingToolbarContext.commands = commands;
   floatingToolbarContext.activeStates = activeStates;
   floatingToolbarContext.editorTheme = editorTheme;
+  floatingToolbarContext.isFeatureEnabled = isFeatureEnabled;
 }
 
 export function createFloatingToolbarExtension() {
@@ -35,6 +39,7 @@ export function createFloatingToolbarExtension() {
       commands: floatingToolbarContext.commands,
       activeStates: floatingToolbarContext.activeStates,
       editorTheme: floatingToolbarContext.editorTheme,
+      isFeatureEnabled: floatingToolbarContext.isFeatureEnabled,
     }),
     getCommands: () => floatingToolbarContext.commands,
     getActiveStates: () => floatingToolbarContext.activeStates,

@@ -1,7 +1,16 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
 import { createEditorSystem, createEditorThemeStyleVars, defaultLuthorTheme, mergeThemes, RichText, type LuthorTheme } from "@lyfie/luthor-headless";
 import { $setSelection } from "lexical";
-import { createExtensiveExtensions, extensiveExtensions, setFloatingToolbarContext } from "./extensions";
+import {
+  createExtensiveExtensions,
+  extensiveExtensions,
+  setFloatingToolbarContext,
+  resolveFeatureFlags,
+  type FeatureFlags,
+  type FeatureFlagOverrides,
+  type FeatureFlag,
+  EXTENSIVE_FEATURE_KEYS,
+} from "./extensions";
 import {
   CommandPalette,
   SlashCommandMenu,
@@ -23,6 +32,7 @@ import {
   type QuoteStyleVars,
   type EditorThemeOverrides,
   type ToolbarLayout,
+  type ToolbarItemType,
   type ToolbarVisibility,
   type ToolbarPosition,
   type SlashCommandVisibility,
@@ -181,6 +191,274 @@ function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): 
   return entries.length > 0 ? JSON.stringify(entries) : "__default__";
 }
 
+function normalizeFeatureFlagsKey(overrides?: FeatureFlagOverrides): string {
+  const resolved = resolveFeatureFlags(overrides);
+  return JSON.stringify(
+    EXTENSIVE_FEATURE_KEYS.map((key) => [key, resolved[key]]),
+  );
+}
+
+function isEditableCommandTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  if (target.closest('[contenteditable="true"]')) {
+    return true;
+  }
+
+  const tagName = target.tagName.toLowerCase();
+  return tagName === "input" || tagName === "textarea" || tagName === "select";
+}
+
+type FeatureShortcutSpec = {
+  feature: FeatureFlag;
+  key: string;
+  requiresPrimary: boolean;
+  shift?: boolean;
+  alt?: boolean;
+};
+
+const FEATURE_SHORTCUT_SPECS: readonly FeatureShortcutSpec[] = [
+  { feature: "bold", key: "b", requiresPrimary: true },
+  { feature: "italic", key: "i", requiresPrimary: true },
+  { feature: "underline", key: "u", requiresPrimary: true },
+  { feature: "link", key: "k", requiresPrimary: true },
+  { feature: "history", key: "z", requiresPrimary: true },
+  { feature: "history", key: "y", requiresPrimary: true },
+  { feature: "history", key: "z", requiresPrimary: true, shift: true },
+  { feature: "commandPalette", key: "p", requiresPrimary: true, shift: true },
+  { feature: "codeFormat", key: "`", requiresPrimary: true },
+  { feature: "code", key: "`", requiresPrimary: true, shift: true },
+  { feature: "list", key: "l", requiresPrimary: true, shift: true },
+  { feature: "list", key: "l", requiresPrimary: true, alt: true },
+  { feature: "list", key: "x", requiresPrimary: true, shift: true },
+  { feature: "blockFormat", key: "0", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "1", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "2", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "3", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "4", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "5", requiresPrimary: true, alt: true },
+  { feature: "blockFormat", key: "6", requiresPrimary: true, alt: true },
+];
+
+function isShortcutMatch(event: KeyboardEvent, shortcut: FeatureShortcutSpec): boolean {
+  if (event.key.toLowerCase() !== shortcut.key.toLowerCase()) {
+    return false;
+  }
+
+  const hasPrimaryModifier = event.ctrlKey || event.metaKey;
+  if (!!shortcut.requiresPrimary !== hasPrimaryModifier) {
+    return false;
+  }
+
+  if (!!shortcut.shift !== !!event.shiftKey) {
+    return false;
+  }
+
+  if (!!shortcut.alt !== !!event.altKey) {
+    return false;
+  }
+
+  return true;
+}
+
+function createFeatureGuardedCommands(
+  commands: CoreEditorCommands,
+  featureFlags: FeatureFlags,
+): CoreEditorCommands {
+  const guarded = { ...commands } as CoreEditorCommands;
+  const disable = (feature: FeatureFlag, apply: () => void) => {
+    if (featureFlags[feature] === false) {
+      apply();
+    }
+  };
+
+  disable("bold", () => {
+    guarded.toggleBold = () => {};
+  });
+  disable("italic", () => {
+    guarded.toggleItalic = () => {};
+  });
+  disable("underline", () => {
+    guarded.toggleUnderline = () => {};
+  });
+  disable("strikethrough", () => {
+    guarded.toggleStrikethrough = () => {};
+  });
+  disable("codeFormat", () => {
+    guarded.formatText = () => {};
+  });
+  disable("fontFamily", () => {
+    guarded.setFontFamily = () => {};
+    guarded.clearFontFamily = () => {};
+  });
+  disable("fontSize", () => {
+    guarded.setFontSize = () => {};
+    guarded.clearFontSize = () => {};
+  });
+  disable("lineHeight", () => {
+    guarded.setLineHeight = () => {};
+    guarded.clearLineHeight = () => {};
+  });
+  disable("textColor", () => {
+    guarded.setTextColor = () => {};
+    guarded.clearTextColor = () => {};
+  });
+  disable("textHighlight", () => {
+    guarded.setTextHighlight = () => {};
+    guarded.clearTextHighlight = () => {};
+  });
+  disable("subscript", () => {
+    guarded.toggleSubscript = () => {};
+  });
+  disable("superscript", () => {
+    guarded.toggleSuperscript = () => {};
+  });
+  disable("link", () => {
+    guarded.insertLink = () => {};
+    guarded.removeLink = () => {};
+    guarded.updateLink = () => false;
+    guarded.getCurrentLink = async () => null;
+    guarded.getLinkByKey = async () => null;
+    guarded.updateLinkByKey = () => false;
+    guarded.removeLinkByKey = () => false;
+  });
+  disable("blockFormat", () => {
+    guarded.toggleParagraph = () => {};
+    guarded.toggleHeading = () => {};
+    guarded.toggleQuote = () => {};
+    guarded.setTextAlignment = () => {};
+  });
+  disable("code", () => {
+    guarded.toggleCodeBlock = () => {};
+  });
+  disable("codeIntelligence", () => {
+    guarded.setCodeLanguage = () => {};
+    guarded.autoDetectCodeLanguage = async () => null;
+    guarded.copySelectedCodeBlock = async () => false;
+  });
+  disable("list", () => {
+    guarded.toggleUnorderedList = () => {};
+    guarded.toggleOrderedList = () => {};
+    guarded.toggleCheckList = () => {};
+    guarded.indentList = () => {};
+    guarded.outdentList = () => {};
+  });
+  disable("horizontalRule", () => {
+    guarded.insertHorizontalRule = () => {};
+  });
+  disable("table", () => {
+    guarded.insertTable = () => {};
+  });
+  disable("image", () => {
+    guarded.insertImage = () => {};
+    guarded.setImageAlignment = () => {};
+    guarded.setImageCaption = () => {};
+    guarded.getImageCaption = async () => "";
+  });
+  disable("emoji", () => {
+    guarded.insertEmoji = () => {};
+    guarded.executeEmojiSuggestion = () => false;
+    guarded.closeEmojiSuggestions = () => {};
+    guarded.getEmojiSuggestions = () => [];
+    guarded.getEmojiCatalog = () => [];
+  });
+  disable("iframeEmbed", () => {
+    guarded.insertIframeEmbed = () => {};
+    guarded.setIframeEmbedAlignment = () => {};
+    guarded.resizeIframeEmbed = () => {};
+    guarded.setIframeEmbedCaption = () => {};
+    guarded.getIframeEmbedCaption = async () => "";
+    guarded.updateIframeEmbedUrl = () => false;
+    guarded.getIframeEmbedUrl = async () => "";
+  });
+  disable("youTubeEmbed", () => {
+    guarded.insertYouTubeEmbed = () => {};
+    guarded.setYouTubeEmbedAlignment = () => {};
+    guarded.resizeYouTubeEmbed = () => {};
+    guarded.setYouTubeEmbedCaption = () => {};
+    guarded.getYouTubeEmbedCaption = async () => "";
+    guarded.updateYouTubeEmbedUrl = () => false;
+    guarded.getYouTubeEmbedUrl = async () => "";
+  });
+  disable("history", () => {
+    guarded.undo = () => {};
+    guarded.redo = () => {};
+  });
+  disable("commandPalette", () => {
+    guarded.showCommandPalette = () => {};
+    guarded.hideCommandPalette = () => {};
+    guarded.registerCommand = () => {};
+    guarded.unregisterCommand = () => {};
+  });
+  disable("slashCommand", () => {
+    guarded.registerSlashCommand = () => {};
+    guarded.unregisterSlashCommand = () => {};
+    guarded.setSlashCommands = () => {};
+    guarded.closeSlashMenu = () => {};
+    guarded.executeSlashCommand = () => false;
+  });
+
+  return guarded;
+}
+
+const TOOLBAR_FEATURE_MAP: Partial<Record<ToolbarItemType, FeatureFlag | readonly FeatureFlag[]>> = {
+  fontFamily: "fontFamily",
+  fontSize: "fontSize",
+  lineHeight: "lineHeight",
+  textColor: "textColor",
+  textHighlight: "textHighlight",
+  bold: "bold",
+  italic: "italic",
+  underline: "underline",
+  strikethrough: "strikethrough",
+  subscript: "subscript",
+  superscript: "superscript",
+  code: "codeFormat",
+  link: "link",
+  blockFormat: "blockFormat",
+  quote: "blockFormat",
+  alignLeft: "blockFormat",
+  alignCenter: "blockFormat",
+  alignRight: "blockFormat",
+  alignJustify: "blockFormat",
+  codeBlock: "code",
+  unorderedList: "list",
+  orderedList: "list",
+  checkList: "list",
+  indentList: "list",
+  outdentList: "list",
+  horizontalRule: "horizontalRule",
+  table: "table",
+  image: "image",
+  emoji: "emoji",
+  embed: ["iframeEmbed", "youTubeEmbed"],
+  undo: "history",
+  redo: "history",
+  commandPalette: "commandPalette",
+  themeToggle: "themeToggle",
+};
+
+function mergeToolbarVisibilityWithFeatures(
+  toolbarVisibility: ToolbarVisibility | undefined,
+  featureFlags: FeatureFlags,
+): ToolbarVisibility {
+  const merged: ToolbarVisibility = { ...(toolbarVisibility ?? {}) };
+
+  for (const [itemType, featureSelection] of Object.entries(TOOLBAR_FEATURE_MAP) as [ToolbarItemType, FeatureFlag | readonly FeatureFlag[]][]) {
+    const requiredFeatures: readonly FeatureFlag[] = Array.isArray(featureSelection)
+      ? featureSelection
+      : [featureSelection];
+    const supported = requiredFeatures.some((feature) => featureFlags[feature] !== false);
+    if (!supported) {
+      merged[itemType] = false;
+    }
+  }
+
+  return merged;
+}
+
 function normalizeHeadingOptions(input?: readonly BlockHeadingLevel[]): BlockHeadingLevel[] {
   if (!input || input.length === 0) {
     return [...BLOCK_HEADING_LEVELS];
@@ -244,8 +522,12 @@ function normalizeSlashCommandVisibilityKey(visibility?: SlashCommandVisibility)
     return normalized;
   };
 
-  const allowlist = normalize(visibility.allowlist);
-  const denylist = normalize(visibility.denylist);
+  const visibilityFilters = visibility as {
+    allowlist?: readonly string[];
+    denylist?: readonly string[];
+  };
+  const allowlist = normalize(visibilityFilters.allowlist);
+  const denylist = normalize(visibilityFilters.denylist);
   if (allowlist.length === 0 && denylist.length === 0) {
     return "__default__";
   }
@@ -271,6 +553,7 @@ function ExtensiveEditorContent({
   paragraphLabel,
   syncHeadingOptionsWithCommands,
   slashCommandVisibility,
+  featureFlags,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
@@ -289,6 +572,7 @@ function ExtensiveEditorContent({
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  featureFlags: FeatureFlags;
 }) {
   const {
     commands,
@@ -326,6 +610,24 @@ function ExtensiveEditorContent({
   );
   const commandHeadingOptions = syncHeadingOptionsWithCommands ? resolvedHeadingOptions : undefined;
   const commandParagraphLabel = syncHeadingOptionsWithCommands ? paragraphLabel : undefined;
+  const safeCommands = useMemo(
+    () => createFeatureGuardedCommands(commands as CoreEditorCommands, featureFlags),
+    [commands, featureFlags],
+  );
+  const isFeatureEnabled = useMemo(
+    () => (feature: string) => {
+      if (!Object.prototype.hasOwnProperty.call(featureFlags, feature)) {
+        return true;
+      }
+
+      return featureFlags[feature as FeatureFlag] !== false;
+    },
+    [featureFlags],
+  );
+  const resolvedToolbarVisibility = useMemo(
+    () => mergeToolbarVisibilityWithFeatures(toolbarVisibility, featureFlags),
+    [toolbarVisibility, featureFlags],
+  );
   const slashCommandVisibilityKey = normalizeSlashCommandVisibilityKey(slashCommandVisibility);
   const stableSlashCommandVisibilityRef = useRef<SlashCommandVisibility | undefined>(slashCommandVisibility);
   const stableSlashCommandVisibilityKeyRef = useRef(slashCommandVisibilityKey);
@@ -340,8 +642,13 @@ function ExtensiveEditorContent({
   const editorChangeCountRef = useRef(0);
 
   useEffect(() => {
-    setFloatingToolbarContext(commands, activeStates, isDark ? "dark" : "light");
-  }, [commands, activeStates, isDark]);
+    setFloatingToolbarContext(
+      safeCommands,
+      activeStates,
+      isDark ? "dark" : "light",
+      isFeatureEnabled,
+    );
+  }, [safeCommands, activeStates, isDark, isFeatureEnabled]);
 
   const methods = useMemo<ExtensiveEditorRef>(
     () => ({
@@ -362,18 +669,22 @@ function ExtensiveEditorContent({
   );
 
   useEffect(() => {
-    if (!editor || !commands) return;
+    if (!editor || !safeCommands) return;
 
-    const commandApi = commands as CoreEditorCommands;
+    const commandApi = safeCommands as CoreEditorCommands;
     const paletteItems = commandsToCommandPaletteItems(commandApi, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
+      isFeatureEnabled,
     });
-    paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
+    if (typeof commandApi.registerCommand === "function") {
+      paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
+    }
     const slashItems = commandsToSlashCommandItems(commandApi, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
       slashCommandVisibility: stableSlashCommandVisibilityRef.current,
+      isFeatureEnabled,
     });
     if (typeof commandApi.setSlashCommands === "function") {
       commandApi.setSlashCommands(slashItems);
@@ -384,6 +695,7 @@ function ExtensiveEditorContent({
     const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
+      isFeatureEnabled,
     });
 
     if (!readyRef.current) {
@@ -393,7 +705,9 @@ function ExtensiveEditorContent({
 
     return () => {
       unregisterShortcuts();
-      paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
+      if (typeof commandApi.unregisterCommand === "function") {
+        paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
+      }
       if (typeof commandApi.setSlashCommands === "function") {
         commandApi.setSlashCommands([]);
       } else {
@@ -402,13 +716,46 @@ function ExtensiveEditorContent({
     };
   }, [
     editor,
-    commands,
+    safeCommands,
     methods,
     onReady,
     commandHeadingOptions,
     commandParagraphLabel,
     slashCommandVisibilityKey,
+    isFeatureEnabled,
   ]);
+
+  useEffect(() => {
+    const disabledShortcutSpecs = FEATURE_SHORTCUT_SPECS.filter(
+      (shortcut) => featureFlags[shortcut.feature] === false,
+    );
+
+    if (disabledShortcutSpecs.length === 0) {
+      return;
+    }
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      if (!isEditableCommandTarget(event.target)) {
+        return;
+      }
+
+      const isDisabledFeatureShortcut = disabledShortcutSpecs.some((shortcut) => {
+        return isShortcutMatch(event, shortcut);
+      });
+
+      if (!isDisabledFeatureShortcut) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener("keydown", handleKeydown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeydown, true);
+    };
+  }, [featureFlags]);
 
   useEffect(() => {
     const commandPaletteExtension = extensions.find(
@@ -525,15 +872,19 @@ function ExtensiveEditorContent({
 
   const toolbarNode = isToolbarEnabled ? (
     <Toolbar
-      commands={commands as CoreEditorCommands}
+      commands={safeCommands}
       hasExtension={(name: string) => hasExtension(name as any)}
       activeStates={activeStates}
       isDark={isDark}
       toggleTheme={toggleTheme}
-      onCommandPaletteOpen={() => commands.showCommandPalette()}
+      onCommandPaletteOpen={() => {
+        if (featureFlags.commandPalette !== false) {
+          safeCommands.showCommandPalette();
+        }
+      }}
       imageUploadHandler={(file) => ((extensions.find((ext: any) => ext.name === "image") as any)?.config?.uploadHandler?.(file) ?? Promise.resolve(URL.createObjectURL(file)))}
       layout={toolbarLayout ?? TRADITIONAL_TOOLBAR_LAYOUT}
-      toolbarVisibility={toolbarVisibility}
+      toolbarVisibility={resolvedToolbarVisibility}
       toolbarStyleVars={toolbarStyleVars}
       headingOptions={resolvedHeadingOptions}
       paragraphLabel={paragraphLabel}
@@ -590,7 +941,7 @@ function ExtensiveEditorContent({
       </div>
       <LinkHoverBubble
         editor={editor}
-        commands={commands as CoreEditorCommands}
+        commands={safeCommands}
         editorTheme={isDark ? "dark" : "light"}
         disabled={mode !== "visual"}
       />
@@ -599,7 +950,7 @@ function ExtensiveEditorContent({
       )}
       <CommandPalette
         isOpen={commandPaletteState.isOpen}
-        onClose={() => commands.hideCommandPalette()}
+        onClose={() => safeCommands.hideCommandPalette()}
         commands={commandPaletteState.commands}
       />
       <SlashCommandMenu
@@ -607,9 +958,9 @@ function ExtensiveEditorContent({
         query={slashCommandState.query}
         position={slashCommandState.position}
         commands={slashCommandState.commands}
-        onClose={() => commands.closeSlashMenu?.()}
+        onClose={() => safeCommands.closeSlashMenu?.()}
         onExecute={(commandId) => {
-          commands.executeSlashCommand?.(commandId);
+          safeCommands.executeSlashCommand?.(commandId);
         }}
       />
       <EmojiSuggestionMenu
@@ -617,9 +968,9 @@ function ExtensiveEditorContent({
         query={emojiSuggestionState.query}
         position={emojiSuggestionState.position}
         suggestions={emojiSuggestionState.suggestions}
-        onClose={() => commands.closeEmojiSuggestions?.()}
+        onClose={() => safeCommands.closeEmojiSuggestions?.()}
         onExecute={(emoji) => {
-          commands.executeEmojiSuggestion?.(emoji);
+          safeCommands.executeEmojiSuggestion?.(emoji);
         }}
       />
     </>
@@ -655,6 +1006,7 @@ export interface ExtensiveEditorProps {
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  featureFlags?: FeatureFlagOverrides;
   syntaxHighlighting?: "auto" | "disabled";
   codeHighlightProvider?: CodeHighlightProvider | null;
   loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
@@ -692,6 +1044,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
     slashCommandVisibility,
+    featureFlags,
     syntaxHighlighting,
     codeHighlightProvider,
     loadCodeHighlightProvider,
@@ -728,10 +1081,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         ? maxAutoDetectCodeLength.toString()
         : "unset";
     const copyAllowedKey = isCopyAllowed ? "copy-on" : "copy-off";
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}`;
+    const featureFlagsKey = useMemo(
+      () => normalizeFeatureFlagsKey(featureFlags),
+      [featureFlags],
+    );
+    const resolvedFeatureFlags = useMemo(
+      () => resolveFeatureFlags(featureFlags),
+      [featureFlagsKey],
+    );
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${featureFlagsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
+    const stableFeatureFlagsRef = useRef<FeatureFlagOverrides | undefined>(featureFlags);
     const stableCodeHighlightProviderRef = useRef<CodeHighlightProvider | null | undefined>(codeHighlightProvider);
     const stableLoadCodeHighlightProviderRef = useRef<
       (() => Promise<CodeHighlightProvider | null>) | undefined
@@ -747,6 +1109,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
       stableFontSizeOptionsRef.current = fontSizeOptions;
       stableLineHeightOptionsRef.current = lineHeightOptions;
+      stableFeatureFlagsRef.current = featureFlags;
       stableCodeHighlightProviderRef.current = codeHighlightProvider;
       stableLoadCodeHighlightProviderRef.current = loadCodeHighlightProvider;
     }
@@ -775,6 +1138,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
           ? { maxAutoDetectCodeLength }
           : {}),
         isCopyAllowed,
+        ...(stableFeatureFlagsRef.current ? { featureFlags: stableFeatureFlagsRef.current } : {}),
       };
 
       memoizedExtensionsRef.current = {
@@ -869,6 +1233,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
             slashCommandVisibility={slashCommandVisibility}
+            featureFlags={resolvedFeatureFlags}
           />
         </Provider>
       </div>

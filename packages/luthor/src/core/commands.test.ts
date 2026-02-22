@@ -146,4 +146,17 @@ describe("command heading configuration", () => {
       "block.quote",
     ]);
   });
+
+  it("filters command palette and slash commands when features are disabled", () => {
+    const commands = createCommands();
+    const isFeatureEnabled = (feature: string) => feature !== "image" && feature !== "blockFormat";
+
+    const palette = commandsToCommandPaletteItems(commands, { isFeatureEnabled });
+    const slash = commandsToSlashCommandItems(commands, { isFeatureEnabled });
+
+    expect(palette.some((command) => command.id === "insert.image")).toBe(false);
+    expect(palette.some((command) => command.id === "block.quote")).toBe(false);
+    expect(slash.some((command) => command.id === "insert.image")).toBe(false);
+    expect(slash.some((command) => command.id === "block.quote")).toBe(false);
+  });
 });

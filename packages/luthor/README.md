@@ -106,6 +106,7 @@ export function App() {
 - `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
 - `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
 - `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.
+- `featureFlags`: optional `Partial<FeatureFlags>` to enable/disable capabilities from one registry. All flags default to `true`. Disabled features are removed from extension composition, hidden from toolbar, and excluded from generated commands/shortcuts.
 - `slashCommandVisibility`: optional slash command filter:
   - `allowlist`: include only these command IDs (for example `insert.table`, `block.heading2`)
   - `denylist`: exclude these command IDs (applied after allowlist)
@@ -185,6 +186,34 @@ export function App() {
   return <ExtensiveEditor placeholder="Start writing..." />;
 }
 ```
+
+### Feature flags (single source of truth)
+
+Use `featureFlags` when you want one switchboard for extension composition, command registration, and toolbar visibility.
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      featureFlags={{
+        image: false,
+        emoji: false,
+        commandPalette: false,
+        floatingToolbar: false,
+      }}
+    />
+  );
+}
+```
+
+Behavior:
+- All flags default to `true`.
+- Disabling a feature removes its extension from the preset.
+- Related toolbar items are auto-hidden even if `toolbarVisibility` sets them to `true`.
+- Related commands and keyboard shortcuts are not registered.
+- Command calls from custom UI safely no-op if the feature is unavailable.
 
 You can still use the object form:
 
@@ -434,6 +463,7 @@ Quote CSS variable contract:
 - Preset registry: `presetRegistry`
 - Ready component: `ExtensiveEditor`
 - Shared extension bundle: `extensiveExtensions`
+- Feature flag helpers: `resolveFeatureFlags`, `isFeatureEnabled`
 - Preset config helper: `createPresetEditorConfig`
 - Headless passthrough namespace: `headless`
 

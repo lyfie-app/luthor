@@ -29,6 +29,77 @@ vi.mock("./extensions", () => ({
   extensiveExtensions: [],
   createExtensiveExtensions: createExtensiveExtensionsMock,
   setFloatingToolbarContext: vi.fn(),
+  resolveFeatureFlags: vi.fn((featureFlags) => ({
+    bold: true,
+    italic: true,
+    underline: true,
+    strikethrough: true,
+    fontFamily: true,
+    fontSize: true,
+    lineHeight: true,
+    textColor: true,
+    textHighlight: true,
+    subscript: true,
+    superscript: true,
+    link: true,
+    horizontalRule: true,
+    table: true,
+    list: true,
+    history: true,
+    image: true,
+    blockFormat: true,
+    code: true,
+    codeIntelligence: true,
+    codeFormat: true,
+    tabIndent: true,
+    enterKeyBehavior: true,
+    iframeEmbed: true,
+    youTubeEmbed: true,
+    floatingToolbar: true,
+    contextMenu: true,
+    commandPalette: true,
+    slashCommand: true,
+    emoji: true,
+    draggableBlock: true,
+    customNode: true,
+    themeToggle: true,
+    ...(featureFlags ?? {}),
+  })),
+  EXTENSIVE_FEATURE_KEYS: [
+    "bold",
+    "italic",
+    "underline",
+    "strikethrough",
+    "fontFamily",
+    "fontSize",
+    "lineHeight",
+    "textColor",
+    "textHighlight",
+    "subscript",
+    "superscript",
+    "link",
+    "horizontalRule",
+    "table",
+    "list",
+    "history",
+    "image",
+    "blockFormat",
+    "code",
+    "codeIntelligence",
+    "codeFormat",
+    "tabIndent",
+    "enterKeyBehavior",
+    "iframeEmbed",
+    "youTubeEmbed",
+    "floatingToolbar",
+    "contextMenu",
+    "commandPalette",
+    "slashCommand",
+    "emoji",
+    "draggableBlock",
+    "customNode",
+    "themeToggle",
+  ],
 }));
 
 vi.mock("../../core", () => ({
@@ -43,6 +114,7 @@ vi.mock("../../core", () => ({
   SourceView: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
     <textarea value={value} onChange={(event) => onChange(event.target.value)} />
   ),
+  LinkHoverBubble: () => null,
   Toolbar: toolbarMock,
   TRADITIONAL_TOOLBAR_LAYOUT: { sections: [] },
   BLOCK_HEADING_LEVELS: ["h1", "h2", "h3", "h4", "h5", "h6"],
@@ -186,16 +258,16 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(commandsToCommandPaletteItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions, paragraphLabel: "Normal" },
+      expect.objectContaining({ headingOptions, paragraphLabel: "Normal" }),
     );
     expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions, paragraphLabel: "Normal", slashCommandVisibility: undefined },
+      expect.objectContaining({ headingOptions, paragraphLabel: "Normal", slashCommandVisibility: undefined }),
     );
     expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
       expect.anything(),
       document.body,
-      { headingOptions, paragraphLabel: "Normal" },
+      expect.objectContaining({ headingOptions, paragraphLabel: "Normal" }),
     );
   });
 
@@ -210,16 +282,16 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(commandsToCommandPaletteItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions: undefined, paragraphLabel: undefined },
+      expect.objectContaining({ headingOptions: undefined, paragraphLabel: undefined }),
     );
     expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions: undefined, paragraphLabel: undefined, slashCommandVisibility: undefined },
+      expect.objectContaining({ headingOptions: undefined, paragraphLabel: undefined, slashCommandVisibility: undefined }),
     );
     expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
       expect.anything(),
       document.body,
-      { headingOptions: undefined, paragraphLabel: undefined },
+      expect.objectContaining({ headingOptions: undefined, paragraphLabel: undefined }),
     );
   });
 
@@ -237,11 +309,11 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      {
+      expect.objectContaining({
         headingOptions: expect.anything(),
         paragraphLabel: undefined,
         slashCommandVisibility: { allowlist: ["insert.table"] },
-      },
+      }),
     );
     expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([{ id: "insert.table" }]);
 
@@ -291,12 +363,13 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       />,
     );
 
-    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(expect.objectContaining({
       fontFamilyOptions,
       fontSizeOptions: undefined,
       lineHeightOptions: undefined,
       scaleByRatio: false,
-    });
+      isCopyAllowed: true,
+    }));
   });
 
   it("applies quoteClassName through editor theme config", () => {
@@ -358,12 +431,13 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       />,
     );
 
-    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(expect.objectContaining({
       fontFamilyOptions: undefined,
       fontSizeOptions,
       lineHeightOptions: undefined,
       scaleByRatio: false,
-    });
+      isCopyAllowed: true,
+    }));
   });
 
   it("passes lineHeightOptions to extension factory", () => {
@@ -380,12 +454,13 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       />,
     );
 
-    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(expect.objectContaining({
       fontFamilyOptions: undefined,
       fontSizeOptions: undefined,
       lineHeightOptions,
       scaleByRatio: false,
-    });
+      isCopyAllowed: true,
+    }));
   });
 
   it("passes scaleByRatio to extension factory", () => {
@@ -396,11 +471,12 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       />,
     );
 
-    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(expect.objectContaining({
       fontFamilyOptions: undefined,
       fontSizeOptions: undefined,
       lineHeightOptions: undefined,
       scaleByRatio: true,
-    });
+      isCopyAllowed: true,
+    }));
   });
 });

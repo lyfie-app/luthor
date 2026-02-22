@@ -34,16 +34,113 @@ import {
   tabIndentExtension,
   enterKeyBehaviorExtension,
   type CodeHighlightProvider,
+  type Extension,
 } from "@lyfie/luthor-headless";
 import type { ReactNode } from "react";
 import { createFloatingToolbarExtension, setFloatingToolbarContext } from "../../core";
 
 export { setFloatingToolbarContext };
 
+export const EXTENSIVE_FEATURE_KEYS = [
+  "bold",
+  "italic",
+  "underline",
+  "strikethrough",
+  "fontFamily",
+  "fontSize",
+  "lineHeight",
+  "textColor",
+  "textHighlight",
+  "subscript",
+  "superscript",
+  "link",
+  "horizontalRule",
+  "table",
+  "list",
+  "history",
+  "image",
+  "blockFormat",
+  "code",
+  "codeIntelligence",
+  "codeFormat",
+  "tabIndent",
+  "enterKeyBehavior",
+  "iframeEmbed",
+  "youTubeEmbed",
+  "floatingToolbar",
+  "contextMenu",
+  "commandPalette",
+  "slashCommand",
+  "emoji",
+  "draggableBlock",
+  "customNode",
+  "themeToggle",
+] as const;
+
+export type FeatureFlag = (typeof EXTENSIVE_FEATURE_KEYS)[number];
+export type FeatureFlags = Record<FeatureFlag, boolean>;
+export type FeatureFlagOverrides = Partial<FeatureFlags>;
+
+export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
+  bold: true,
+  italic: true,
+  underline: true,
+  strikethrough: true,
+  fontFamily: true,
+  fontSize: true,
+  lineHeight: true,
+  textColor: true,
+  textHighlight: true,
+  subscript: true,
+  superscript: true,
+  link: true,
+  horizontalRule: true,
+  table: true,
+  list: true,
+  history: true,
+  image: true,
+  blockFormat: true,
+  code: true,
+  codeIntelligence: true,
+  codeFormat: true,
+  tabIndent: true,
+  enterKeyBehavior: true,
+  iframeEmbed: true,
+  youTubeEmbed: true,
+  floatingToolbar: true,
+  contextMenu: true,
+  commandPalette: true,
+  slashCommand: true,
+  emoji: true,
+  draggableBlock: true,
+  customNode: true,
+  themeToggle: true,
+};
+
+export function resolveFeatureFlags(overrides?: FeatureFlagOverrides): FeatureFlags {
+  const resolved: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS };
+  if (!overrides) {
+    return resolved;
+  }
+
+  for (const key of EXTENSIVE_FEATURE_KEYS) {
+    if (typeof overrides[key] === "boolean") {
+      resolved[key] = overrides[key] as boolean;
+    }
+  }
+
+  return resolved;
+}
+
+export function isFeatureEnabled(featureFlags: FeatureFlags, feature: FeatureFlag): boolean {
+  return featureFlags[feature] !== false;
+}
+
 export type ExtensiveExtensionsConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  featureFlags?: FeatureFlagOverrides;
   scaleByRatio?: boolean;
   syntaxHighlighting?: "auto" | "disabled";
   codeHighlightProvider?: CodeHighlightProvider | null;
@@ -586,6 +683,7 @@ function buildExtensiveExtensions({
   fontFamilyOptions,
   fontSizeOptions,
   lineHeightOptions,
+  featureFlags,
   scaleByRatio,
   syntaxHighlighting,
   codeHighlightProvider,
@@ -593,6 +691,9 @@ function buildExtensiveExtensions({
   maxAutoDetectCodeLength,
   isCopyAllowed,
 }: ExtensiveExtensionsConfig = {}) {
+  const resolvedFeatureFlags = resolveFeatureFlags(featureFlags);
+  const enabled = (feature: FeatureFlag) => isFeatureEnabled(resolvedFeatureFlags, feature);
+
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
     cssLoadStrategy: "on-demand",
@@ -606,52 +707,54 @@ function buildExtensiveExtensions({
   extensiveImageExtension.configure({
     scaleByRatio: scaleByRatio ?? false,
   });
-  codeExtension.configure({
+  (codeExtension as any).configure({
     syntaxHighlighting: syntaxHighlighting ?? "auto",
     provider: codeHighlightProvider ?? undefined,
     loadProvider: loadCodeHighlightProvider,
   });
-  codeIntelligenceExtension.configure({
+  (codeIntelligenceExtension as any).configure({
     provider: codeHighlightProvider ?? undefined,
     loadProvider: loadCodeHighlightProvider,
     maxAutoDetectLength: maxAutoDetectCodeLength,
     isCopyAllowed: isCopyAllowed ?? true,
   });
 
-  return [
-    boldExtension,
-    italicExtension,
-    underlineExtension,
-    strikethroughExtension,
-    fontFamilyExt,
-    fontSizeExt,
-    lineHeightExt,
-    textColorExt,
-    textHighlightExt,
-    subscriptExtension,
-    superscriptExtension,
-    linkExt,
-    horizontalRuleExtension,
-    tableExt,
-    listExtension,
-    historyExtension,
-    extensiveImageExtension,
-    blockFormatExtension,
-    codeExtension,
-    codeIntelligenceExtension,
-    codeFormatExtension,
-    tabIndentExtension,
-    enterKeyBehaviorExtension,
-    iframeEmbedExt,
-    youTubeEmbedExt,
-    floatingToolbarExt,
-    contextMenuExt,
-    commandPaletteExt,
-    slashCommandExt,
-    emojiExt,
-    draggableBlockExt,
-    featureCardExtension,
-  ] as const;
+  const extensions: Extension[] = [];
+
+  if (enabled("bold")) extensions.push(boldExtension);
+  if (enabled("italic")) extensions.push(italicExtension);
+  if (enabled("underline")) extensions.push(underlineExtension);
+  if (enabled("strikethrough")) extensions.push(strikethroughExtension);
+  if (enabled("fontFamily")) extensions.push(fontFamilyExt);
+  if (enabled("fontSize")) extensions.push(fontSizeExt);
+  if (enabled("lineHeight")) extensions.push(lineHeightExt);
+  if (enabled("textColor")) extensions.push(textColorExt);
+  if (enabled("textHighlight")) extensions.push(textHighlightExt);
+  if (enabled("subscript")) extensions.push(subscriptExtension);
+  if (enabled("superscript")) extensions.push(superscriptExtension);
+  if (enabled("link")) extensions.push(linkExt);
+  if (enabled("horizontalRule")) extensions.push(horizontalRuleExtension);
+  if (enabled("table")) extensions.push(tableExt);
+  if (enabled("list")) extensions.push(listExtension);
+  if (enabled("history")) extensions.push(historyExtension);
+  if (enabled("image")) extensions.push(extensiveImageExtension);
+  if (enabled("blockFormat")) extensions.push(blockFormatExtension);
+  if (enabled("code")) extensions.push(codeExtension);
+  if (enabled("codeIntelligence")) extensions.push(codeIntelligenceExtension);
+  if (enabled("codeFormat")) extensions.push(codeFormatExtension);
+  if (enabled("tabIndent")) extensions.push(tabIndentExtension);
+  if (enabled("enterKeyBehavior")) extensions.push(enterKeyBehaviorExtension);
+  if (enabled("iframeEmbed")) extensions.push(iframeEmbedExt);
+  if (enabled("youTubeEmbed")) extensions.push(youTubeEmbedExt);
+  if (enabled("floatingToolbar")) extensions.push(floatingToolbarExt);
+  if (enabled("contextMenu")) extensions.push(contextMenuExt);
+  if (enabled("commandPalette")) extensions.push(commandPaletteExt);
+  if (enabled("slashCommand")) extensions.push(slashCommandExt);
+  if (enabled("emoji")) extensions.push(emojiExt);
+  if (enabled("draggableBlock")) extensions.push(draggableBlockExt);
+  if (enabled("customNode")) extensions.push(featureCardExtension);
+
+  return extensions;
 }
 
 export type ExtensiveExtensions = ReturnType<typeof buildExtensiveExtensions>;
