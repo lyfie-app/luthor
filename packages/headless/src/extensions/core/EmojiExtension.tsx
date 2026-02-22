@@ -18,6 +18,12 @@ export type EmojiCatalogItem = {
   keywords?: string[];
 };
 
+export type EmojiCatalogAdapter = {
+  search: (query: string, options?: { limit?: number }) => EmojiCatalogItem[];
+  resolveShortcode: (shortcode: string) => EmojiCatalogItem | null;
+  getAll: () => EmojiCatalogItem[];
+};
+
 export type EmojiSuggestionState = {
   isOpen: boolean;
   query: string;
@@ -32,6 +38,8 @@ export interface EmojiConfig extends BaseExtensionConfig {
   autoReplaceSymbols?: boolean;
   symbolReplacements?: Record<string, string>;
   catalog?: EmojiCatalogItem[];
+  catalogAdapter?: EmojiCatalogAdapter;
+  autoDetectExternalCatalog?: boolean;
   offset?: { x: number; y: number };
 }
 
@@ -41,6 +49,10 @@ export type EmojiCommands = {
   closeEmojiSuggestions: () => void;
   getEmojiSuggestions: (query?: string) => EmojiCatalogItem[];
   getEmojiCatalog: () => EmojiCatalogItem[];
+  resolveEmojiShortcode: (shortcode: string) => EmojiCatalogItem | null;
+  setEmojiCatalog: (catalog: EmojiCatalogItem[]) => void;
+  setEmojiCatalogAdapter: (adapter: EmojiCatalogAdapter) => void;
+  getEmojiCatalogAdapter: () => EmojiCatalogAdapter;
 };
 
 export type EmojiStateQueries = {
@@ -53,7 +65,7 @@ type EmojiMatch = {
   endOffset: number;
 };
 
-const DEFAULT_EMOJI_CATALOG: EmojiCatalogItem[] = [
+export const LIGHTWEIGHT_EMOJI_CATALOG: EmojiCatalogItem[] = [
   { emoji: "😀", label: "Grinning Face", shortcodes: ["grinning"], keywords: ["happy", "smile"] },
   { emoji: "😄", label: "Smile", shortcodes: ["smile"], keywords: ["happy", "joy"] },
   { emoji: "😊", label: "Blush", shortcodes: ["blush"], keywords: ["warm", "happy"] },
@@ -91,6 +103,8 @@ const DEFAULT_EMOJI_CATALOG: EmojiCatalogItem[] = [
   { emoji: "🎬", label: "Clapper Board", shortcodes: ["clapper"], keywords: ["video", "gif"] },
 ];
 
+const DEFAULT_EMOJI_CATALOG = LIGHTWEIGHT_EMOJI_CATALOG;
+
 const DEFAULT_SYMBOL_REPLACEMENTS: Record<string, string> = {
   ":)": "😊",
   ":(": "🙁",
@@ -110,6 +124,158 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function normalizeShortcode(value: string): string {
+  return value.trim().toLowerCase().replace(/^:+|:+$/g, "");
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function createStaticCatalogAdapter(catalog: readonly EmojiCatalogItem[]): EmojiCatalogAdapter {
+  const stableCatalog = catalog.map((item) => ({
+    ...item,
+    shortcodes: [...item.shortcodes],
+    keywords: item.keywords ? [...item.keywords] : undefined,
+  }));
+
+  const shortcodeIndex = new Map<string, EmojiCatalogItem>();
+  const searchRows = stableCatalog.map((item) => {
+    const shortcodes = (item.shortcodes || []).map((entry) => normalizeShortcode(entry)).filter(Boolean);
+    for (const shortcode of shortcodes) {
+      if (!shortcodeIndex.has(shortcode)) {
+        shortcodeIndex.set(shortcode, item);
+      }
+    }
+
+    const searchable = normalizeSearchText([
+      item.label,
+      ...shortcodes,
+      ...(item.keywords || []),
+    ].join(" "));
+
+    return {
+      item,
+      searchable,
+    };
+  });
+
+  return {
+    getAll: () => [...stableCatalog],
+    resolveShortcode: (shortcode: string) => {
+      return shortcodeIndex.get(normalizeShortcode(shortcode)) ?? null;
+    },
+    search: (query: string, options?: { limit?: number }) => {
+      const limit = Math.max(0, options?.limit ?? stableCatalog.length);
+      if (limit === 0) {
+        return [];
+      }
+
+      const normalizedQuery = normalizeSearchText(query);
+      if (!normalizedQuery) {
+        return stableCatalog.slice(0, limit);
+      }
+      return searchRows
+        .filter((row) => row.searchable.includes(normalizedQuery))
+        .slice(0, limit)
+        .map((row) => row.item);
+    },
+  };
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+    .filter((entry) => entry.length > 0);
+}
+
+function parseEmojiMartShortcodes(entry: Record<string, unknown>): string[] {
+  const fromArray = toStringArray(entry.shortcodes);
+  if (fromArray.length > 0) {
+    return fromArray.map((item) => normalizeShortcode(item));
+  }
+
+  if (typeof entry.shortcodes === "string") {
+    return entry.shortcodes
+      .split(/[,\s]+/)
+      .map((item) => normalizeShortcode(item))
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function createEmojiMartAdapterFromUnknownData(
+  rawData: unknown,
+): EmojiCatalogAdapter | null {
+  if (!rawData || typeof rawData !== "object") {
+    return null;
+  }
+
+  const data = rawData as { emojis?: Record<string, unknown> };
+  if (!data.emojis || typeof data.emojis !== "object") {
+    return null;
+  }
+
+  const items: EmojiCatalogItem[] = [];
+
+  for (const [id, rawEntry] of Object.entries(data.emojis)) {
+    if (!rawEntry || typeof rawEntry !== "object") {
+      continue;
+    }
+
+    const entry = rawEntry as Record<string, unknown>;
+    const name = typeof entry.name === "string" && entry.name.trim().length > 0
+      ? entry.name.trim()
+      : id;
+    const skins = Array.isArray(entry.skins) ? entry.skins : [];
+    const firstSkin = skins[0] as { native?: unknown } | undefined;
+    const emoji = typeof firstSkin?.native === "string" ? firstSkin.native : "";
+    if (!emoji) {
+      continue;
+    }
+
+    const shortcodes = Array.from(
+      new Set([
+        normalizeShortcode(id),
+        ...parseEmojiMartShortcodes(entry),
+      ].filter(Boolean)),
+    );
+
+    if (shortcodes.length === 0) {
+      continue;
+    }
+
+    items.push({
+      emoji,
+      label: name,
+      shortcodes,
+      keywords: toStringArray(entry.keywords),
+    });
+  }
+
+  if (items.length === 0) {
+    return null;
+  }
+
+  return createStaticCatalogAdapter(items);
+}
+
+async function dynamicImport(moduleName: string): Promise<unknown> {
+  const importer = new Function(
+    "name",
+    "return import(name);",
+  ) as (name: string) => Promise<unknown>;
+  return importer(moduleName);
+}
+
 export class EmojiExtension extends BaseExtension<
   "emoji",
   EmojiConfig,
@@ -124,19 +290,34 @@ export class EmojiExtension extends BaseExtension<
   private suggestions: EmojiCatalogItem[] = [];
   private activeMatch: EmojiMatch | null = null;
   private applyingAutoReplace = false;
+  private catalogAdapter: EmojiCatalogAdapter = createStaticCatalogAdapter(
+    DEFAULT_EMOJI_CATALOG,
+  );
+  private hasExplicitCatalogConfig = false;
+  private hasExplicitAdapterConfig = false;
+  private externalCatalogDetectionStarted = false;
 
   constructor(config: EmojiConfig = {}) {
     super("emoji", [ExtensionCategory.Toolbar]);
+    this.hasExplicitCatalogConfig = Object.prototype.hasOwnProperty.call(
+      config,
+      "catalog",
+    );
+    this.hasExplicitAdapterConfig = Object.prototype.hasOwnProperty.call(
+      config,
+      "catalogAdapter",
+    );
     this.config = {
       trigger: ":",
       maxSuggestions: 8,
       maxQueryLength: 32,
       autoReplaceSymbols: true,
       symbolReplacements: DEFAULT_SYMBOL_REPLACEMENTS,
-      catalog: DEFAULT_EMOJI_CATALOG,
+      autoDetectExternalCatalog: true,
       offset: { x: 0, y: 8 },
       ...config,
     };
+    this.catalogAdapter = this.resolveCatalogAdapter(this.config);
   }
 
   configure(config: Partial<EmojiConfig>): this {
@@ -148,10 +329,24 @@ export class EmojiExtension extends BaseExtension<
         ...(config.symbolReplacements || {}),
       },
     };
+    if (Object.prototype.hasOwnProperty.call(config, "catalog")) {
+      this.hasExplicitCatalogConfig = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(config, "catalogAdapter")) {
+      this.hasExplicitAdapterConfig = true;
+    }
+    this.catalogAdapter = this.resolveCatalogAdapter(this.config);
+    if (this.isOpen) {
+      this.suggestions = this.getSuggestions(this.query);
+      this.isOpen = this.suggestions.length > 0;
+      this.notifyListeners();
+    }
     return this;
   }
 
   register(editor: LexicalEditor): () => void {
+    void this.tryEnableExternalCatalog();
+
     const unregisterUpdate = editor.registerUpdateListener(() => {
       this.updateFromSelection(editor);
     });
@@ -264,6 +459,29 @@ export class EmojiExtension extends BaseExtension<
       closeEmojiSuggestions: () => this.closeEmojiSuggestions(),
       getEmojiSuggestions: (query = "") => this.getSuggestions(query),
       getEmojiCatalog: () => this.getCatalog(),
+      resolveEmojiShortcode: (shortcode: string) => this.resolveShortcode(shortcode),
+      setEmojiCatalog: (catalog: EmojiCatalogItem[]) => {
+        this.hasExplicitCatalogConfig = true;
+        this.hasExplicitAdapterConfig = false;
+        this.config = { ...this.config, catalog: [...catalog], catalogAdapter: undefined };
+        this.catalogAdapter = this.resolveCatalogAdapter(this.config);
+        if (this.isOpen) {
+          this.suggestions = this.getSuggestions(this.query);
+          this.isOpen = this.suggestions.length > 0;
+          this.notifyListeners();
+        }
+      },
+      setEmojiCatalogAdapter: (adapter: EmojiCatalogAdapter) => {
+        this.hasExplicitAdapterConfig = true;
+        this.config = { ...this.config, catalogAdapter: adapter };
+        this.catalogAdapter = this.resolveCatalogAdapter(this.config);
+        if (this.isOpen) {
+          this.suggestions = this.getSuggestions(this.query);
+          this.isOpen = this.suggestions.length > 0;
+          this.notifyListeners();
+        }
+      },
+      getEmojiCatalogAdapter: () => this.catalogAdapter,
     };
   }
 
@@ -283,30 +501,73 @@ export class EmojiExtension extends BaseExtension<
   }
 
   private getCatalog(): EmojiCatalogItem[] {
-    return [...(this.config.catalog || DEFAULT_EMOJI_CATALOG)];
+    return this.catalogAdapter.getAll();
   }
 
   private getSuggestions(query: string): EmojiCatalogItem[] {
-    const normalizedQuery = query.trim().toLowerCase();
-    const catalog = this.getCatalog();
     const maxSuggestions = this.config.maxSuggestions ?? 8;
+    return this.catalogAdapter.search(query, { limit: maxSuggestions });
+  }
 
-    if (!normalizedQuery) {
-      return catalog.slice(0, maxSuggestions);
+  private resolveShortcode(shortcode: string): EmojiCatalogItem | null {
+    return this.catalogAdapter.resolveShortcode(shortcode);
+  }
+
+  private resolveCatalogAdapter(config: EmojiConfig): EmojiCatalogAdapter {
+    if (config.catalogAdapter) {
+      return config.catalogAdapter;
+    }
+    return createStaticCatalogAdapter(config.catalog || DEFAULT_EMOJI_CATALOG);
+  }
+
+  private async tryEnableExternalCatalog(): Promise<void> {
+    if (this.externalCatalogDetectionStarted) {
+      return;
+    }
+    this.externalCatalogDetectionStarted = true;
+
+    if (!this.config.autoDetectExternalCatalog) {
+      return;
+    }
+    if (this.hasExplicitCatalogConfig || this.hasExplicitAdapterConfig) {
+      return;
     }
 
-    return catalog
-      .filter((item) => {
-        const searchable = [
-          item.label,
-          ...(item.shortcodes || []),
-          ...(item.keywords || []),
-        ]
-          .join(" ")
-          .toLowerCase();
-        return searchable.includes(normalizedQuery);
-      })
-      .slice(0, maxSuggestions);
+    const globalData =
+      (globalThis as Record<string, unknown>).__EMOJI_MART_DATA__ ||
+      ((globalThis as Record<string, unknown>).EmojiMart as Record<string, unknown> | undefined)?.data;
+    const fromGlobal = createEmojiMartAdapterFromUnknownData(globalData);
+    if (fromGlobal) {
+      this.catalogAdapter = fromGlobal;
+      this.refreshSuggestionsIfOpen();
+      return;
+    }
+
+    try {
+      const imported = await dynamicImport("@emoji-mart/data");
+      const moduleRecord = imported as {
+        default?: unknown;
+        data?: unknown;
+      };
+      const adapter =
+        createEmojiMartAdapterFromUnknownData(moduleRecord.default) ||
+        createEmojiMartAdapterFromUnknownData(moduleRecord.data);
+      if (adapter) {
+        this.catalogAdapter = adapter;
+        this.refreshSuggestionsIfOpen();
+      }
+    } catch {
+      // No external emoji library detected; keep built-in fallback adapter.
+    }
+  }
+
+  private refreshSuggestionsIfOpen() {
+    if (!this.isOpen) {
+      return;
+    }
+    this.suggestions = this.getSuggestions(this.query);
+    this.isOpen = this.suggestions.length > 0;
+    this.notifyListeners();
   }
 
   private updateFromSelection(editor: LexicalEditor) {

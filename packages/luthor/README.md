@@ -1,19 +1,6 @@
 # @lyfie/luthor
 
-Plug-and-play preset package built on top of `@lyfie/luthor-headless`.
-
-## Package scope
-
-- Provides out-of-the-box editor presets and pre-composed UX.
-- Depends on and composes `@lyfie/luthor-headless`.
-- Re-exports headless capabilities for teams that want one package entrypoint.
-
-## Version and compatibility
-
-- Package version: `2.2.0`
-- React peer dependencies: `^18.0.0 || ^19.0.0`
-- Lexical dependencies are included directly in this package (`^0.40.0` family).
-- Icon dependency: `lucide-react ^0.475.0`
+Plug-and-play React editor preset package built on top of `@lyfie/luthor-headless`.
 
 ## Installation
 
@@ -21,7 +8,7 @@ Plug-and-play preset package built on top of `@lyfie/luthor-headless`.
 pnpm add @lyfie/luthor react react-dom
 ```
 
-## Quick start
+## Quick Start
 
 ```tsx
 import { ExtensiveEditor } from "@lyfie/luthor";
@@ -32,336 +19,146 @@ export function App() {
 }
 ```
 
-## Placeholder usage
+## What This Package Exposes
 
-Use a single string to set the visual editor placeholder:
+- Preset editor component: `ExtensiveEditor`
+- Preset builder helpers: `extensivePreset`, `createExtensivePreset`, `presetRegistry`
+- Extension composition helpers: `createExtensiveExtensions`, `extensiveExtensions`
+- Feature flag helpers: `resolveFeatureFlags`, `isFeatureEnabled`, `DEFAULT_FEATURE_FLAGS`
+- Core UI + command utilities: `Toolbar`, `FloatingToolbar`, `generateCommands`, `registerKeyboardShortcuts`, and more
+- Full headless passthrough namespace: `headless`
+
+```tsx
+import { headless } from "@lyfie/luthor";
+
+const { createEditorSystem, richTextExtension, boldExtension } = headless;
+```
+
+## ExtensiveEditor API
+
+### Props
+
+| Prop | Type | Default | Notes |
+|---|---|---|---|
+| `className` | `string` | `undefined` | Appended to wrapper root. |
+| `variantClassName` | `string` | `undefined` | Extra preset variant class on wrapper. |
+| `onReady` | `(methods: ExtensiveEditorRef) => void` | `undefined` | Called when editor methods are ready. |
+| `initialTheme` | `"light" \| "dark"` | `"light"` | Initial visual theme mode. |
+| `theme` | `Partial<LuthorTheme>` | `undefined` | Theme class/style overrides merged with default theme. |
+| `defaultContent` | `string` | `undefined` | If provided, injected as initial content (JSON parsed or plain text converted to JSONB). |
+| `showDefaultContent` | `boolean` | `true` | If `true` and `defaultContent` is not provided, loads built-in welcome content. |
+| `placeholder` | `string \| { visual?: string; jsonb?: string }` | `"Write anything..."` | String applies to visual mode; object lets you set visual and JSONB placeholders separately. |
+| `initialMode` | `"visual" \| "jsonb"` | `"visual"` | Initial open mode; clamped to `availableModes`. |
+| `availableModes` | `readonly ("visual" \| "jsonb")[]` | `["visual", "jsonb"]` | Visible mode tabs and allowed switching targets. |
+| `toolbarLayout` | `ToolbarLayout` | `TRADITIONAL_TOOLBAR_LAYOUT` | Custom toolbar sections/items order. |
+| `toolbarVisibility` | `Partial<Record<ToolbarItemType, boolean>>` | `undefined` | Per-item hide/show map. Unsupported items are auto-hidden. |
+| `toolbarPosition` | `"top" \| "bottom"` | `"top"` | Renders toolbar above or below visual editor. |
+| `toolbarAlignment` | `"left" \| "center" \| "right"` | `"left"` | Horizontal toolbar alignment class. |
+| `toolbarClassName` | `string` | `undefined` | Extra class for toolbar root (`.luthor-toolbar`). |
+| `toolbarStyleVars` | `ToolbarStyleVars` | `undefined` | Inline `--luthor-toolbar-*` CSS variable overrides. |
+| `isToolbarEnabled` | `boolean` | `true` | Hides toolbar UI only; keyboard/commands still exist unless feature-flagged off. |
+| `quoteClassName` | `string` | `undefined` | Appended to quote node class. |
+| `quoteStyleVars` | `QuoteStyleVars` | `undefined` | Inline `--luthor-quote-*` CSS variable overrides. |
+| `defaultSettings` | `DefaultSettings` | `undefined` | High-level style token API for common color settings. |
+| `editorThemeOverrides` | `LuthorEditorThemeOverrides` | `undefined` | Inline editor-wide `--luthor-*` token overrides. |
+| `fontFamilyOptions` | `readonly FontFamilyOption[]` | preset defaults | Sanitized: duplicates removed, invalid tokens removed, `default` auto-added if missing. |
+| `fontSizeOptions` | `readonly FontSizeOption[]` | preset defaults | Sanitized similarly to font family options. |
+| `lineHeightOptions` | `readonly LineHeightOption[]` | preset defaults | Uses unitless ratios (`"1.5"`) for non-default values. |
+| `scaleByRatio` | `boolean` | `false` | Image resize behavior (`true` = keep ratio by default, Shift unlocks). |
+| `headingOptions` | `readonly ("h1"\|"h2"\|"h3"\|"h4"\|"h5"\|"h6")[]` | all headings | Invalid/duplicate entries are removed. |
+| `paragraphLabel` | `string` | `"Paragraph"` behavior | Label for paragraph entry in block format menu/commands. |
+| `syncHeadingOptionsWithCommands` | `boolean` | `true` | Syncs heading command generation with `headingOptions`. |
+| `slashCommandVisibility` | `SlashCommandVisibility` | `undefined` | Slash command filter using allowlist/denylist or enabled-ID selection array form. |
+| `isDraggableBoxEnabled` | `boolean` | `undefined` | Shortcut for enabling/disabling draggable block UI (maps into `featureFlags.draggableBlock`). |
+| `featureFlags` | `Partial<Record<FeatureFlag, boolean>>` | all `true` | Central capability switchboard; affects extensions, toolbar, commands, shortcuts. |
+| `syntaxHighlighting` | `"auto" \| "disabled"` | extension default (`"auto"`) | Code block syntax highlighting strategy. |
+| `codeHighlightProvider` | `CodeHighlightProvider \| null` | `undefined` | Injected highlight provider instance. |
+| `loadCodeHighlightProvider` | `() => Promise<CodeHighlightProvider \| null>` | `undefined` | Lazy async provider loader. |
+| `maxAutoDetectCodeLength` | `number` | `12000` in code intelligence extension | Guard for auto language detection input size. |
+| `isCopyAllowed` | `boolean` | `true` | Enables/disables code block copy button and command path. |
+| `languageOptions` | `readonly string[] \| { mode?: "append"\|"replace"; values: readonly string[] }` | default language catalog | Controls visible code language options. |
+
+### Ref Methods
+
+```ts
+type ExtensiveEditorRef = {
+  injectJSONB: (content: string) => void;
+  getJSONB: () => string;
+};
+```
+
+## Valid Argument Sets
+
+### `ToolbarItemType`
+
+`"fontFamily"`, `"fontSize"`, `"lineHeight"`, `"textColor"`, `"textHighlight"`, `"bold"`, `"italic"`, `"underline"`, `"strikethrough"`, `"subscript"`, `"superscript"`, `"code"`, `"link"`, `"blockFormat"`, `"quote"`, `"alignLeft"`, `"alignCenter"`, `"alignRight"`, `"alignJustify"`, `"codeBlock"`, `"unorderedList"`, `"orderedList"`, `"checkList"`, `"indentList"`, `"outdentList"`, `"horizontalRule"`, `"table"`, `"image"`, `"emoji"`, `"embed"`, `"undo"`, `"redo"`, `"commandPalette"`, `"themeToggle"`.
+
+### `FeatureFlag`
+
+`"bold"`, `"italic"`, `"underline"`, `"strikethrough"`, `"fontFamily"`, `"fontSize"`, `"lineHeight"`, `"textColor"`, `"textHighlight"`, `"subscript"`, `"superscript"`, `"link"`, `"horizontalRule"`, `"table"`, `"list"`, `"history"`, `"image"`, `"blockFormat"`, `"code"`, `"codeIntelligence"`, `"codeFormat"`, `"tabIndent"`, `"enterKeyBehavior"`, `"iframeEmbed"`, `"youTubeEmbed"`, `"floatingToolbar"`, `"contextMenu"`, `"commandPalette"`, `"slashCommand"`, `"emoji"`, `"draggableBlock"`, `"customNode"`, `"themeToggle"`.
+
+## Usage Recipes
+
+### 1) Minimal with defaults
 
 ```tsx
 import { ExtensiveEditor } from "@lyfie/luthor";
+import "@lyfie/luthor/styles.css";
 
 export function App() {
-  return <ExtensiveEditor placeholder="Write your story..." />;
+  return <ExtensiveEditor />;
 }
 ```
 
-Use per-mode placeholders when you want different text for visual and JSONB tabs:
+### 2) Placeholder per mode + restricted modes
 
 ```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      initialMode="visual"
-      placeholder={{
-        visual: "Write your story...",
-        jsonb: "Paste JSONB document...",
-      }}
-    />
-  );
-}
+<ExtensiveEditor
+  initialMode="visual"
+  availableModes={["visual", "jsonb"]}
+  placeholder={{
+    visual: "Write release notes...",
+    jsonb: "Paste JSONB...",
+  }}
+/>
 ```
 
-- `placeholder` default (visual): `"Write anything..."`
-- `placeholder.jsonb` default (source mode): `"Enter JSONB document content..."`
-
-## Toolbar placement and alignment
+### 3) Feature-gated editor (product tiers)
 
 ```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      toolbarPosition="bottom"
-      toolbarAlignment="center"
-      toolbarVisibility={{ embed: false, themeToggle: false }}
-    />
-  );
-}
+<ExtensiveEditor
+  featureFlags={{
+    image: false,
+    iframeEmbed: false,
+    youTubeEmbed: false,
+    emoji: false,
+    commandPalette: false,
+  }}
+  toolbarVisibility={{
+    embed: false,
+    image: false,
+    emoji: false,
+  }}
+/>
 ```
 
-## Toolbar style customization (TSX + CSS)
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      toolbarClassName="docs-toolbar"
-      editorThemeOverrides={{
-        "--luthor-bg": "#fffaf2",
-        "--luthor-fg": "#431407",
-        "--luthor-accent": "#c2410c",
-      }}
-      toolbarStyleVars={{
-        "--luthor-toolbar-button-active-bg": "#ea580c",
-        "--luthor-toolbar-button-active-fg": "#ffffff",
-      }}
-    />
-  );
-}
-```
-
-```css
-/* CSS-only override pattern */
-.docs-toolbar {
-  --luthor-toolbar-bg: color-mix(in srgb, #fff7ed 75%, white 25%);
-  --luthor-toolbar-section-border: #fdba74;
-  --luthor-toolbar-button-fg: #7c2d12;
-  --luthor-toolbar-button-hover-bg: #ffedd5;
-  --luthor-toolbar-button-hover-border: #fb923c;
-  --luthor-toolbar-button-active-bg: #ea580c;
-  --luthor-toolbar-button-active-border: #ea580c;
-  --luthor-toolbar-button-active-fg: #ffffff;
-}
-```
-
-- `toolbarPosition`: `"top"` (default) or `"bottom"`
-- `toolbarAlignment`: `"left"` (default), `"center"`, or `"right"`
-- `isToolbarEnabled`: `true` (default). Set `false` to hide the primary toolbar while keeping keyboard shortcuts, slash commands, and command palette support.
-- `toolbarVisibility`: `Partial<Record<ToolbarItemType, boolean>>`. Set an item to `false` to hide it; unsupported items are auto-hidden even if set to `true`.
-- `toolbarClassName`: optional class appended to the toolbar root (`.luthor-toolbar`) for CSS overrides.
-- `toolbarStyleVars`: optional map of `--luthor-toolbar-*` custom properties applied to the toolbar root.
-- `defaultSettings`: optional grouped visual defaults (`font`, `link`, `list`, `quote`, `table`, `hr`, `placeholder`, `codeblock`, `toolbar`) mapped to CSS variables.
-- `editorThemeOverrides`: optional map of `--luthor-*` custom properties applied to the editor wrapper for per-instance theme injection.
-- `theme`: optional `Partial<LuthorTheme>` merged into the editor theme config.
-- `quoteClassName`: optional class appended to the quote node class (default base class is `.luthor-quote`).
-- `quoteStyleVars`: optional map of `--luthor-quote-*` custom properties applied to the editor wrapper.
-- `fontFamilyOptions`: optional per-editor font-family option list for the `fontFamily` toolbar select.
-- `fontSizeOptions`: optional per-editor font-size option list for the `fontSize` toolbar select.
-- `lineHeightOptions`: optional per-editor line-height option list for the `lineHeight` toolbar select. Non-default options should use unitless numeric ratios (for example `"1.5"`).
-- `syntaxHighlighting`: optional code highlighting mode. `"auto"` (default) tries provider/global/dynamic loading, `"disabled"` keeps fallback palette only.
-- `codeHighlightProvider`: optional injected provider object for code language detection/highlighting adapters.
-- `loadCodeHighlightProvider`: optional async loader for provider injection (lazy-load path).
-- `maxAutoDetectCodeLength`: optional guard for language auto-detect input size (default `12000` characters).
-- `isCopyAllowed`: `true` by default. Set `false` to hide code-block copy buttons and disable code-block copy command execution.
-- `languageOptions`: optional per-editor code language list config for code block controls. Use array form to append, or object form with `mode: "append" | "replace"` and `values`.
-- `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
-- `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
-- `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.
-- `featureFlags`: optional `Partial<FeatureFlags>` to enable/disable capabilities from one registry. All flags default to `true`. Disabled features are removed from extension composition, hidden from toolbar, and excluded from generated commands/shortcuts.
-- `slashCommandVisibility`: optional slash command filter:
-  - `allowlist`: include only these command IDs (for example `insert.table`, `block.heading2`)
-  - `denylist`: exclude these command IDs (applied after allowlist)
-  - enabled-id list form: pass `[{ "block.quote": true }, { "block.heading1": true }]` to show only selected slash IDs
-  - command ordering remains the preset default for deterministic menus
-
-### Default visual settings (`defaultSettings`)
-
-Use `defaultSettings` for a typed visual-default API without mixing structural behavior props:
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      defaultSettings={{
-        font: { color: "#1f2937", boldColor: "#0f172a" },
-        link: { color: "#1d4ed8" },
-        list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
-        quote: {
-          backgroundColor: "#f8fafc",
-          color: "#334155",
-          indicatorColor: "#2563eb",
-        },
-        table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
-        hr: { color: "#cbd5e1" },
-        placeholder: { color: "#94a3b8" },
-        codeblock: { backgroundColor: "#f8fafc" },
-        toolbar: { backgroundColor: "#f8fafc" },
-      }}
-    />
-  );
-}
-```
-
-Precedence (highest to lowest):
-- `toolbarStyleVars` (toolbar element only) and `quoteStyleVars` (quote tokens)
-- `editorThemeOverrides`
-- `defaultSettings`
-- CSS variables from your stylesheet/theme classes
-
-Notes:
-- `defaultSettings` is style-only; structural/editor behavior props remain separate.
-- Since TSX styles are inline on the editor instance, stylesheet overrides need higher specificity or `!important` when overriding the same token.
-
-### Slash command visibility (enabled IDs, allowlist / denylist)
-
-Use `slashCommandVisibility` to control what appears in the `/` menu from app state (for example in `apps/demo/src/App.tsx`).
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      slashCommandVisibility={[
-        { "block.quote": true },
-        { "block.paragraph": true },
-        { "block.heading1": true },
-      ]}
-    />
-  );
-}
-```
-
-## Link create/edit/delete flow
-
-Luthor supports link creation from the main toolbar and link editing/removal from a dedicated hover bubble.
-
-### Usage requirements
-
-- Use `ExtensiveEditor` in `visual` mode (hover bubble is visual-mode only).
-- Ensure the `link` extension is enabled (it is enabled by default in the extensive preset).
-- No extra setup is required for hover link editing in the default preset.
-
-### End-user flow
-
-1. Select text and click the link button in the main toolbar to create a link.
-2. Hover any linked text to open a small link bubble.
-3. Review the current URL, then click `Edit`.
-4. Enter a new URL and click `Update`, or click `Unlink` to remove the link.
-
-Link updates are validated. Invalid URLs are rejected and the previous URL is preserved.
-
-When link text is selected, the regular floating formatting toolbar still appears independently.
-
-### Command API flow
-
-If you are building custom UI on top of the editor commands, use:
-
-- `commands.insertLink()` to create a link from current selection.
-- `commands.updateLink(url, rel?, target?)` to edit the selected link URL (and optional `rel`/`target` attributes).
-- `commands.removeLink()` to remove link formatting from the selected link.
-- `commands.updateLinkByKey(linkNodeKey, url, rel?, target?)` to update a specific hovered link node.
-- `commands.removeLinkByKey(linkNodeKey)` to unlink a specific hovered link node.
-- `commands.getLinkByKey(linkNodeKey)` to read current URL metadata for a hovered link node.
-
-Example:
-
-```tsx
-import { ExtensiveEditor, type CoreEditorCommands } from "@lyfie/luthor";
-
-function LinkActions({ commands }: { commands: CoreEditorCommands }) {
-  return (
-    <div>
-      <button onClick={() => commands.insertLink()}>Create link</button>
-      <button onClick={() => commands.updateLink?.("https://example.com", "noopener noreferrer", "_blank")}>
-        Update link
-      </button>
-      <button onClick={() => commands.removeLink()}>Remove link</button>
-    </div>
-  );
-}
-
-export function App() {
-  return <ExtensiveEditor placeholder="Start writing..." />;
-}
-```
-
-### Feature flags (single source of truth)
-
-Use `featureFlags` when you want one switchboard for extension composition, command registration, and toolbar visibility.
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      featureFlags={{
-        image: false,
-        emoji: false,
-        commandPalette: false,
-        floatingToolbar: false,
-      }}
-    />
-  );
-}
-```
-
-Behavior:
-- All flags default to `true`.
-- Disabling a feature removes its extension from the preset.
-- Related toolbar items are auto-hidden even if `toolbarVisibility` sets them to `true`.
-- Related commands and keyboard shortcuts are not registered.
-- Command calls from custom UI safely no-op if the feature is unavailable.
-
-You can still use the object form:
+### 4) Slash command allowlist
 
 ```tsx
 <ExtensiveEditor
   slashCommandVisibility={{
-    allowlist: ["block.quote", "block.paragraph", "block.heading1"],
+    allowlist: [
+      "block.paragraph",
+      "block.heading1",
+      "block.heading2",
+      "insert.table",
+    ],
     denylist: ["insert.image"],
   }}
 />
 ```
 
-Common command IDs:
-- `block.paragraph`
-- `block.heading1` to `block.heading6`
-- `block.quote`
-- `block.codeblock`
-- `list.bullet`, `list.numbered`, `list.check`
-- `insert.horizontal-rule`, `insert.image`, `insert.gif`, `insert.table`, `insert.emoji`, `insert.iframe`, `insert.youtube`
-
-### Code block syntax highlighting (plug-and-play for `apps/demo/src/App.tsx`)
-
-Default behavior (`auto`) tries, in order:
-1. an injected provider (`codeHighlightProvider`)
-2. an injected async loader (`loadCodeHighlightProvider`)
-3. global `window.hljs` if present
-4. dynamic import of `highlight.js/lib/core`
-5. fallback code palette (`lang-default`) if none are available
-
-Use directly on `ExtensiveEditor`:
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-import "@lyfie/luthor/styles.css";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      syntaxHighlighting="auto"
-      maxAutoDetectCodeLength={12000}
-    />
-  );
-}
-```
-
-Disable highlighting engine but keep fallback palette:
-
-```tsx
-<ExtensiveEditor syntaxHighlighting="disabled" />
-```
-
-Inject a provider (for explicit app-level control):
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      loadCodeHighlightProvider={async () => {
-        const module = await import("highlight.js/lib/core");
-        const hljs = (module.default ?? module) as {
-          highlightAuto: (code: string, languageSubset?: string[]) => { language?: string };
-        };
-        return { highlightAuto: hljs.highlightAuto };
-      }}
-      maxAutoDetectCodeLength={10000}
-    />
-  );
-}
-```
-
-Customize code language options:
+### 5) Code language list replacement
 
 ```tsx
 <ExtensiveEditor
@@ -369,253 +166,79 @@ Customize code language options:
     mode: "replace",
     values: ["plaintext", "typescript", "javascript", "sql", "bash"],
   }}
+  syntaxHighlighting="auto"
+  maxAutoDetectCodeLength={10000}
 />
 ```
 
-Notes:
-- `mode: "append"` keeps built-in defaults and adds your values.
-- `mode: "replace"` uses only your values (the UI still includes `auto`).
-- Aliases are normalized (for example `js` -> `javascript`).
-- Duplicate normalized entries are rejected (for example `["js", "javascript"]`).
+### 6) Style token overrides
 
-### Font family options
+```tsx
+<ExtensiveEditor
+  editorThemeOverrides={{
+    "--luthor-bg": "#fffaf2",
+    "--luthor-fg": "#431407",
+    "--luthor-accent": "#c2410c",
+  }}
+  toolbarStyleVars={{
+    "--luthor-toolbar-button-active-bg": "#ea580c",
+    "--luthor-toolbar-button-active-fg": "#ffffff",
+  }}
+  quoteStyleVars={{
+    "--luthor-quote-bg": "#fff7ed",
+    "--luthor-quote-fg": "#7c2d12",
+    "--luthor-quote-border": "#ea580c",
+  }}
+/>
+```
+
+### 7) Emoji library auto-detection (works in `apps/demo`)
+
+Install emoji-mart data in the app:
+
+```bash
+pnpm add -F demo @emoji-mart/data
+```
+
+Then use `ExtensiveEditor` normally:
 
 ```tsx
 import { ExtensiveEditor } from "@lyfie/luthor";
+import "@lyfie/luthor/styles.css";
 
 export function App() {
-  return (
-    <ExtensiveEditor
-      fontFamilyOptions={[
-        { value: "default", label: "Default", fontFamily: "inherit" },
-        {
-          value: "geist",
-          label: "Geist",
-          fontFamily: "'Geist', 'Segoe UI', Arial, sans-serif",
-          cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
-        },
-      ]}
-    />
-  );
+  return <ExtensiveEditor />;
 }
 ```
 
-### Font size options
+What happens:
 
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
+- `:shortcode` suggestions and resolution use the detected emoji-mart dataset.
+- Emoji toolbar dropdown uses the detected emoji-mart catalog.
+- If the library is not installed/available, it automatically falls back to the built-in emoji list.
 
-export function App() {
-  return (
-    <ExtensiveEditor
-      fontSizeOptions={[
-        { value: "default", label: "Default", fontSize: "inherit" },
-        { value: "13", label: "13px", fontSize: "13px" },
-        { value: "17", label: "17px", fontSize: "17px" },
-        { value: "21", label: "21px", fontSize: "21px" },
-      ]}
-    />
-  );
-}
-```
+## Notes and Nuances
 
-### Line height options
+- `featureFlags` are authoritative. If a feature is disabled, related toolbar items and commands are removed/no-op even if you attempt to show them.
+- `slashCommandVisibility` keeps original command ordering; it only filters visibility.
+- `languageOptions` normalizes aliases (for example `js` becomes `javascript`) and rejects duplicates after normalization.
+- Emoji suggestions/tooling auto-detect external emoji-mart data when available, and otherwise use the built-in default emoji catalog.
+- `defaultSettings` is style-only; behavior is controlled by explicit props (for example `featureFlags`, `availableModes`).
+- `isToolbarEnabled={false}` hides toolbar UI, but editor shortcuts/features still work unless disabled via `featureFlags`.
 
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
+## Which Package Should I Use?
 
-export function App() {
-  return (
-    <ExtensiveEditor
-      lineHeightOptions={[
-        { value: "default", label: "Default", lineHeight: "normal" },
-        { value: "1.3", label: "1.3", lineHeight: "1.3" },
-        { value: "1.6", label: "1.6", lineHeight: "1.6" },
-        { value: "2", label: "2.0", lineHeight: "2" },
-      ]}
-    />
-  );
-}
-```
-
-Toolbar CSS variable contract:
-- `--luthor-toolbar-bg`
-- `--luthor-toolbar-section-border`
-- `--luthor-toolbar-button-fg`
-- `--luthor-toolbar-button-hover-bg`
-- `--luthor-toolbar-button-hover-border`
-- `--luthor-toolbar-button-hover-shadow`
-- `--luthor-toolbar-button-press-shadow`
-- `--luthor-toolbar-button-active-bg`
-- `--luthor-toolbar-button-active-border`
-- `--luthor-toolbar-button-active-fg`
-- `--luthor-toolbar-button-active-shadow`
-- `--luthor-toolbar-button-overlay`
-- `--luthor-toolbar-button-active-overlay`
-- `--luthor-toolbar-color-indicator-border`
-- `--luthor-toolbar-highlight-bg`
-
-Editor theme CSS variable contract (`editorThemeOverrides`):
-- `--luthor-bg`
-- `--luthor-fg`
-- `--luthor-border`
-- `--luthor-border-hover`
-- `--luthor-border-active`
-- `--luthor-accent`
-- `--luthor-accent-hover`
-- `--luthor-shadow`
-- `--luthor-muted`
-- `--luthor-muted-fg`
-- `--luthor-theme-transition`
-- `--luthor-drag-gutter-width`
-- `--luthor-line-height-ratio`
-- `--luthor-toolbar-bg`
-- `--luthor-toolbar-section-border`
-- `--luthor-toolbar-button-fg`
-- `--luthor-toolbar-button-hover-bg`
-- `--luthor-toolbar-button-hover-border`
-- `--luthor-toolbar-button-hover-shadow`
-- `--luthor-toolbar-button-press-shadow`
-- `--luthor-toolbar-button-active-bg`
-- `--luthor-toolbar-button-active-border`
-- `--luthor-toolbar-button-active-fg`
-- `--luthor-toolbar-button-active-shadow`
-- `--luthor-toolbar-button-overlay`
-- `--luthor-toolbar-button-active-overlay`
-- `--luthor-toolbar-color-indicator-border`
-- `--luthor-toolbar-highlight-bg`
-- `--luthor-quote-bg`
-- `--luthor-quote-fg`
-- `--luthor-quote-border`
-- `--luthor-text-bold-color`
-- `--luthor-link-color`
-- `--luthor-list-marker-color`
-- `--luthor-list-checkbox-color`
-- `--luthor-table-border-color`
-- `--luthor-table-header-bg`
-- `--luthor-hr-color`
-- `--luthor-placeholder-color`
-- `--luthor-codeblock-bg`
-- `--luthor-syntax-comment`
-- `--luthor-syntax-keyword`
-- `--luthor-syntax-string`
-- `--luthor-syntax-number`
-- `--luthor-syntax-function`
-- `--luthor-syntax-variable`
-- `--luthor-floating-bg`
-- `--luthor-floating-fg`
-- `--luthor-floating-border`
-- `--luthor-floating-shadow`
-- `--luthor-floating-muted`
-- `--luthor-floating-border-hover`
-- `--luthor-floating-border-active`
-- `--luthor-floating-accent`
-- `--luthor-floating-accent-fg`
-- `--luthor-preset-bg`
-- `--luthor-preset-fg`
-- `--luthor-preset-border`
-- `--luthor-preset-muted`
-- `--luthor-preset-muted-fg`
-- `--luthor-preset-accent`
-- `--luthor-preset-radius`
-- `--luthor-preset-shadow`
-- `--luthor-preset-content-padding`
-- `--luthor-preset-content-min-height`
-
-## Quote style customization (TSX + CSS)
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-export function App() {
-  return (
-    <ExtensiveEditor
-      quoteClassName="docs-quote"
-      quoteStyleVars={{
-        "--luthor-quote-bg": "#fff7ed",
-        "--luthor-quote-fg": "#7c2d12",
-        "--luthor-quote-border": "#ea580c",
-      }}
-      theme={{
-        quote: "docs-quote-theme",
-      }}
-    />
-  );
-}
-```
-
-```css
-/* Class override API */
-.docs-quote,
-.docs-quote-theme {
-  border-left-width: 6px;
-  border-radius: 0 8px 8px 0;
-}
-```
-
-Quote CSS variable contract:
-- `--luthor-quote-bg`
-- `--luthor-quote-fg`
-- `--luthor-quote-border`
-
-## Primary exports
-
-- Presets: `extensivePreset`
-- Preset registry: `presetRegistry`
-- Ready component: `ExtensiveEditor`
-- Shared extension bundle: `extensiveExtensions`
-- Feature flag helpers: `resolveFeatureFlags`, `isFeatureEnabled`
-- Preset config helper: `createPresetEditorConfig`
-- Headless passthrough namespace: `headless`
-
-## Headless access from this package
-
-```tsx
-import { headless } from "@lyfie/luthor";
-
-const { createEditorSystem, boldExtension } = headless;
-```
-
-## Extensive preset capabilities
-
-- rich text and formatting controls
-- command palette and slash commands
-- floating toolbar and context-aware actions
-- media support (image, iframe, YouTube)
-- visual/source modes with conversions (`visual`, `html`, `markdown`, `jsonb`)
-
-## Which package should you use?
-
-- Use `@lyfie/luthor` if you want fast setup and opinionated defaults.
-- Use `@lyfie/luthor-headless` if you want full control over extension selection and UI composition.
+- Use `@lyfie/luthor` for fast onboarding and polished defaults.
+- Use `@lyfie/luthor-headless` for full extension/UI control.
 
 ## Documentation
 
-Canonical docs root: [../../documentation/index.md](../../documentation/index.md)
-
-### User docs
-
-- Luthor getting started: [../../documentation/user/luthor/getting-started.md](../../documentation/user/luthor/getting-started.md)
-- Presets and configuration: [../../documentation/user/luthor/presets-and-configuration.md](../../documentation/user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [../../documentation/user/luthor/extensive-editor.md](../../documentation/user/luthor/extensive-editor.md)
-
-### Developer docs
-
-- Luthor architecture: [../../documentation/developer/luthor/architecture.md](../../documentation/developer/luthor/architecture.md)
-- Luthor source-file reference: [../../documentation/developer/luthor/source-file-reference.md](../../documentation/developer/luthor/source-file-reference.md)
-- Luthor maintainer notes: [../../documentation/developer/luthor/maintainer-notes.md](../../documentation/developer/luthor/maintainer-notes.md)
-
-### Related docs
-
-- Monorepo README: [../../README.md](../../README.md)
+- Monorepo docs index: [../../documentation/index.md](../../documentation/index.md)
 - Headless package README: [../headless/README.md](../headless/README.md)
-- Legacy luthor docs redirects: [../../documentation/readmes/packages/luthor-docs/README.md](../../documentation/readmes/packages/luthor-docs/README.md)
-- Demo getting started: [../../documentation/user/demo/getting-started.md](../../documentation/user/demo/getting-started.md)
-- Demo architecture: [../../documentation/developer/demo/architecture.md](../../documentation/developer/demo/architecture.md)
+- User docs: [../../documentation/user/luthor/getting-started.md](../../documentation/user/luthor/getting-started.md)
+- Developer docs: [../../documentation/developer/luthor/architecture.md](../../documentation/developer/luthor/architecture.md)
 
-## Workspace development
-
-From repository root:
+## Workspace Development
 
 ```bash
 pnpm --filter @lyfie/luthor dev

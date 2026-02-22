@@ -427,6 +427,14 @@ function createFeatureGuardedCommands(
     guarded.closeEmojiSuggestions = () => {};
     guarded.getEmojiSuggestions = () => [];
     guarded.getEmojiCatalog = () => [];
+    guarded.resolveEmojiShortcode = () => null;
+    guarded.setEmojiCatalog = () => {};
+    guarded.setEmojiCatalogAdapter = () => {};
+    guarded.getEmojiCatalogAdapter = () => ({
+      search: () => [],
+      resolveShortcode: () => null,
+      getAll: () => [],
+    });
   });
   disable("iframeEmbed", () => {
     guarded.insertIframeEmbed = () => {};

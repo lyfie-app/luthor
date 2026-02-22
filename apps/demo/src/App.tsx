@@ -23,12 +23,7 @@ function App() {
 
   const codeLanguageOptions = {
     mode: "replace" as const,
-    values: [
-      "plaintext",
-      "typescript",
-      "javascript",
-      "tsx",
-    ],
+    values: ["plaintext", "typescript", "javascript", "tsx"],
   };
 
   return (
@@ -60,11 +55,11 @@ function App() {
           justifyContent: "center",
         }}
       >
-        <ExtensiveEditor 
-          initialTheme={theme} 
+        <ExtensiveEditor
+          initialTheme={theme}
           toolbarPosition="top"
           toolbarAlignment="center"
-          toolbarVisibility={{ fontFamily: true }}         
+          toolbarVisibility={{ fontFamily: true }}
           toolbarClassName="docs-toolbar"
           quoteClassName="docs-quote"
           quoteStyleVars={{
@@ -89,7 +84,7 @@ function App() {
             { value: "2", label: "2.0", lineHeight: "2" },
           ]}
           paragraphLabel="Normal"
-          headingOptions={['h1', 'h2', 'h3']}
+          headingOptions={["h1", "h2", "h3"]}
           scaleByRatio={false}
           slashCommandVisibility={[
             { "block.quote": true },
@@ -98,16 +93,13 @@ function App() {
           ]}
           isCopyAllowed={true}
           languageOptions={codeLanguageOptions}
-          featureFlags={{
-            emoji: false,
-          }}
           placeholder={{
             visual: "Write your story...",
             jsonb: "Paste JSONB document...",
           }}
           isDraggableBoxEnabled={true}
           defaultSettings={{
-            link: { color: "#1d4ed8"},
+            link: { color: "#1d4ed8" },
             list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
             table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
             hr: { color: "#cbd5e1" },

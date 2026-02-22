@@ -124,6 +124,60 @@ export interface CoreEditorCommands {
     shortcodes: string[];
     keywords?: string[];
   }[];
+  resolveEmojiShortcode?: (shortcode: string) => {
+    emoji: string;
+    label: string;
+    shortcodes: string[];
+    keywords?: string[];
+  } | null;
+  setEmojiCatalog?: (
+    catalog: {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    }[],
+  ) => void;
+  setEmojiCatalogAdapter?: (adapter: {
+    search: (query: string, options?: { limit?: number }) => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    }[];
+    resolveShortcode: (shortcode: string) => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    } | null;
+    getAll: () => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    }[];
+  }) => void;
+  getEmojiCatalogAdapter?: () => {
+    search: (query: string, options?: { limit?: number }) => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    }[];
+    resolveShortcode: (shortcode: string) => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    } | null;
+    getAll: () => {
+      emoji: string;
+      label: string;
+      shortcodes: string[];
+      keywords?: string[];
+    }[];
+  };
   setImageAlignment: (alignment: ImageAlignment) => void;
   setImageCaption: (caption: string) => void;
   getImageCaption?: () => Promise<string>;

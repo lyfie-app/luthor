@@ -461,11 +461,24 @@ export function generateCommands(options?: CommandGenerationOptions): CommandCon
         }
 
         const shortcodeMatch = value.match(/^:([a-z0-9_+-]+):$/i);
-        if (shortcodeMatch && typeof commands.getEmojiSuggestions === "function") {
-          const [match] = commands.getEmojiSuggestions(shortcodeMatch[1]);
-          if (match?.emoji) {
-            commands.insertEmoji(match.emoji);
+        if (shortcodeMatch) {
+          const shortcode = shortcodeMatch[1];
+          if (!shortcode) {
             return;
+          }
+
+          if (typeof commands.resolveEmojiShortcode === "function") {
+            const match = commands.resolveEmojiShortcode(shortcode);
+            if (match?.emoji) {
+              commands.insertEmoji(match.emoji);
+              return;
+            }
+          } else if (typeof commands.getEmojiSuggestions === "function") {
+            const [match] = commands.getEmojiSuggestions(shortcode);
+            if (match?.emoji) {
+              commands.insertEmoji(match.emoji);
+              return;
+            }
           }
         }
 

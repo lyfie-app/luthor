@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { EmojiCatalogItem } from "@lyfie/luthor-headless";
 import { getOverlayThemeStyleFromSelection } from "./overlay-theme";
@@ -20,18 +20,6 @@ export function EmojiSuggestionMenu({
 }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const filteredSuggestions = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) {
-      return suggestions;
-    }
-
-    return suggestions.filter((item) => {
-      const searchableText = `${item.label} ${item.shortcodes.join(" ")} ${(item.keywords || []).join(" ")}`.toLowerCase();
-      return searchableText.includes(normalizedQuery);
-    });
-  }, [query, suggestions]);
-
   useEffect(() => {
     setSelectedIndex(0);
   }, [query, isOpen]);
@@ -42,7 +30,7 @@ export function EmojiSuggestionMenu({
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const hasItems = filteredSuggestions.length > 0;
+      const hasItems = suggestions.length > 0;
       switch (event.key) {
         case "Escape":
           event.preventDefault();
@@ -53,7 +41,7 @@ export function EmojiSuggestionMenu({
           if (!hasItems) return;
           event.preventDefault();
           event.stopPropagation();
-          setSelectedIndex((prev) => Math.min(prev + 1, Math.max(filteredSuggestions.length - 1, 0)));
+          setSelectedIndex((prev) => Math.min(prev + 1, Math.max(suggestions.length - 1, 0)));
           break;
         case "ArrowUp":
           if (!hasItems) return;
@@ -64,19 +52,19 @@ export function EmojiSuggestionMenu({
         case "Enter":
         case "Tab":
           if (!hasItems) return;
-          if (!filteredSuggestions[selectedIndex]) {
+          if (!suggestions[selectedIndex]) {
             return;
           }
           event.preventDefault();
           event.stopPropagation();
-          onExecute(filteredSuggestions[selectedIndex].emoji);
+          onExecute(suggestions[selectedIndex].emoji);
           break;
       }
     };
 
     document.addEventListener("keydown", handleKeyDown, true);
     return () => document.removeEventListener("keydown", handleKeyDown, true);
-  }, [filteredSuggestions, isOpen, onClose, onExecute, selectedIndex]);
+  }, [isOpen, onClose, onExecute, selectedIndex, suggestions]);
 
   if (!isOpen || !position) {
     return null;
@@ -99,10 +87,10 @@ export function EmojiSuggestionMenu({
       </div>
 
       <div className="luthor-emoji-menu-list">
-        {filteredSuggestions.length === 0 ? (
+        {suggestions.length === 0 ? (
           <div className="luthor-emoji-menu-empty">No matching emoji</div>
         ) : (
-          filteredSuggestions.map((item, index) => {
+          suggestions.map((item, index) => {
             const selected = index === selectedIndex;
             const primaryShortcode = item.shortcodes[0] ? `:${item.shortcodes[0]}:` : "";
             return (

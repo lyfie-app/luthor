@@ -2,41 +2,19 @@
 
 Type-safe, headless rich text editor system for React, built on Lexical.
 
-## Package scope
-
-- Owns all Lexical-derived features and extension implementations.
-- Exposes a typed extension composition system (`createEditorSystem`).
-- Keeps runtime dependencies lightweight using peer dependencies for React/Lexical.
-- Supports optional integrations (like `highlight.js`) without making them mandatory.
-
-## Version and compatibility
-
-- Package version: `2.2.0`
-- React peers: `^18.0.0 || ^19.0.0`
-- Lexical peers: `>=0.40.0` (`lexical` + required `@lexical/*` packages)
-- Optional dependency: `highlight.js >=11.0.0`
-
-## Why headless
-
-Use this package when you want:
-
-- full control over extension selection
-- custom editor UI and layout
-- typed command/state composition with minimal runtime surface
-
 ## Installation
 
 ```bash
 pnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/html @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
 ```
 
-Optional:
+Optional syntax highlighting provider:
 
 ```bash
 pnpm add highlight.js
 ```
 
-## Quick start
+## Quick Start
 
 ```tsx
 import {
@@ -67,7 +45,7 @@ function Toolbar() {
 
 export function Editor() {
   return (
-    <Provider extensions={extensions} config={{ namespace: "LuthorEditor" }}>
+    <Provider extensions={extensions}>
       <Toolbar />
       <RichText placeholder="Write here..." />
     </Provider>
@@ -75,158 +53,563 @@ export function Editor() {
 }
 ```
 
-## Extension model
+## Core API
 
-- Extensions contribute commands, state queries, nodes, and plugins.
-- Your extension list should be declared `as const` for full type inference.
-- `useEditor()` returns only the command/state surface available from installed extensions.
+### `createEditorSystem<Exts>()`
 
-## Core public building blocks
+Returns:
 
-Frequently used APIs:
+- `Provider(props)`
+- `useEditor()`
 
-- `createEditorSystem`
-- `RichText`
-- `createEditorThemeStyleVars`
+`Provider` props:
+
+- `extensions: Exts` (required)
+- `children: ReactNode` (required)
+- `config?: EditorConfig`
+
+`EditorConfig`:
+
+- `theme?: EditorThemeClasses`
+- any additional keys are allowed and can be consumed by extensions/components
+
+### `useEditor()` context
+
+Returns strongly typed surface based on `extensions`:
+
+- `commands`
+- `activeStates`
+- `stateQueries`
+- `hasExtension(name)`
+- `export.toJSON()`
+- `import.fromJSON(json)`
+- `lexical` / `editor`
+- `plugins`
+- listener helpers (`registerUpdate`, `registerPaste`)
+
+## RichText Component API
+
+`RichText` and `RichTextExtension` use the same prop shape:
+
+- `contentEditable?: ReactElement`
+- `placeholder?: ReactElement | string`
+- `className?: string`
+- `classNames?: { container?: string; contentEditable?: string; placeholder?: string }`
+- `styles?: { container?: CSSProperties; contentEditable?: CSSProperties; placeholder?: CSSProperties }`
+- `errorBoundary?: ComponentType<{ children: JSX.Element; onError: (error: Error) => void }>`
+
+## Theme Utilities
+
+- `defaultLuthorTheme`
+- `mergeThemes(baseTheme, overrideTheme)`
+- `isLuthorTheme(value)`
 - `LUTHOR_EDITOR_THEME_TOKENS`
-- extension factories such as `boldExtension`, `italicExtension`, `historyExtension`, `linkExtension`
-- import/export helpers for HTML and enhanced markdown workflows
+- `createEditorThemeStyleVars(overrides)`
 
-The exact exported surface is documented in:
+`LuthorEditorThemeOverrides` is a token map with keys from `LUTHOR_EDITOR_THEME_TOKENS` and string values.
 
-- [../../documentation/developer/headless/source-file-reference.md](../../documentation/developer/headless/source-file-reference.md)
+## Base Extension Config
 
-## Built-in extension categories
+All extension configs support `BaseExtensionConfig`:
 
-- Core UX: rich text, history, slash commands, floating toolbar, context menu, draggable blocks, tab indent, emoji
-- Formatting: text styles, block formats, list/link/table/code/typography controls
-- Media: image, iframe embeds, YouTube embeds
-- Import/export: HTML and Markdown extensions
-- Custom: factory for custom node-based extensions
+- `showInToolbar?: boolean`
+- `category?: ExtensionCategory[]`
+- `position?: "before" | "after"`
+- `initPriority?: number`
 
-## Slash command list control
+## Built-in Extensions
 
-`SlashCommandExtension` supports whole-list updates for deterministic menus and clean reconfiguration:
+### Text Formatting
 
-- pass `items` in `new SlashCommandExtension({ items })` for initial commands
-- call `commands.setSlashCommands(items)` to atomically replace the registered list
-- `registerSlashCommand` / `unregisterSlashCommand` remain available for incremental updates
+- `boldExtension`
+- `italicExtension`
+- `underlineExtension`
+- `strikethroughExtension`
+- `subscriptExtension`
+- `superscriptExtension`
+- `codeFormatExtension` (inline code mark)
 
-## Image resize ratio behavior
+These are toggle-style text-format extensions and do not require custom config.
 
-Use `scaleByRatio` in `imageExtension.configure(...)` to control default resize behavior.
+### Link Extension (`LinkExtension`, `linkExtension`)
+
+`LinkConfig`:
+
+- `autoLinkText?: boolean`
+- `autoLinkUrls?: boolean`
+- `linkSelectedTextOnPaste?: boolean`
+- `validateUrl?: (url: string) => boolean`
+- `clickableLinks?: boolean`
+- `openLinksInNewTab?: boolean`
+
+Commands:
+
+- `insertLink(url?, text?)`
+- `updateLink(url, rel?, target?)`
+- `removeLink()`
+- `getCurrentLink()`
+- `getLinkByKey(linkNodeKey)`
+- `updateLinkByKey(linkNodeKey, url, rel?, target?)`
+- `removeLinkByKey(linkNodeKey)`
+
+Note: set `autoLinkUrls` explicitly in your config for unambiguous paste-link behavior.
+
+### Typography Selectors
+
+#### `FontFamilyExtension`
+
+`FontFamilyOption`:
+
+- `value: string`
+- `label: string`
+- `fontFamily: string`
+- `cssImportUrl?: string`
+
+`FontFamilyConfig`:
+
+- `options: readonly FontFamilyOption[]`
+- `cssLoadStrategy: "none" | "preload-all" | "on-demand"`
+
+Nuances:
+
+- Invalid/duplicate option values are sanitized out.
+- `default` option is auto-inserted when omitted.
+
+#### `FontSizeExtension`
+
+`FontSizeOption`:
+
+- `value: string`
+- `label: string`
+- `fontSize: string`
+
+`FontSizeConfig`:
+
+- `options: readonly FontSizeOption[]`
+
+Nuances:
+
+- Invalid/duplicate option values are sanitized out.
+- `default` option is auto-inserted when omitted.
+
+#### `LineHeightExtension`
+
+`LineHeightOption`:
+
+- `value: string`
+- `label: string`
+- `lineHeight: string`
+
+`LineHeightConfig`:
+
+- `options: readonly LineHeightOption[]`
+
+Nuances:
+
+- `value: "default"` maps to `lineHeight: "normal"`.
+- Non-default entries should use positive numeric ratios (`"1.5"`, `"2"`).
+
+#### `TextColorExtension`
+
+`TextColorOption`:
+
+- `value: string`
+- `label: string`
+- `color: string`
+
+`TextColorConfig`:
+
+- `options: readonly TextColorOption[]`
+
+Nuances:
+
+- `setTextColor` accepts configured option values and valid CSS colors.
+
+#### `TextHighlightExtension`
+
+`TextHighlightOption`:
+
+- `value: string`
+- `label: string`
+- `backgroundColor: string`
+
+`TextHighlightConfig`:
+
+- `options: readonly TextHighlightOption[]`
+
+Nuances:
+
+- `setTextHighlight` accepts configured option values and valid CSS colors.
+- Highlight styling also patches padding/box-decoration style helpers for clean rendering.
+
+### Block/Structure Extensions
+
+#### `blockFormatExtension`
+
+Commands include paragraph/heading/quote toggles and alignment helpers. No custom config required.
+
+#### `listExtension`
+
+Commands include unordered/ordered/check list toggles and indentation commands. No custom config required.
+
+#### `horizontalRuleExtension`
+
+Commands include horizontal rule insertion. No custom config required.
+
+### Code Extensions
+
+#### `CodeExtension`
+
+`CodeExtensionConfig`:
+
+- `syntaxHighlighting?: "auto" | "disabled"`
+- `tokenizer?: CodeTokenizer | null`
+- `provider?: CodeHighlightProvider | null`
+- `loadProvider?: () => Promise<CodeHighlightProvider | null>`
+
+`CodeHighlightProvider` shape:
+
+- `highlightAuto?(code, languageSubset?)`
+- `tokenizer?: CodeTokenizer | null`
+- `getTokenizer?: () => CodeTokenizer | null | Promise<CodeTokenizer | null>`
+
+#### `CodeIntelligenceExtension`
+
+`CodeLanguageOptionsConfig`:
+
+- `mode?: "append" | "replace"`
+- `values: readonly string[]`
+
+`CodeIntelligenceConfig`:
+
+- `provider?: CodeHighlightProvider | null`
+- `loadProvider?: () => Promise<CodeHighlightProvider | null>`
+- `maxAutoDetectLength?: number` (default `12000`)
+- `isCopyAllowed?: boolean` (default `true`)
+- `languageOptions?: readonly string[] | CodeLanguageOptionsConfig`
+
+Commands:
+
+- `setCodeLanguage(language)`
+- `autoDetectCodeLanguage()`
+- `getCurrentCodeLanguage()`
+- `getCodeLanguageOptions()`
+- `copySelectedCodeBlock()`
+
+Nuances:
+
+- Array form for `languageOptions` is equivalent to `{ mode: "append", values }`.
+- Aliases are normalized.
+- Duplicate normalized languages throw.
+
+### History and Input Behavior
+
+- `historyExtension`: undo/redo commands and canUndo/canRedo state.
+- `tabIndentExtension`: tab/shift-tab indent behavior.
+- `enterKeyBehaviorExtension`: enter behavior normalization (quotes/code/table transitions). No extra config.
+
+### Table Extension (`TableExtension`, `tableExtension`)
+
+`TableConfig`:
+
+- `rows?: number`
+- `columns?: number`
+- `includeHeaders?: boolean`
+- `enableContextMenu?: boolean`
+- `contextMenuItems?: ContextMenuItem[] | ((commands: TableCommands) => ContextMenuItem[])`
+- `contextMenuRenderer?: ContextMenuRenderer`
+- `contextMenuExtension?: typeof contextMenuExtension`
+- `tableBubbleRenderer?: (props: TableBubbleRenderProps) => ReactNode`
+
+`TableBubbleRenderProps`:
+
+- `headersEnabled: boolean`
+- `setHeadersEnabled(enabled)`
+- `actions`: row/column insert/delete + delete table actions
+
+Defaults:
+
+- `rows: 3`
+- `columns: 3`
+- `includeHeaders: false`
+- `enableContextMenu: true`
+
+### Media Extensions
+
+#### Image (`ImageExtension`, `imageExtension`)
+
+`ImageExtensionConfig`:
+
+- `uploadHandler?: (file: File) => Promise<string>`
+- `defaultAlignment?: "left" | "right" | "center" | "none"`
+- `classNames?: Partial<Record<Alignment | "wrapper" | "caption", string>>`
+- `styles?: Partial<Record<Alignment | "wrapper" | "caption", CSSProperties>>`
+- `customRenderer?: ComponentType<ImageComponentProps>`
+- `resizable?: boolean` (default `true`)
+- `scaleByRatio?: boolean` (default `false`)
+- `pasteListener?: { insert: boolean; replace: boolean }` (default both `true`)
+- `debug?: boolean` (default `false`)
+- `forceUpload?: boolean` (default `false`)
+
+#### Iframe (`IframeEmbedExtension`, `iframeEmbedExtension`)
+
+`IframeEmbedConfig`:
+
+- `defaultWidth?: number` (default `640`)
+- `defaultHeight?: number` (default `360`)
+- `defaultAlignment?: "left" | "center" | "right"` (default `"center"`)
+
+#### YouTube (`YouTubeEmbedExtension`, `youTubeEmbedExtension`)
+
+`YouTubeEmbedConfig`:
+
+- `defaultWidth?: number` (default `640`)
+- `defaultHeight?: number` (default `480`)
+- `defaultAlignment?: "left" | "center" | "right"` (default `"center"`)
+- `allowFullscreen?: boolean` (default `true`)
+- `autoplay?: boolean` (default `false`)
+- `controls?: boolean` (default `true`)
+- `nocookie?: boolean` (default `true`)
+- `rel?: number` (default `1`)
+
+### Command UI Extensions
+
+#### Slash Command (`SlashCommandExtension`, `slashCommandExtension`)
+
+`SlashCommandItem`:
+
+- `id`, `label`, `action`
+- optional: `description`, `keywords`, `category`, `icon`, `shortcut`
+
+`SlashCommandConfig`:
+
+- `trigger?: string` (default `"/"`)
+- `offset?: { x: number; y: number }` (default `{ x: 0, y: 8 }`)
+- `items?: readonly SlashCommandItem[]`
+
+Commands:
+
+- `registerSlashCommand(item)`
+- `unregisterSlashCommand(id)`
+- `setSlashCommands(items)`
+- `closeSlashMenu()`
+- `executeSlashCommand(id)`
+
+#### Command Palette (`CommandPaletteExtension`, `commandPaletteExtension`)
+
+`CommandPaletteItem`:
+
+- `id`, `label`, `action`
+- optional: `description`, `keywords`, `category`, `icon`, `shortcut`
+
+Commands:
+
+- `showCommandPalette()`
+- `hideCommandPalette()`
+- `registerCommand(item)`
+- `unregisterCommand(id)`
+
+#### Emoji (`EmojiExtension`, `emojiExtension`)
+
+`EmojiCatalogItem`:
+
+- `emoji`, `label`, `shortcodes`
+- optional `keywords`
+
+`EmojiConfig`:
+
+- `trigger?: string` (default `":"`)
+- `maxSuggestions?: number` (default `8`)
+- `maxQueryLength?: number` (default `32`)
+- `autoReplaceSymbols?: boolean` (default `true`)
+- `symbolReplacements?: Record<string, string>`
+- `catalog?: EmojiCatalogItem[]`
+- `catalogAdapter?: { search(query, options?), resolveShortcode(shortcode), getAll() }`
+- `autoDetectExternalCatalog?: boolean` (default `true`, auto-detects emoji-mart data if available)
+- `offset?: { x: number; y: number }` (default `{ x: 0, y: 8 }`)
+
+Commands:
+
+- `insertEmoji(emoji)`
+- `executeEmojiSuggestion(emoji)`
+- `closeEmojiSuggestions()`
+- `getEmojiSuggestions(query?)`
+- `getEmojiCatalog()`
+- `resolveEmojiShortcode(shortcode)`
+- `setEmojiCatalog(catalog)`
+- `setEmojiCatalogAdapter(adapter)`
+- `getEmojiCatalogAdapter()`
+
+Behavior:
+
+- If no custom catalog/adapter is provided, emoji will auto-detect emoji-mart data when available.
+- If nothing is detected, it falls back to the built-in lightweight catalog.
+
+Usage (including `apps/demo`):
+
+```bash
+pnpm add -F demo @emoji-mart/data
+```
+
+- No editor config changes are required.
+- After install, typing `:shortcode` and opening the emoji toolbar picker will use the detected emoji-mart catalog.
+- If `@emoji-mart/data` is not installed (or not available globally), behavior stays on the built-in fallback catalog.
+
+### Context/Overlay Extensions
+
+#### Context Menu (`ContextMenuExtension`, `contextMenuExtension`)
+
+`ContextMenuConfig`:
+
+- `defaultRenderer?: ContextMenuRenderer`
+- `preventDefault?: boolean`
+- `theme?: { container?: string; item?: string; itemDisabled?: string }`
+- `styles?: { container?: CSSProperties; item?: CSSProperties; itemDisabled?: CSSProperties }`
+
+Commands:
+
+- `registerProvider(provider)`
+- `unregisterProvider(id)`
+- `showContextMenu({ items, position, renderer? })`
+- `hideContextMenu()`
+
+`ContextMenuProvider`:
+
+- `id`
+- `priority?`
+- `canHandle(context)`
+- `getItems(context)`
+- `renderer?`
+
+#### Floating Toolbar (`FloatingToolbarExtension`, `floatingToolbarExtension`)
+
+`FloatingConfig<TCommands, TStates>`:
+
+- `render(props)`
+- `getCommands?(): TCommands`
+- `getActiveStates?(): TStates`
+- `anchorElem?: HTMLElement`
+- `debounceMs?: number` (default `100`)
+- `offset?: { x: number; y: number }` (default `{ x: 0, y: 8 }`)
+- `positionStrategy?: "above" | "below" | "auto"` (default `"below"`)
+- `theme?: { container?: string; button?: string; buttonActive?: string }`
+- `toolbarDimensions?: { width: number; height: number }`
+
+#### Draggable Blocks (`DraggableBlockExtension`, `draggableBlockExtension`)
+
+`DraggableConfig`:
+
+- `anchorElem?: HTMLElement`
+- `showAddButton?: boolean`
+- `buttonStackPosition?: "left" | "right"`
+- `enableTextSelectionDrag?: boolean`
+- `offsetLeft?: number`
+- `offsetRight?: number`
+- `theme?: { handle?, handleActive?, blockDragging?, dropIndicator?, addButton?, buttonStack? }`
+- `styles?: { handle?, handleActive?, blockDragging?, dropIndicator?, addButton?, buttonStack? }`
+- `handleRenderer?(props)`
+- `buttonsRenderer?(props)`
+- `dropIndicatorRenderer?(props)`
+
+Default behavior includes draggable handle, add button, and left-side controls.
+
+### Custom Nodes
+
+`createCustomNodeExtension(config)` lets you define a full custom node extension.
+
+`CustomNodeConfig` includes:
+
+- `nodeType: string`
+- `isContainer?: boolean`
+- `defaultPayload?: Record<string, any>`
+- `initialChildren?: () => SerializedLexicalNode[]`
+- `render?` or `jsx?`
+- DOM import/export hooks (`createDOM`, `updateDOM`, `importDOM`, `exportDOM`)
+- `commands?(editor)`
+- `stateQueries?(editor)`
+
+Returns:
+
+- `extension`
+- `$createCustomNode(payload?)`
+- `jsxToDOM(jsxElement)`
+
+## Complete Extension Example
 
 ```tsx
 import {
   createEditorSystem,
   RichText,
   richTextExtension,
+  historyExtension,
+  boldExtension,
+  italicExtension,
+  linkExtension,
+  listExtension,
+  blockFormatExtension,
+  tableExtension,
   imageExtension,
+  slashCommandExtension,
+  commandPaletteExtension,
+  codeExtension,
+  codeIntelligenceExtension,
 } from "@lyfie/luthor-headless";
 
 const extensions = [
   richTextExtension,
+  historyExtension,
+  boldExtension,
+  italicExtension,
+  linkExtension.configure({
+    autoLinkText: true,
+    autoLinkUrls: true,
+    linkSelectedTextOnPaste: true,
+  }),
+  listExtension,
+  blockFormatExtension,
+  tableExtension.configure({
+    rows: 3,
+    columns: 4,
+    includeHeaders: true,
+  }),
   imageExtension.configure({
     resizable: true,
     scaleByRatio: true,
   }),
+  codeExtension.configure({
+    syntaxHighlighting: "auto",
+  }),
+  codeIntelligenceExtension.configure({
+    maxAutoDetectLength: 12000,
+    isCopyAllowed: true,
+    languageOptions: {
+      mode: "append",
+      values: ["sql", "yaml"],
+    },
+  }),
+  slashCommandExtension,
+  commandPaletteExtension,
 ] as const;
 
 const { Provider } = createEditorSystem<typeof extensions>();
 
 export function Editor() {
   return (
-    <Provider extensions={extensions} config={{ namespace: "LuthorEditor" }}>
+    <Provider extensions={extensions}>
       <RichText placeholder="Write here..." />
     </Provider>
   );
 }
 ```
 
-- `scaleByRatio: false` (default): free resize by default, hold `Shift` to keep aspect ratio.
-- `scaleByRatio: true`: keep aspect ratio by default, hold `Shift` to temporarily free resize.
-
-## Code language options
-
-`CodeIntelligenceExtension` supports per-instance language option control for code block selectors:
-
-```tsx
-import { CodeIntelligenceExtension } from "@lyfie/luthor-headless";
-
-const codeIntelligence = new CodeIntelligenceExtension().configure({
-  languageOptions: {
-    mode: "replace",
-    values: ["plaintext", "typescript", "javascript", "sql"],
-  },
-});
-```
-
-- `mode: "append"`: add to built-in options.
-- `mode: "replace"`: use only configured options.
-- Aliases are normalized (for example `js` becomes `javascript`).
-- Duplicate normalized entries throw validation errors.
-
-## Editor theme CSS variables helper
-
-For custom UIs, headless exposes the same editor token contract used by `@lyfie/luthor`:
-
-- `LUTHOR_EDITOR_THEME_TOKENS`: full list of supported `--luthor-*` tokens.
-- `createEditorThemeStyleVars(overrides)`: sanitizes token overrides into a React `style` object.
-
-```tsx
-import { createEditorThemeStyleVars, LUTHOR_EDITOR_THEME_TOKENS } from "@lyfie/luthor-headless";
-
-const style = createEditorThemeStyleVars({
-  "--luthor-bg": "#ffffff",
-  "--luthor-fg": "#111827",
-  "--luthor-accent": "#0f172a",
-});
-
-console.log(LUTHOR_EDITOR_THEME_TOKENS);
-```
-
-## Import and export support
-
-- Canonical fidelity: Lexical JSON
-- Interop format: HTML
-- Human-readable with metadata: enhanced Markdown (`LUTHOR_BLOCK` comment metadata)
-
-## Installation notes
-
-- Install required Lexical peer packages from the install command in this README.
-- If using code intelligence/highlighting flows, install optional `highlight.js`.
-- Ensure your app includes compatible React and React DOM versions.
-
-## For contributors
-
-- Keep headless package minimal and dependency-light.
-- Implement Lexical-derived features in this package, then re-export/compose from `@lyfie/luthor`.
-- Update docs whenever extension APIs or source file responsibilities change.
-
 ## Documentation
 
-Canonical docs root: [../../documentation/index.md](../../documentation/index.md)
+- Monorepo docs index: [../../documentation/index.md](../../documentation/index.md)
+- User docs: [../../documentation/user/headless/getting-started.md](../../documentation/user/headless/getting-started.md)
+- Developer docs: [../../documentation/developer/headless/architecture.md](../../documentation/developer/headless/architecture.md)
+- Luthor preset package README: [../luthor/README.md](../luthor/README.md)
 
-- User docs (headless): [../../documentation/user/headless/getting-started.md](../../documentation/user/headless/getting-started.md)
-- Extension/config docs: [../../documentation/user/headless/extensions-and-configuration.md](../../documentation/user/headless/extensions-and-configuration.md)
-- Import/export docs: [../../documentation/user/headless/import-export.md](../../documentation/user/headless/import-export.md)
-- Developer architecture: [../../documentation/developer/headless/architecture.md](../../documentation/developer/headless/architecture.md)
-- Developer file map: [../../documentation/developer/headless/source-file-reference.md](../../documentation/developer/headless/source-file-reference.md)
-- Maintainer notes: [../../documentation/developer/headless/maintainer-notes.md](../../documentation/developer/headless/maintainer-notes.md)
-
-Related luthor preset docs:
-
-- [../../packages/luthor/README.md](../../packages/luthor/README.md)
-- [../../documentation/user/luthor/getting-started.md](../../documentation/user/luthor/getting-started.md)
-
-Related demo docs:
-
-- [../../documentation/user/demo/getting-started.md](../../documentation/user/demo/getting-started.md)
-- [../../documentation/developer/demo/architecture.md](../../documentation/developer/demo/architecture.md)
-
-## Workspace development
-
-From repository root:
+## Workspace Development
 
 ```bash
 pnpm --filter @lyfie/luthor-headless dev

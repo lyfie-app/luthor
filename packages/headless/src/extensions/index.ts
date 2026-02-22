@@ -135,6 +135,8 @@ export {
 export {
   EmojiExtension,
   emojiExtension,
+  LIGHTWEIGHT_EMOJI_CATALOG,
+  type EmojiCatalogAdapter,
   type EmojiCatalogItem,
   type EmojiSuggestionState,
   type EmojiConfig,

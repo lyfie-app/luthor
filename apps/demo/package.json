@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emoji-mart/data": "^1.2.1",
     "@lyfie/luthor": "workspace:*",
     "highlight.js": ">=11.0.0",
     "react": "^19.2.0",

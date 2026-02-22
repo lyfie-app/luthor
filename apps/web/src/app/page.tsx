@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import metadata from '@/src/data/package-metadata.json';
+import metadata from '@/data/package-metadata.json';
 import { CopyInstallButton } from '@/components/copy-install-button';
 import { ExtensiveEditorShell } from '@/components/extensive-editor-shell';
 import { HomeJsonLd } from '@/components/home-json-ld';
