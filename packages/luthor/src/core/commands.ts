@@ -1,5 +1,5 @@
 import type { CommandPaletteItem, SlashCommandItem } from "@lyfie/luthor-headless";
-import type { CoreEditorCommands } from "./types";
+import { BLOCK_HEADING_LEVELS, type BlockHeadingLevel, type CoreEditorCommands } from "./types";
 
 export type KeyboardShortcut = {
   key: string;
@@ -47,6 +47,11 @@ export type CommandConfig = {
   condition?: (commands: CoreEditorCommands) => boolean;
 };
 
+export type CommandGenerationOptions = {
+  headingOptions?: readonly BlockHeadingLevel[];
+  paragraphLabel?: string;
+};
+
 function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
   return (
     typeof commands.setCodeLanguage === "function" &&
@@ -74,7 +79,69 @@ function supportsEmoji(commands: CoreEditorCommands): boolean {
   return typeof commands.insertEmoji === "function";
 }
 
-export function generateCommands(): CommandConfig[] {
+function getHeadingShortcutLevel(heading: BlockHeadingLevel): string {
+  return heading.slice(1);
+}
+
+function getHeadingDescription(heading: BlockHeadingLevel): string {
+  switch (heading) {
+    case "h1":
+      return "Convert to large heading";
+    case "h2":
+      return "Convert to medium heading";
+    case "h3":
+      return "Convert to small heading";
+    case "h4":
+      return "Convert to heading level 4";
+    case "h5":
+      return "Convert to heading level 5";
+    case "h6":
+      return "Convert to heading level 6";
+  }
+}
+
+function resolveHeadingOptions(input?: readonly BlockHeadingLevel[]): BlockHeadingLevel[] {
+  if (!input || input.length === 0) {
+    return [...BLOCK_HEADING_LEVELS];
+  }
+
+  const seen = new Set<BlockHeadingLevel>();
+  const resolved: BlockHeadingLevel[] = [];
+  for (const heading of input) {
+    if (!BLOCK_HEADING_LEVELS.includes(heading) || seen.has(heading)) {
+      continue;
+    }
+    seen.add(heading);
+    resolved.push(heading);
+  }
+
+  return resolved.length > 0 ? resolved : [...BLOCK_HEADING_LEVELS];
+}
+
+function resolveAvailableCommands(
+  commands: CoreEditorCommands,
+  options?: CommandGenerationOptions,
+): CommandConfig[] {
+  return generateCommands(options).filter((command) => !command.condition || command.condition(commands));
+}
+
+export function generateCommands(options?: CommandGenerationOptions): CommandConfig[] {
+  const resolvedHeadingOptions = resolveHeadingOptions(options?.headingOptions);
+  const resolvedParagraphLabel = options?.paragraphLabel?.trim() || "Paragraph";
+  const headingCommands: CommandConfig[] = resolvedHeadingOptions.map((heading) => {
+    const headingLevel = getHeadingShortcutLevel(heading);
+
+    return {
+      id: `block.heading${headingLevel}`,
+      label: `Heading ${headingLevel}`,
+      description: getHeadingDescription(heading),
+      category: "Block",
+      action: (commands) => commands.toggleHeading(heading),
+      shortcuts: [{ key: headingLevel, ctrlKey: true, altKey: true }],
+      keywords: ["heading", heading],
+    };
+  });
+
   return [
     {
       id: "format.bold",
@@ -139,41 +206,15 @@ export function generateCommands(): CommandConfig[] {
       keywords: ["code", "inline", "format"],
     },
     {
-      id: "block.heading1",
-      label: "Heading 1",
-      description: "Convert to large heading",
-      category: "Block",
-      action: (commands) => commands.toggleHeading("h1"),
-      shortcuts: [{ key: "1", ctrlKey: true, altKey: true }],
-      keywords: ["heading", "h1"],
-    },
-    {
-      id: "block.heading2",
-      label: "Heading 2",
-      description: "Convert to medium heading",
-      category: "Block",
-      action: (commands) => commands.toggleHeading("h2"),
-      shortcuts: [{ key: "2", ctrlKey: true, altKey: true }],
-      keywords: ["heading", "h2"],
-    },
-    {
-      id: "block.heading3",
-      label: "Heading 3",
-      description: "Convert to small heading",
-      category: "Block",
-      action: (commands) => commands.toggleHeading("h3"),
-      shortcuts: [{ key: "3", ctrlKey: true, altKey: true }],
-      keywords: ["heading", "h3"],
-    },
-    {
       id: "block.paragraph",
-      label: "Paragraph",
+      label: resolvedParagraphLabel,
       description: "Convert to paragraph",
       category: "Block",
       action: (commands) => commands.toggleParagraph(),
       shortcuts: [{ key: "0", ctrlKey: true, altKey: true }],
       keywords: ["paragraph", "text"],
     },
+    ...headingCommands,
     {
       id: "block.quote",
       label: "Quote",
@@ -431,8 +472,11 @@ export function generateCommands(): CommandConfig[] {
   ];
 }
 
-export function commandsToCommandPaletteItems(commands: CoreEditorCommands): CommandPaletteItem[] {
-  return generateCommands().map((command) => ({
+export function commandsToCommandPaletteItems(
+  commands: CoreEditorCommands,
+  options?: CommandGenerationOptions,
+): CommandPaletteItem[] {
+  return resolveAvailableCommands(commands, options).map((command) => ({
     id: command.id,
     label: command.label,
     description: command.description,
@@ -443,15 +487,11 @@ export function commandsToCommandPaletteItems(commands: CoreEditorCommands): Com
   }));
 }
 
-export function commandsToSlashCommandItems(commands: CoreEditorCommands): SlashCommandItem[] {
-  const creatableBlockCommandIds = new Set([
-    "block.heading1",
-    "block.heading2",
-    "block.heading3",
-    "block.paragraph",
-    "block.quote",
-    "block.codeblock",
-  ]);
+export function commandsToSlashCommandItems(
+  commands: CoreEditorCommands,
+  options?: CommandGenerationOptions,
+): SlashCommandItem[] {
+  const creatableBlockCommandIds = new Set(["block.paragraph", "block.quote", "block.codeblock"]);
 
   const isCreatableSlashCommand = (command: CommandConfig): boolean => {
     if (command.category === "Insert" || command.category === "List") {
@@ -459,13 +499,17 @@ export function commandsToSlashCommandItems(commands: CoreEditorCommands): Slash
     }
 
     if (command.category === "Block") {
+      if (command.id.startsWith("block.heading")) {
+        return true;
+      }
+
       return creatableBlockCommandIds.has(command.id);
     }
 
     return false;
   };
 
-  return generateCommands()
+  return resolveAvailableCommands(commands, options)
     .filter(isCreatableSlashCommand)
     .map((command) => ({
       id: command.id,
@@ -488,8 +532,12 @@ function formatShortcut(shortcut: KeyboardShortcut): string {
   return parts.join("+");
 }
 
-export function registerKeyboardShortcuts(commands: CoreEditorCommands, element: HTMLElement = document.body): () => void {
-  const commandConfigs = generateCommands();
+export function registerKeyboardShortcuts(
+  commands: CoreEditorCommands,
+  element: HTMLElement = document.body,
+  options?: CommandGenerationOptions,
+): () => void {
+  const commandConfigs = resolveAvailableCommands(commands, options);
 
   const handleKeyDown = (event: KeyboardEvent) => {
     for (const config of commandConfigs) {

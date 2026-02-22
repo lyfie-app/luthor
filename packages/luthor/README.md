@@ -89,6 +89,9 @@ export function App() {
 - `fontFamilyOptions`: optional per-editor font-family option list for the `fontFamily` toolbar select.
 - `fontSizeOptions`: optional per-editor font-size option list for the `fontSize` toolbar select.
 - `lineHeightOptions`: optional per-editor line-height option list for the `lineHeight` toolbar select. Non-default options should use unitless numeric ratios (for example `"1.5"`).
+- `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
+- `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
+- `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.
 
 ### Font family options
 

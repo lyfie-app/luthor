@@ -50,7 +50,7 @@ import {
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
 import { getOverlayThemeStyleFromElement } from "./overlay-theme";
-import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment, ToolbarLayout, ToolbarItemType, ToolbarStyleVars, ToolbarVisibility } from "./types";
+import { BLOCK_HEADING_LEVELS, type BlockHeadingLevel, type CoreEditorActiveStates, type CoreEditorCommands, type CoreToolbarClassNames, type InsertTableConfig, type ImageAlignment, type ToolbarLayout, type ToolbarItemType, type ToolbarStyleVars, type ToolbarVisibility } from "./types";
 import { TRADITIONAL_TOOLBAR_LAYOUT } from "./types";
 
 type SelectOption = {
@@ -690,6 +690,8 @@ export interface ToolbarProps {
   toolbarStyleVars?: ToolbarStyleVars;
   layout?: ToolbarLayout;
   toolbarVisibility?: ToolbarVisibility;
+  headingOptions?: readonly BlockHeadingLevel[];
+  paragraphLabel?: string;
 }
 
 export function Toolbar({
@@ -704,6 +706,8 @@ export function Toolbar({
   toolbarStyleVars,
   layout,
   toolbarVisibility,
+  headingOptions,
+  paragraphLabel,
 }: ToolbarProps) {
   const { handlers, fileInputRef, gifInputRef } = useImageHandlers(commands, imageUploadHandler);
   const embedHandlers = useEmbedHandlers(commands);
@@ -991,20 +995,37 @@ export function Toolbar({
     };
   }, [activeStates, commands, hasExtension]);
 
-  const blockFormatOptions = useMemo(
-    () => [
-      { value: "p", label: "Paragraph" },
-      { value: "h1", label: "Heading 1" },
-      { value: "h2", label: "Heading 2" },
-      { value: "h3", label: "Heading 3" },
-      { value: "h4", label: "Heading 4" },
-      { value: "h5", label: "Heading 5" },
-      { value: "h6", label: "Heading 6" },
-    ],
-    [],
-  );
+  const availableHeadingOptions = useMemo(() => {
+    if (!headingOptions || headingOptions.length === 0) {
+      return [...BLOCK_HEADING_LEVELS];
+    }
 
-  const currentBlockFormat =
+    const seen = new Set<BlockHeadingLevel>();
+    const normalized: BlockHeadingLevel[] = [];
+    for (const heading of headingOptions) {
+      if (!BLOCK_HEADING_LEVELS.includes(heading) || seen.has(heading)) {
+        continue;
+      }
+      seen.add(heading);
+      normalized.push(heading);
+    }
+    return normalized.length > 0 ? normalized : [...BLOCK_HEADING_LEVELS];
+  }, [headingOptions]);
+
+  const resolvedParagraphLabel = (paragraphLabel?.trim() || "Paragraph");
+  const blockFormatOptions = useMemo(() => {
+    const headingSelectOptions = availableHeadingOptions.map((heading) => ({
+      value: heading,
+      label: `Heading ${heading.slice(1)}`,
+    }));
+
+    return [
+      { value: "p", label: resolvedParagraphLabel },
+      ...headingSelectOptions,
+    ];
+  }, [availableHeadingOptions, resolvedParagraphLabel]);
+
+  const computedCurrentBlockFormat =
     activeStates.isH1 ? "h1" :
     activeStates.isH2 ? "h2" :
     activeStates.isH3 ? "h3" :
@@ -1012,10 +1033,15 @@ export function Toolbar({
     activeStates.isH5 ? "h5" :
     activeStates.isH6 ? "h6" :
     "p";
+  const currentBlockFormat = blockFormatOptions.some((option) => option.value === computedCurrentBlockFormat)
+    ? computedCurrentBlockFormat
+    : "p";
 
   const handleBlockFormatChange = (value: string) => {
     if (value === "p") commands.toggleParagraph();
-    else if (value.startsWith("h")) commands.toggleHeading(value as "h1" | "h2" | "h3" | "h4" | "h5" | "h6");
+    else if (value.startsWith("h") && availableHeadingOptions.includes(value as BlockHeadingLevel)) {
+      commands.toggleHeading(value as BlockHeadingLevel);
+    }
   };
 
   const handleFontFamilyChange = (value: string) => {

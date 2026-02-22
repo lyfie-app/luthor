@@ -14,7 +14,9 @@ import {
   SourceView,
   Toolbar,
   TRADITIONAL_TOOLBAR_LAYOUT,
+  BLOCK_HEADING_LEVELS,
   type CoreEditorCommands,
+  type BlockHeadingLevel,
   type ToolbarAlignment,
   type ToolbarStyleVars,
   type ToolbarLayout,
@@ -162,6 +164,25 @@ function normalizeLineHeightOptionsKey(options?: readonly LineHeightOption[]): s
   );
 }
 
+function normalizeHeadingOptions(input?: readonly BlockHeadingLevel[]): BlockHeadingLevel[] {
+  if (!input || input.length === 0) {
+    return [...BLOCK_HEADING_LEVELS];
+  }
+
+  const seen = new Set<BlockHeadingLevel>();
+  const normalized: BlockHeadingLevel[] = [];
+  for (const heading of input) {
+    if (!BLOCK_HEADING_LEVELS.includes(heading) || seen.has(heading)) {
+      continue;
+    }
+
+    seen.add(heading);
+    normalized.push(heading);
+  }
+
+  return normalized.length > 0 ? normalized : [...BLOCK_HEADING_LEVELS];
+}
+
 function ExtensiveEditorContent({
   isDark,
   toggleTheme,
@@ -176,6 +197,9 @@ function ExtensiveEditorContent({
   toolbarClassName,
   toolbarStyleVars,
   isToolbarEnabled,
+  headingOptions,
+  paragraphLabel,
+  syncHeadingOptionsWithCommands,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
@@ -190,6 +214,9 @@ function ExtensiveEditorContent({
   toolbarClassName?: string;
   toolbarStyleVars?: ToolbarStyleVars;
   isToolbarEnabled: boolean;
+  headingOptions?: readonly BlockHeadingLevel[];
+  paragraphLabel?: string;
+  syncHeadingOptionsWithCommands: boolean;
 }) {
   const {
     commands,
@@ -221,6 +248,12 @@ function ExtensiveEditorContent({
     suggestions: [] as EmojiCatalogItem[],
   });
   const readyRef = useRef(false);
+  const resolvedHeadingOptions = useMemo(
+    () => normalizeHeadingOptions(headingOptions),
+    [headingOptions],
+  );
+  const commandHeadingOptions = syncHeadingOptionsWithCommands ? resolvedHeadingOptions : undefined;
+  const commandParagraphLabel = syncHeadingOptionsWithCommands ? paragraphLabel : undefined;
   
   // Lazy conversion state: track which formats are valid cache
   const cacheValidRef = useRef<Set<ExtensiveEditorMode>>(new Set(["visual"]));
@@ -252,12 +285,21 @@ function ExtensiveEditorContent({
     if (!editor || !commands) return;
 
     const commandApi = commands as CoreEditorCommands;
-    const paletteItems = commandsToCommandPaletteItems(commandApi);
+    const paletteItems = commandsToCommandPaletteItems(commandApi, {
+      headingOptions: commandHeadingOptions,
+      paragraphLabel: commandParagraphLabel,
+    });
     paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
-    const slashItems = commandsToSlashCommandItems(commandApi);
+    const slashItems = commandsToSlashCommandItems(commandApi, {
+      headingOptions: commandHeadingOptions,
+      paragraphLabel: commandParagraphLabel,
+    });
     slashItems.forEach((cmd) => commandApi.registerSlashCommand?.(cmd));
 
-    const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body);
+    const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body, {
+      headingOptions: commandHeadingOptions,
+      paragraphLabel: commandParagraphLabel,
+    });
 
     if (!readyRef.current) {
       readyRef.current = true;
@@ -269,7 +311,7 @@ function ExtensiveEditorContent({
       paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
       slashItems.forEach((cmd) => commandApi.unregisterSlashCommand?.(cmd.id));
     };
-  }, [editor, commands, methods, onReady]);
+  }, [editor, commands, methods, onReady, commandHeadingOptions, commandParagraphLabel]);
 
   useEffect(() => {
     const commandPaletteExtension = extensions.find(
@@ -396,6 +438,8 @@ function ExtensiveEditorContent({
       layout={toolbarLayout ?? TRADITIONAL_TOOLBAR_LAYOUT}
       toolbarVisibility={toolbarVisibility}
       toolbarStyleVars={toolbarStyleVars}
+      headingOptions={resolvedHeadingOptions}
+      paragraphLabel={paragraphLabel}
       classNames={{
         toolbar: `luthor-toolbar luthor-toolbar--align-${toolbarAlignment}${toolbarClassName ? ` ${toolbarClassName}` : ""}`,
       }}
@@ -499,6 +543,9 @@ export interface ExtensiveEditorProps {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  headingOptions?: readonly BlockHeadingLevel[];
+  paragraphLabel?: string;
+  syncHeadingOptionsWithCommands?: boolean;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -522,6 +569,9 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     fontFamilyOptions,
     fontSizeOptions,
     lineHeightOptions,
+    headingOptions,
+    paragraphLabel,
+    syncHeadingOptionsWithCommands = true,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -608,6 +658,9 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toolbarClassName={toolbarClassName}
             toolbarStyleVars={toolbarStyleVars}
             isToolbarEnabled={isToolbarEnabled}
+            headingOptions={headingOptions}
+            paragraphLabel={paragraphLabel}
+            syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
           />
         </Provider>
       </div>

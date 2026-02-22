@@ -64,6 +64,8 @@ function App() {
             { value: "1.5", label: "1.5", lineHeight: "1.5" },
             { value: "2", label: "2.0", lineHeight: "2" },
           ]}
+          paragraphLabel="Normal"
+          headingOptions={['h1', 'h2', 'h3']}
           />
       </div>
     </div>

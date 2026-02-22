@@ -43,6 +43,7 @@ vi.mock("../../core", () => ({
   ),
   Toolbar: toolbarMock,
   TRADITIONAL_TOOLBAR_LAYOUT: { sections: [] },
+  BLOCK_HEADING_LEVELS: ["h1", "h2", "h3", "h4", "h5", "h6"],
 }));
 
 const mockEditorApi = {
@@ -151,6 +152,63 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     const toolbarCall = toolbarMock.mock.calls.at(-1)?.[0] as { toolbarVisibility?: unknown };
     expect(toolbarCall.toolbarVisibility).toEqual(toolbarVisibility);
+  });
+
+  it("passes headingOptions and paragraphLabel to toolbar and command wiring by default", () => {
+    const headingOptions = ["h2", "h4"] as const;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        headingOptions={headingOptions}
+        paragraphLabel="Normal"
+      />,
+    );
+
+    const toolbarCall = toolbarMock.mock.calls.at(-1)?.[0] as {
+      headingOptions?: unknown;
+      paragraphLabel?: unknown;
+    };
+    expect(toolbarCall.headingOptions).toEqual(headingOptions);
+    expect(toolbarCall.paragraphLabel).toBe("Normal");
+
+    expect(commandsToCommandPaletteItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { headingOptions, paragraphLabel: "Normal" },
+    );
+    expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { headingOptions, paragraphLabel: "Normal" },
+    );
+    expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      document.body,
+      { headingOptions, paragraphLabel: "Normal" },
+    );
+  });
+
+  it("can keep heading commands independent from toolbar options", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        headingOptions={["h6"]}
+        syncHeadingOptionsWithCommands={false}
+      />,
+    );
+
+    expect(commandsToCommandPaletteItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { headingOptions: undefined, paragraphLabel: undefined },
+    );
+    expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { headingOptions: undefined, paragraphLabel: undefined },
+    );
+    expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      document.body,
+      { headingOptions: undefined, paragraphLabel: undefined },
+    );
   });
 
   it("applies toolbarClassName and passes toolbarStyleVars to toolbar rendering", () => {

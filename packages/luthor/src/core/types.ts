@@ -2,7 +2,9 @@ export type CoreTheme = "light" | "dark";
 
 export type CoreEditorMode = "visual" | "jsonb";
 
-export type BlockHeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+export const BLOCK_HEADING_LEVELS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+
+export type BlockHeadingLevel = (typeof BLOCK_HEADING_LEVELS)[number];
 
 export type BlockFormat = "p" | BlockHeadingLevel;
 
