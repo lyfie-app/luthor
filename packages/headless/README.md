@@ -104,6 +104,14 @@ The exact exported surface is documented in:
 - Import/export: HTML and Markdown extensions
 - Custom: factory for custom node-based extensions
 
+## Slash command list control
+
+`SlashCommandExtension` supports whole-list updates for deterministic menus and clean reconfiguration:
+
+- pass `items` in `new SlashCommandExtension({ items })` for initial commands
+- call `commands.setSlashCommands(items)` to atomically replace the registered list
+- `registerSlashCommand` / `unregisterSlashCommand` remain available for incremental updates
+
 ## Image resize ratio behavior
 
 Use `scaleByRatio` in `imageExtension.configure(...)` to control default resize behavior.

@@ -101,6 +101,51 @@ export function App() {
 - `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
 - `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
 - `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.
+- `slashCommandVisibility`: optional slash command filter:
+  - `allowlist`: include only these command IDs (for example `insert.table`, `block.heading2`)
+  - `denylist`: exclude these command IDs (applied after allowlist)
+  - command ordering remains the preset default for deterministic menus
+
+### Slash command visibility (allowlist / denylist)
+
+Use `slashCommandVisibility` to control what appears in the `/` menu from app state (for example in `apps/demo/src/App.tsx`).
+
+```tsx
+import { useMemo, useState } from "react";
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+const allSlashIds = [
+  "block.paragraph",
+  "block.heading1",
+  "block.quote",
+  "insert.image",
+  "insert.table",
+] as const;
+
+export function App() {
+  const [allowOnlyCurated, setAllowOnlyCurated] = useState(true);
+  const [denyImages, setDenyImages] = useState(false);
+
+  const slashCommandVisibility = useMemo(() => ({
+    allowlist: allowOnlyCurated ? [...allSlashIds] : undefined,
+    denylist: denyImages ? ["insert.image"] : [],
+  }), [allowOnlyCurated, denyImages]);
+
+  return (
+    <ExtensiveEditor
+      slashCommandVisibility={slashCommandVisibility}
+    />
+  );
+}
+```
+
+Common command IDs:
+- `block.paragraph`
+- `block.heading1` to `block.heading6`
+- `block.quote`
+- `block.codeblock`
+- `list.bullet`, `list.numbered`, `list.check`
+- `insert.horizontal-rule`, `insert.image`, `insert.gif`, `insert.table`, `insert.emoji`, `insert.iframe`, `insert.youtube`
 
 ### Font family options
 

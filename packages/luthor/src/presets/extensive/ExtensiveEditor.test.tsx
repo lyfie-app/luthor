@@ -54,6 +54,7 @@ const mockEditorApi = {
     unregisterCommand: vi.fn(),
     registerSlashCommand: vi.fn(),
     unregisterSlashCommand: vi.fn(),
+    setSlashCommands: vi.fn(),
     showCommandPalette: vi.fn(),
     hideCommandPalette: vi.fn(),
     closeSlashMenu: vi.fn(),
@@ -92,6 +93,7 @@ vi.mock("@lyfie/luthor-headless", () => ({
     quote: "luthor-quote",
     ...override,
   }),
+  createEditorThemeStyleVars: vi.fn(() => undefined),
 }));
 
 import { ExtensiveEditor } from "./ExtensiveEditor";
@@ -152,7 +154,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(screen.queryByTestId("toolbar")).toBeNull();
     expect(registerKeyboardShortcutsMock).toHaveBeenCalled();
     expect(mockEditorApi.commands.registerCommand).toHaveBeenCalledWith({ id: "mock-command" });
-    expect(mockEditorApi.commands.registerSlashCommand).toHaveBeenCalledWith({ id: "mock-slash-command" });
+    expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([{ id: "mock-slash-command" }]);
   });
 
   it("passes toolbarVisibility to toolbar rendering", () => {
@@ -188,7 +190,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     );
     expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions, paragraphLabel: "Normal" },
+      { headingOptions, paragraphLabel: "Normal", slashCommandVisibility: undefined },
     );
     expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
       expect.anything(),
@@ -212,13 +214,46 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     );
     expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
       expect.anything(),
-      { headingOptions: undefined, paragraphLabel: undefined },
+      { headingOptions: undefined, paragraphLabel: undefined, slashCommandVisibility: undefined },
     );
     expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
       expect.anything(),
       document.body,
       { headingOptions: undefined, paragraphLabel: undefined },
     );
+  });
+
+  it("passes slashCommandVisibility to slash command mapping and replaces command list on updates", () => {
+    commandsToSlashCommandItemsMock
+      .mockReturnValueOnce([{ id: "insert.table" }])
+      .mockReturnValueOnce([{ id: "insert.image" }]);
+
+    const { rerender } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        slashCommandVisibility={{ allowlist: ["insert.table"] }}
+      />,
+    );
+
+    expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        headingOptions: expect.anything(),
+        paragraphLabel: undefined,
+        slashCommandVisibility: { allowlist: ["insert.table"] },
+      },
+    );
+    expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([{ id: "insert.table" }]);
+
+    rerender(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        slashCommandVisibility={{ allowlist: ["insert.image"] }}
+      />,
+    );
+
+    expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([]);
+    expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([{ id: "insert.image" }]);
   });
 
   it("applies toolbarClassName and passes toolbarStyleVars to toolbar rendering", () => {

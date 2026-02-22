@@ -24,11 +24,13 @@ export type SlashCommandMenuState = {
 export interface SlashCommandConfig extends BaseExtensionConfig {
   trigger?: string;
   offset?: { x: number; y: number };
+  items?: readonly SlashCommandItem[];
 }
 
 export type SlashCommandCommands = {
   registerSlashCommand: (item: SlashCommandItem) => void;
   unregisterSlashCommand: (id: string) => void;
+  setSlashCommands: (items: readonly SlashCommandItem[]) => void;
   closeSlashMenu: () => void;
   executeSlashCommand: (id: string) => boolean;
 };
@@ -65,6 +67,7 @@ export class SlashCommandExtension extends BaseExtension<
       offset: { x: 0, y: 8 },
       ...config,
     };
+    this.setSlashCommands(this.config.items ?? []);
   }
 
   register(editor: LexicalEditor): () => void {
@@ -133,6 +136,7 @@ export class SlashCommandExtension extends BaseExtension<
     return {
       registerSlashCommand: (item: SlashCommandItem) => this.registerSlashCommand(item),
       unregisterSlashCommand: (id: string) => this.unregisterSlashCommand(id),
+      setSlashCommands: (items: readonly SlashCommandItem[]) => this.setSlashCommands(items),
       closeSlashMenu: () => this.closeSlashMenu(),
       executeSlashCommand: (id: string) => this.executeSlashCommand(editor, id),
     };
@@ -164,6 +168,18 @@ export class SlashCommandExtension extends BaseExtension<
 
   private unregisterSlashCommand(id: string) {
     this.commands.delete(id);
+    this.notifyListeners();
+  }
+
+  private setSlashCommands(items: readonly SlashCommandItem[]) {
+    const nextCommands = new Map<string, SlashCommandItem>();
+    for (const item of items) {
+      if (!item?.id || nextCommands.has(item.id)) {
+        continue;
+      }
+      nextCommands.set(item.id, item);
+    }
+    this.commands = nextCommands;
     this.notifyListeners();
   }
 

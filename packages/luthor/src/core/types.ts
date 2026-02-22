@@ -135,6 +135,7 @@ export interface CoreEditorCommands {
   unregisterCommand: (commandId: string) => void;
   registerSlashCommand?: (command: Record<string, unknown>) => void;
   unregisterSlashCommand?: (commandId: string) => void;
+  setSlashCommands?: (commands: Record<string, unknown>[]) => void;
   closeSlashMenu?: () => void;
   executeSlashCommand?: (commandId: string) => boolean;
 }
@@ -264,6 +265,11 @@ export type ToolbarItemType =
   | "themeToggle";
 
 export type ToolbarVisibility = Partial<Record<ToolbarItemType, boolean>>;
+
+export interface SlashCommandVisibility {
+  allowlist?: readonly string[];
+  denylist?: readonly string[];
+}
 
 export type ToolbarSection = {
   items: readonly ToolbarItemType[];

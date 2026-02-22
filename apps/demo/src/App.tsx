@@ -1,18 +1,67 @@
 import { ExtensiveEditor } from "@lyfie/luthor";
 import "@lyfie/luthor/styles.css";
+import { useMemo, useState } from "react";
 import { useDemoTheme } from "./hooks/useDemoTheme";
+
+const SLASH_COMMAND_OPTIONS = [
+  { id: "block.paragraph", label: "Paragraph" },
+  { id: "block.heading1", label: "Heading 1" },
+  { id: "block.heading2", label: "Heading 2" },
+  { id: "block.quote", label: "Quote" },
+  { id: "insert.image", label: "Image" },
+  { id: "insert.table", label: "Table" },
+  { id: "insert.youtube", label: "YouTube" },
+  { id: "list.bullet", label: "Bullet List" },
+] as const;
 
 function App() {
   const { theme, toggleTheme } = useDemoTheme();
+  const [enforceAllowlist, setEnforceAllowlist] = useState(false);
+  const [selectedAllowlist, setSelectedAllowlist] = useState<Set<string>>(
+    () => new Set(["block.paragraph", "block.heading1", "insert.table", "insert.image"]),
+  );
+  const [selectedDenylist, setSelectedDenylist] = useState<Set<string>>(
+    () => new Set(["insert.youtube"]),
+  );
+
   const fontFamilyOptions = [
-            { value: "default", label: "Default", fontFamily: "inherit" },
-            {
-              value: "geist",
-              label: "Geist",
-              fontFamily: "'Geist', 'Segoe UI', Arial, sans-serif",
-              cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
-            },
-          ]
+    { value: "default", label: "Default", fontFamily: "inherit" },
+    {
+      value: "geist",
+      label: "Geist",
+      fontFamily: "'Geist', 'Segoe UI', Arial, sans-serif",
+      cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
+    },
+  ];
+
+  const slashCommandVisibility = useMemo(() => {
+    const allowlist = enforceAllowlist ? Array.from(selectedAllowlist) : undefined;
+    const denylist = Array.from(selectedDenylist);
+
+    if ((!allowlist || allowlist.length === 0) && denylist.length === 0) {
+      return undefined;
+    }
+
+    return {
+      allowlist,
+      denylist,
+    };
+  }, [enforceAllowlist, selectedAllowlist, selectedDenylist]);
+
+  const toggleSetMember = (
+    value: string,
+    current: Set<string>,
+    setValue: (value: Set<string>) => void,
+  ) => {
+    const next = new Set(current);
+    if (next.has(value)) {
+      next.delete(value);
+    } else {
+      next.add(value);
+    }
+    setValue(next);
+  };
+
   return (
     <div className="app-shell" data-theme={theme}>
       <button
@@ -33,7 +82,47 @@ function App() {
       >
         {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
       </button>
-      
+
+      <section className="slash-visibility-panel">
+        <h3>Slash Commands</h3>
+        <label className="slash-panel-toggle">
+          <input
+            type="checkbox"
+            checked={enforceAllowlist}
+            onChange={(event) => setEnforceAllowlist(event.target.checked)}
+          />
+          <span>Enable allowlist</span>
+        </label>
+
+        <p className="slash-panel-label">Allowlist</p>
+        <div className="slash-panel-grid">
+          {SLASH_COMMAND_OPTIONS.map((option) => (
+            <label key={`allow-${option.id}`}>
+              <input
+                type="checkbox"
+                checked={selectedAllowlist.has(option.id)}
+                onChange={() => toggleSetMember(option.id, selectedAllowlist, setSelectedAllowlist)}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+
+        <p className="slash-panel-label">Denylist</p>
+        <div className="slash-panel-grid">
+          {SLASH_COMMAND_OPTIONS.map((option) => (
+            <label key={`deny-${option.id}`}>
+              <input
+                type="checkbox"
+                checked={selectedDenylist.has(option.id)}
+                onChange={() => toggleSetMember(option.id, selectedDenylist, setSelectedDenylist)}
+              />
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
       <div
         style={{
           minHeight: "100vh",
@@ -73,12 +162,11 @@ function App() {
           paragraphLabel="Normal"
           headingOptions={['h1', 'h2', 'h3']}
           scaleByRatio={false}
+          slashCommandVisibility={slashCommandVisibility}
           editorThemeOverrides={{
-            "--luthor-bg": theme === "dark" ? "#ea580c" : "#ea580c",
-            "--luthor-fg": theme === "dark" ? "#eee" : "#111",
             "--luthor-toolbar-bg": theme === "dark" ? "#333" : "#f9f9f9",
-            }}
-          />
+          }}
+        />
       </div>
     </div>
   );

@@ -98,4 +98,33 @@ describe("command heading configuration", () => {
 
     teardown();
   });
+
+  it("applies slash command allowlist and denylist filtering", () => {
+    const commands = createCommands();
+
+    const slash = commandsToSlashCommandItems(commands, {
+      slashCommandVisibility: {
+        allowlist: ["insert.table", "block.heading2", "insert.image"],
+        denylist: ["insert.image"],
+      },
+    });
+
+    expect(slash.map((command) => command.id)).toEqual(["block.heading2", "insert.table"]);
+  });
+
+  it("keeps slash command order deterministic when filtering", () => {
+    const commands = createCommands();
+
+    const slash = commandsToSlashCommandItems(commands, {
+      slashCommandVisibility: {
+        allowlist: ["insert.table", "block.heading1", "block.quote"],
+      },
+    });
+
+    expect(slash.map((command) => command.id)).toEqual([
+      "block.heading1",
+      "block.quote",
+      "insert.table",
+    ]);
+  });
 });

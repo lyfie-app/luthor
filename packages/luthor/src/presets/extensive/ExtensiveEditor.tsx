@@ -24,6 +24,7 @@ import {
   type ToolbarLayout,
   type ToolbarVisibility,
   type ToolbarPosition,
+  type SlashCommandVisibility,
 } from "../../core";
 import { EXTENSIVE_WELCOME_CONTENT_JSONB as extensiveWelcomeContent } from "./welcomeContent";
 import type {
@@ -197,6 +198,38 @@ function normalizeHeadingOptions(input?: readonly BlockHeadingLevel[]): BlockHea
   return normalized.length > 0 ? normalized : [...BLOCK_HEADING_LEVELS];
 }
 
+function normalizeSlashCommandVisibilityKey(visibility?: SlashCommandVisibility): string {
+  if (!visibility) {
+    return "__default__";
+  }
+
+  const normalize = (ids?: readonly string[]): string[] => {
+    if (!ids || ids.length === 0) {
+      return [];
+    }
+
+    const seen = new Set<string>();
+    const normalized: string[] = [];
+    for (const id of ids) {
+      const value = id.trim();
+      if (!value || seen.has(value)) {
+        continue;
+      }
+      seen.add(value);
+      normalized.push(value);
+    }
+    return normalized;
+  };
+
+  const allowlist = normalize(visibility.allowlist);
+  const denylist = normalize(visibility.denylist);
+  if (allowlist.length === 0 && denylist.length === 0) {
+    return "__default__";
+  }
+
+  return JSON.stringify({ allowlist, denylist });
+}
+
 function ExtensiveEditorContent({
   isDark,
   toggleTheme,
@@ -214,6 +247,7 @@ function ExtensiveEditorContent({
   headingOptions,
   paragraphLabel,
   syncHeadingOptionsWithCommands,
+  slashCommandVisibility,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
@@ -231,6 +265,7 @@ function ExtensiveEditorContent({
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
+  slashCommandVisibility?: SlashCommandVisibility;
 }) {
   const {
     commands,
@@ -268,6 +303,14 @@ function ExtensiveEditorContent({
   );
   const commandHeadingOptions = syncHeadingOptionsWithCommands ? resolvedHeadingOptions : undefined;
   const commandParagraphLabel = syncHeadingOptionsWithCommands ? paragraphLabel : undefined;
+  const slashCommandVisibilityKey = normalizeSlashCommandVisibilityKey(slashCommandVisibility);
+  const stableSlashCommandVisibilityRef = useRef<SlashCommandVisibility | undefined>(slashCommandVisibility);
+  const stableSlashCommandVisibilityKeyRef = useRef(slashCommandVisibilityKey);
+
+  if (stableSlashCommandVisibilityKeyRef.current !== slashCommandVisibilityKey) {
+    stableSlashCommandVisibilityKeyRef.current = slashCommandVisibilityKey;
+    stableSlashCommandVisibilityRef.current = slashCommandVisibility;
+  }
   
   // Lazy conversion state: track which formats are valid cache
   const cacheValidRef = useRef<Set<ExtensiveEditorMode>>(new Set(["visual"]));
@@ -307,8 +350,13 @@ function ExtensiveEditorContent({
     const slashItems = commandsToSlashCommandItems(commandApi, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
+      slashCommandVisibility: stableSlashCommandVisibilityRef.current,
     });
-    slashItems.forEach((cmd) => commandApi.registerSlashCommand?.(cmd));
+    if (typeof commandApi.setSlashCommands === "function") {
+      commandApi.setSlashCommands(slashItems);
+    } else {
+      slashItems.forEach((cmd) => commandApi.registerSlashCommand?.(cmd));
+    }
 
     const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body, {
       headingOptions: commandHeadingOptions,
@@ -323,9 +371,21 @@ function ExtensiveEditorContent({
     return () => {
       unregisterShortcuts();
       paletteItems.forEach((cmd) => commandApi.unregisterCommand(cmd.id));
-      slashItems.forEach((cmd) => commandApi.unregisterSlashCommand?.(cmd.id));
+      if (typeof commandApi.setSlashCommands === "function") {
+        commandApi.setSlashCommands([]);
+      } else {
+        slashItems.forEach((cmd) => commandApi.unregisterSlashCommand?.(cmd.id));
+      }
     };
-  }, [editor, commands, methods, onReady, commandHeadingOptions, commandParagraphLabel]);
+  }, [
+    editor,
+    commands,
+    methods,
+    onReady,
+    commandHeadingOptions,
+    commandParagraphLabel,
+    slashCommandVisibilityKey,
+  ]);
 
   useEffect(() => {
     const commandPaletteExtension = extensions.find(
@@ -565,6 +625,7 @@ export interface ExtensiveEditorProps {
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
+  slashCommandVisibility?: SlashCommandVisibility;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -596,6 +657,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     headingOptions,
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
+    slashCommandVisibility,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -736,6 +798,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             headingOptions={headingOptions}
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
+            slashCommandVisibility={slashCommandVisibility}
           />
         </Provider>
       </div>

@@ -1,5 +1,10 @@
 import type { CommandPaletteItem, SlashCommandItem } from "@lyfie/luthor-headless";
-import { BLOCK_HEADING_LEVELS, type BlockHeadingLevel, type CoreEditorCommands } from "./types";
+import {
+  BLOCK_HEADING_LEVELS,
+  type BlockHeadingLevel,
+  type CoreEditorCommands,
+  type SlashCommandVisibility,
+} from "./types";
 
 export type KeyboardShortcut = {
   key: string;
@@ -50,6 +55,7 @@ export type CommandConfig = {
 export type CommandGenerationOptions = {
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
+  slashCommandVisibility?: SlashCommandVisibility;
 };
 
 function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
@@ -123,6 +129,18 @@ function resolveAvailableCommands(
   options?: CommandGenerationOptions,
 ): CommandConfig[] {
   return generateCommands(options).filter((command) => !command.condition || command.condition(commands));
+}
+
+function normalizeCommandIdList(ids?: readonly string[]): Set<string> {
+  if (!ids || ids.length === 0) {
+    return new Set();
+  }
+
+  const normalized = ids
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+
+  return new Set(normalized);
 }
 
 export function generateCommands(options?: CommandGenerationOptions): CommandConfig[] {
@@ -509,8 +527,21 @@ export function commandsToSlashCommandItems(
     return false;
   };
 
+  const allowlist = normalizeCommandIdList(options?.slashCommandVisibility?.allowlist);
+  const denylist = normalizeCommandIdList(options?.slashCommandVisibility?.denylist);
+  const hasAllowlist = allowlist.size > 0;
+
   return resolveAvailableCommands(commands, options)
     .filter(isCreatableSlashCommand)
+    .filter((command) => {
+      if (denylist.has(command.id)) {
+        return false;
+      }
+      if (!hasAllowlist) {
+        return true;
+      }
+      return allowlist.has(command.id);
+    })
     .map((command) => ({
       id: command.id,
       label: command.label,
