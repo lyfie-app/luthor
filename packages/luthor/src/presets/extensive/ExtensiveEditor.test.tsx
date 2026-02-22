@@ -191,6 +191,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
       fontFamilyOptions,
       fontSizeOptions: undefined,
+      lineHeightOptions: undefined,
     });
   });
 
@@ -211,6 +212,28 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
       fontFamilyOptions: undefined,
       fontSizeOptions,
+      lineHeightOptions: undefined,
+    });
+  });
+
+  it("passes lineHeightOptions to extension factory", () => {
+    const lineHeightOptions = [
+      { value: "default", label: "Default", lineHeight: "normal" },
+      { value: "1.3", label: "1.3", lineHeight: "1.3" },
+      { value: "1.8", label: "1.8", lineHeight: "1.8" },
+    ] as const;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        lineHeightOptions={lineHeightOptions}
+      />,
+    );
+
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+      fontFamilyOptions: undefined,
+      fontSizeOptions: undefined,
+      lineHeightOptions,
     });
   });
 });

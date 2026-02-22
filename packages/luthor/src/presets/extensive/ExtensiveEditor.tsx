@@ -29,6 +29,7 @@ import type {
   EmojiCatalogItem,
   FontFamilyOption,
   FontSizeOption,
+  LineHeightOption,
 } from "@lyfie/luthor-headless";
 import "./styles.css";
 
@@ -143,6 +144,20 @@ function normalizeFontSizeOptionsKey(options?: readonly FontSizeOption[]): strin
       value: String(option.value).trim(),
       label: String(option.label).trim(),
       fontSize: String(option.fontSize).trim(),
+    })),
+  );
+}
+
+function normalizeLineHeightOptionsKey(options?: readonly LineHeightOption[]): string {
+  if (!options || options.length === 0) {
+    return "__default__";
+  }
+
+  return JSON.stringify(
+    options.map((option) => ({
+      value: String(option.value).trim(),
+      label: String(option.label).trim(),
+      lineHeight: String(option.lineHeight).trim(),
     })),
   );
 }
@@ -483,6 +498,7 @@ export interface ExtensiveEditorProps {
   isToolbarEnabled?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
+  lineHeightOptions?: readonly LineHeightOption[];
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -505,6 +521,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     isToolbarEnabled = true,
     fontFamilyOptions,
     fontSizeOptions,
+    lineHeightOptions,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -526,15 +543,21 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeFontSizeOptionsKey(fontSizeOptions),
       [fontSizeOptions],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}`;
+    const lineHeightOptionsKey = useMemo(
+      () => normalizeLineHeightOptionsKey(lineHeightOptions),
+      [lineHeightOptions],
+    );
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
+    const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
     const stableExtensionsKeyRef = useRef(extensionsKey);
 
     if (stableExtensionsKeyRef.current !== extensionsKey) {
       stableExtensionsKeyRef.current = extensionsKey;
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
       stableFontSizeOptionsRef.current = fontSizeOptions;
+      stableLineHeightOptionsRef.current = lineHeightOptions;
     }
 
     const memoizedExtensionsRef = useRef<{
@@ -548,6 +571,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         value: createExtensiveExtensions({
           fontFamilyOptions: stableFontFamilyOptionsRef.current,
           fontSizeOptions: stableFontSizeOptionsRef.current,
+          lineHeightOptions: stableLineHeightOptionsRef.current,
         }),
       };
     }

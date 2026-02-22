@@ -88,6 +88,7 @@ export function App() {
 - `toolbarStyleVars`: optional map of `--luthor-toolbar-*` custom properties applied to the toolbar root.
 - `fontFamilyOptions`: optional per-editor font-family option list for the `fontFamily` toolbar select.
 - `fontSizeOptions`: optional per-editor font-size option list for the `fontSize` toolbar select.
+- `lineHeightOptions`: optional per-editor line-height option list for the `lineHeight` toolbar select. Non-default options should use unitless numeric ratios (for example `"1.5"`).
 
 ### Font family options
 
@@ -124,6 +125,25 @@ export function App() {
         { value: "13", label: "13px", fontSize: "13px" },
         { value: "17", label: "17px", fontSize: "17px" },
         { value: "21", label: "21px", fontSize: "21px" },
+      ]}
+    />
+  );
+}
+```
+
+### Line height options
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      lineHeightOptions={[
+        { value: "default", label: "Default", lineHeight: "normal" },
+        { value: "1.3", label: "1.3", lineHeight: "1.3" },
+        { value: "1.6", label: "1.6", lineHeight: "1.6" },
+        { value: "2", label: "2.0", lineHeight: "2" },
       ]}
     />
   );

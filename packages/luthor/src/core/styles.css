@@ -1619,7 +1619,7 @@
 }
 
 .luthor-paragraph {
-	margin: 8px 0;
+	margin: calc(8px * var(--luthor-line-height-ratio, 1)) 0;
 }
 
 .luthor-heading-h1,
@@ -1628,7 +1628,7 @@
 .luthor-heading-h4,
 .luthor-heading-h5,
 .luthor-heading-h6 {
-	margin: 16px 0 8px;
+	margin: calc(16px * var(--luthor-line-height-ratio, 1)) 0 calc(8px * var(--luthor-line-height-ratio, 1));
 	font-weight: 700;
 }
 
@@ -1645,7 +1645,7 @@
 }
 
 .luthor-list-li {
-	margin: 4px 0;
+	margin: calc(4px * var(--luthor-line-height-ratio, 1)) 0;
 }
 
 .luthor-list-item-unchecked,

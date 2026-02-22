@@ -18,7 +18,8 @@ import {
   type FontFamilyOption,
   FontSizeExtension,
   type FontSizeOption,
-  lineHeightExtension,
+  LineHeightExtension,
+  type LineHeightOption,
   textColorExtension,
   textHighlightExtension,
   subscriptExtension,
@@ -41,6 +42,7 @@ export { setFloatingToolbarContext };
 export type ExtensiveExtensionsConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
+  lineHeightOptions?: readonly LineHeightOption[];
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -91,12 +93,36 @@ const DEFAULT_FONT_SIZE_OPTION: FontSizeOption = {
   fontSize: "inherit",
 };
 
+const DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS: readonly LineHeightOption[] = [
+  { value: "default", label: "Default", lineHeight: "normal" },
+  { value: "1", label: "1.0", lineHeight: "1" },
+  { value: "1.15", label: "1.15", lineHeight: "1.15" },
+  { value: "1.5", label: "1.5", lineHeight: "1.5" },
+  { value: "1.75", label: "1.75", lineHeight: "1.75" },
+  { value: "2", label: "2.0", lineHeight: "2" },
+];
+
+const DEFAULT_LINE_HEIGHT_OPTION: LineHeightOption = {
+  value: "default",
+  label: "Default",
+  lineHeight: "normal",
+};
+
 function normalizeOptionToken(value: string): string {
   return value.trim().toLowerCase();
 }
 
 function isValidOptionToken(value: string): boolean {
   return /^[a-z0-9][a-z0-9-]*$/i.test(value);
+}
+
+function isValidLineHeightOptionValue(value: string): boolean {
+  const normalized = normalizeOptionToken(value);
+  if (normalized === "default") {
+    return true;
+  }
+
+  return parseLineHeightRatio(value) !== null;
 }
 
 function resolveFontFamilyOptions(
@@ -191,6 +217,82 @@ function resolveFontSizeOptions(
 
   if (!hasDefaultOption) {
     return [DEFAULT_FONT_SIZE_OPTION, ...sanitized];
+  }
+
+  return sanitized;
+}
+
+function parseLineHeightRatio(value: string): string | null {
+  const trimmed = value.trim();
+  if (!/^\d*\.?\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed.toString();
+}
+
+function resolveLineHeightOptions(
+  inputOptions?: readonly LineHeightOption[],
+): readonly LineHeightOption[] {
+  const candidateOptions = inputOptions ?? DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS;
+  const seen = new Set<string>();
+  const sanitized: LineHeightOption[] = [];
+
+  for (const option of candidateOptions) {
+    const value = String(option.value).trim();
+    const label = String(option.label).trim();
+
+    if (!value || !label) {
+      continue;
+    }
+
+    if (!isValidLineHeightOptionValue(value)) {
+      continue;
+    }
+
+    const normalizedValue = normalizeOptionToken(value);
+    if (seen.has(normalizedValue)) {
+      continue;
+    }
+
+    if (normalizedValue === "default") {
+      seen.add(normalizedValue);
+      sanitized.push({
+        value,
+        label,
+        lineHeight: "normal",
+      });
+      continue;
+    }
+
+    const ratio = parseLineHeightRatio(String(option.lineHeight));
+    if (!ratio) {
+      continue;
+    }
+
+    seen.add(normalizedValue);
+    sanitized.push({
+      value,
+      label,
+      lineHeight: ratio,
+    });
+  }
+
+  if (sanitized.length === 0) {
+    return DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS;
+  }
+
+  const hasDefaultOption = sanitized.some((option) => {
+    return normalizeOptionToken(option.value) === "default";
+  });
+
+  if (!hasDefaultOption) {
+    return [DEFAULT_LINE_HEIGHT_OPTION, ...sanitized];
   }
 
   return sanitized;
@@ -454,17 +556,6 @@ const textHighlightExt = textHighlightExtension.configure({
   ],
 });
 
-const lineHeightExt = lineHeightExtension.configure({
-  options: [
-    { value: "default", label: "Default", lineHeight: "normal" },
-    { value: "1", label: "1.0", lineHeight: "1" },
-    { value: "1.15", label: "1.15", lineHeight: "1.15" },
-    { value: "1.5", label: "1.5", lineHeight: "1.5" },
-    { value: "1.75", label: "1.75", lineHeight: "1.75" },
-    { value: "2", label: "2.0", lineHeight: "2" },
-  ],
-});
-
 const { extension: featureCardExtension } = createCustomNodeExtension({
   nodeType: "featureCard",
   defaultPayload: {
@@ -487,6 +578,7 @@ const { extension: featureCardExtension } = createCustomNodeExtension({
 function buildExtensiveExtensions({
   fontFamilyOptions,
   fontSizeOptions,
+  lineHeightOptions,
 }: ExtensiveExtensionsConfig = {}) {
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -494,6 +586,9 @@ function buildExtensiveExtensions({
   });
   const fontSizeExt = new FontSizeExtension().configure({
     options: resolveFontSizeOptions(fontSizeOptions),
+  });
+  const lineHeightExt = new LineHeightExtension().configure({
+    options: resolveLineHeightOptions(lineHeightOptions),
   });
 
   return [

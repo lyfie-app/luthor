@@ -1,4 +1,11 @@
-import { $getSelection, $isRangeSelection, LexicalEditor } from "lexical";
+import {
+  $getSelection,
+  $isElementNode,
+  $isRangeSelection,
+  type ElementNode,
+  LexicalEditor,
+  type RangeSelection,
+} from "lexical";
 import {
   $getSelectionStyleValueForProperty,
   $patchStyleText,
@@ -36,6 +43,100 @@ const DEFAULT_LINE_HEIGHT_OPTIONS: readonly LineHeightOption[] = [
   { value: "2", label: "2.0", lineHeight: "2" },
 ];
 
+const DEFAULT_LINE_HEIGHT_OPTION: LineHeightOption = {
+  value: "default",
+  label: "Default",
+  lineHeight: "normal",
+};
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isValidLineHeightOptionValue(value: string): boolean {
+  const normalized = normalizeToken(value);
+  if (normalized === "default") {
+    return true;
+  }
+
+  return parseLineHeightRatio(value) !== null;
+}
+
+function parseLineHeightRatio(value: string): string | null {
+  const trimmed = value.trim();
+  if (!/^\d*\.?\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+
+  return parsed.toString();
+}
+
+function sanitizeLineHeightOptions(
+  options: readonly LineHeightOption[],
+): readonly LineHeightOption[] {
+  const seenValues = new Set<string>();
+  const sanitized: LineHeightOption[] = [];
+
+  for (const option of options) {
+    const value = option.value.trim();
+    const label = option.label.trim();
+    const normalizedValue = normalizeToken(value);
+
+    if (!value || !label) {
+      continue;
+    }
+
+    if (!isValidLineHeightOptionValue(value)) {
+      continue;
+    }
+
+    if (seenValues.has(normalizedValue)) {
+      continue;
+    }
+
+    if (normalizedValue === "default") {
+      seenValues.add(normalizedValue);
+      sanitized.push({
+        value,
+        label,
+        lineHeight: "normal",
+      });
+      continue;
+    }
+
+    const ratio = parseLineHeightRatio(String(option.lineHeight));
+    if (!ratio) {
+      continue;
+    }
+
+    seenValues.add(normalizedValue);
+    sanitized.push({
+      value,
+      label,
+      lineHeight: ratio,
+    });
+  }
+
+  if (sanitized.length === 0) {
+    return DEFAULT_LINE_HEIGHT_OPTIONS;
+  }
+
+  const hasDefaultOption = sanitized.some((option) => {
+    return normalizeToken(option.value) === "default";
+  });
+
+  if (!hasDefaultOption) {
+    return [DEFAULT_LINE_HEIGHT_OPTION, ...sanitized];
+  }
+
+  return sanitized;
+}
+
 export class LineHeightExtension extends BaseExtension<
   "lineHeight",
   LineHeightConfig,
@@ -53,6 +154,16 @@ export class LineHeightExtension extends BaseExtension<
 
   register(): () => void {
     return () => {};
+  }
+
+  configure(config: Partial<LineHeightConfig>) {
+    const nextConfig: Partial<LineHeightConfig> = { ...config };
+
+    if (config.options) {
+      nextConfig.options = sanitizeLineHeightOptions(config.options);
+    }
+
+    return super.configure(nextConfig);
   }
 
   getCommands(editor: LexicalEditor): LineHeightCommands {
@@ -84,7 +195,62 @@ export class LineHeightExtension extends BaseExtension<
       $patchStyleText(selection, {
         "line-height": lineHeight,
       });
+
+      const selectedBlocks = this.getSelectedTopLevelBlocks(selection);
+      for (const block of selectedBlocks) {
+        let nextStyle = this.withStyleProperty(
+          block.getStyle(),
+          "line-height",
+          lineHeight,
+        );
+        const ratio = parseLineHeightRatio(lineHeight);
+        nextStyle = this.withStyleProperty(
+          nextStyle,
+          "--luthor-line-height-ratio",
+          ratio ?? "",
+        );
+        block.setStyle(nextStyle);
+      }
     });
+  }
+
+  private getSelectedTopLevelBlocks(selection: RangeSelection): ElementNode[] {
+    const blocks = new Map<string, ElementNode>();
+
+    for (const node of selection.getNodes()) {
+      const topLevel = node.getTopLevelElement();
+      if (!topLevel || !$isElementNode(topLevel)) {
+        continue;
+      }
+
+      if (topLevel.getType() === "root") {
+        continue;
+      }
+
+      blocks.set(topLevel.getKey(), topLevel);
+    }
+
+    return [...blocks.values()];
+  }
+
+  private withStyleProperty(
+    style: string,
+    property: string,
+    value: string,
+  ): string {
+    const propertyMatcher = new RegExp(`^${property}\\s*:`, "i");
+    const declarations = style
+      .split(";")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0)
+      .filter((entry) => !propertyMatcher.test(entry));
+
+    const nextValue = value.trim();
+    if (nextValue.length > 0) {
+      declarations.push(`${property}: ${nextValue}`);
+    }
+
+    return declarations.join("; ");
   }
 
   private hasCustomLineHeight(editor: LexicalEditor): boolean {
@@ -138,7 +304,9 @@ export class LineHeightExtension extends BaseExtension<
   }
 
   private normalizeValue(value: string): string {
-    return value.trim().toLowerCase().replace(/\s+/g, "");
+    const normalized = value.trim().toLowerCase().replace(/\s+/g, "");
+    const ratio = parseLineHeightRatio(normalized);
+    return ratio ?? normalized;
   }
 }
 
