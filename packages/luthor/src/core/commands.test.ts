@@ -127,4 +127,23 @@ describe("command heading configuration", () => {
       "insert.table",
     ]);
   });
+
+  it("supports slash command visibility as an enabled-id selection list", () => {
+    const commands = createCommands();
+
+    const slash = commandsToSlashCommandItems(commands, {
+      slashCommandVisibility: [
+        { "block.quote": true },
+        { "block.paragraph": true },
+        { "block.heading1": true },
+        { "insert.image": false },
+      ],
+    });
+
+    expect(slash.map((command) => command.id)).toEqual([
+      "block.paragraph",
+      "block.heading1",
+      "block.quote",
+    ]);
+  });
 });

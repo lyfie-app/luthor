@@ -143,6 +143,32 @@ function normalizeCommandIdList(ids?: readonly string[]): Set<string> {
   return new Set(normalized);
 }
 
+function resolveSlashCommandVisibility(
+  visibility?: SlashCommandVisibility,
+): { allowlist: Set<string>; denylist: Set<string> } {
+  if (!visibility) {
+    return { allowlist: new Set(), denylist: new Set() };
+  }
+
+  if (Array.isArray(visibility)) {
+    const allowlist: string[] = [];
+    for (const selection of visibility) {
+      for (const [id, enabled] of Object.entries(selection)) {
+        if (enabled) {
+          allowlist.push(id);
+        }
+      }
+    }
+
+    return { allowlist: normalizeCommandIdList(allowlist), denylist: new Set() };
+  }
+
+  return {
+    allowlist: normalizeCommandIdList(visibility.allowlist),
+    denylist: normalizeCommandIdList(visibility.denylist),
+  };
+}
+
 export function generateCommands(options?: CommandGenerationOptions): CommandConfig[] {
   const resolvedHeadingOptions = resolveHeadingOptions(options?.headingOptions);
   const resolvedParagraphLabel = options?.paragraphLabel?.trim() || "Paragraph";
@@ -527,8 +553,7 @@ export function commandsToSlashCommandItems(
     return false;
   };
 
-  const allowlist = normalizeCommandIdList(options?.slashCommandVisibility?.allowlist);
-  const denylist = normalizeCommandIdList(options?.slashCommandVisibility?.denylist);
+  const { allowlist, denylist } = resolveSlashCommandVisibility(options?.slashCommandVisibility);
   const hasAllowlist = allowlist.size > 0;
 
   return resolveAvailableCommands(commands, options)

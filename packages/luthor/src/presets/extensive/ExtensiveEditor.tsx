@@ -203,6 +203,27 @@ function normalizeSlashCommandVisibilityKey(visibility?: SlashCommandVisibility)
     return "__default__";
   }
 
+  if (Array.isArray(visibility)) {
+    const seen = new Set<string>();
+    const allowlist: string[] = [];
+    for (const selection of visibility) {
+      for (const [id, enabled] of Object.entries(selection)) {
+        const normalizedId = id.trim();
+        if (!enabled || !normalizedId || seen.has(normalizedId)) {
+          continue;
+        }
+        seen.add(normalizedId);
+        allowlist.push(normalizedId);
+      }
+    }
+
+    if (allowlist.length === 0) {
+      return "__default__";
+    }
+
+    return JSON.stringify({ allowlist, denylist: [] });
+  }
+
   const normalize = (ids?: readonly string[]): string[] => {
     if (!ids || ids.length === 0) {
       return [];

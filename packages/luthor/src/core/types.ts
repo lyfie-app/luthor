@@ -266,10 +266,16 @@ export type ToolbarItemType =
 
 export type ToolbarVisibility = Partial<Record<ToolbarItemType, boolean>>;
 
-export interface SlashCommandVisibility {
+export interface SlashCommandVisibilityFilters {
   allowlist?: readonly string[];
   denylist?: readonly string[];
 }
+
+export type SlashCommandVisibilitySelection = Readonly<Record<string, boolean>>;
+
+export type SlashCommandVisibility =
+  | SlashCommandVisibilityFilters
+  | readonly SlashCommandVisibilitySelection[];
 
 export type ToolbarSection = {
   items: readonly ToolbarItemType[];

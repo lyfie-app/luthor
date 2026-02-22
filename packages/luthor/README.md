@@ -104,39 +104,38 @@ export function App() {
 - `slashCommandVisibility`: optional slash command filter:
   - `allowlist`: include only these command IDs (for example `insert.table`, `block.heading2`)
   - `denylist`: exclude these command IDs (applied after allowlist)
+  - enabled-id list form: pass `[{ "block.quote": true }, { "block.heading1": true }]` to show only selected slash IDs
   - command ordering remains the preset default for deterministic menus
 
-### Slash command visibility (allowlist / denylist)
+### Slash command visibility (enabled IDs, allowlist / denylist)
 
 Use `slashCommandVisibility` to control what appears in the `/` menu from app state (for example in `apps/demo/src/App.tsx`).
 
 ```tsx
-import { useMemo, useState } from "react";
 import { ExtensiveEditor } from "@lyfie/luthor";
 
-const allSlashIds = [
-  "block.paragraph",
-  "block.heading1",
-  "block.quote",
-  "insert.image",
-  "insert.table",
-] as const;
-
 export function App() {
-  const [allowOnlyCurated, setAllowOnlyCurated] = useState(true);
-  const [denyImages, setDenyImages] = useState(false);
-
-  const slashCommandVisibility = useMemo(() => ({
-    allowlist: allowOnlyCurated ? [...allSlashIds] : undefined,
-    denylist: denyImages ? ["insert.image"] : [],
-  }), [allowOnlyCurated, denyImages]);
-
   return (
     <ExtensiveEditor
-      slashCommandVisibility={slashCommandVisibility}
+      slashCommandVisibility={[
+        { "block.quote": true },
+        { "block.paragraph": true },
+        { "block.heading1": true },
+      ]}
     />
   );
 }
+```
+
+You can still use the object form:
+
+```tsx
+<ExtensiveEditor
+  slashCommandVisibility={{
+    allowlist: ["block.quote", "block.paragraph", "block.heading1"],
+    denylist: ["insert.image"],
+  }}
+/>
 ```
 
 Common command IDs:
