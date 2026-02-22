@@ -132,6 +132,60 @@ export function App() {
 }
 ```
 
+## Link create/edit/delete flow
+
+Luthor supports link creation from the main toolbar and link editing/removal from a dedicated hover bubble.
+
+### Usage requirements
+
+- Use `ExtensiveEditor` in `visual` mode (hover bubble is visual-mode only).
+- Ensure the `link` extension is enabled (it is enabled by default in the extensive preset).
+- No extra setup is required for hover link editing in the default preset.
+
+### End-user flow
+
+1. Select text and click the link button in the main toolbar to create a link.
+2. Hover any linked text to open a small link bubble.
+3. Review the current URL, then click `Edit`.
+4. Enter a new URL and click `Update`, or click `Unlink` to remove the link.
+
+Link updates are validated. Invalid URLs are rejected and the previous URL is preserved.
+
+When link text is selected, the regular floating formatting toolbar still appears independently.
+
+### Command API flow
+
+If you are building custom UI on top of the editor commands, use:
+
+- `commands.insertLink()` to create a link from current selection.
+- `commands.updateLink(url, rel?, target?)` to edit the selected link URL (and optional `rel`/`target` attributes).
+- `commands.removeLink()` to remove link formatting from the selected link.
+- `commands.updateLinkByKey(linkNodeKey, url, rel?, target?)` to update a specific hovered link node.
+- `commands.removeLinkByKey(linkNodeKey)` to unlink a specific hovered link node.
+- `commands.getLinkByKey(linkNodeKey)` to read current URL metadata for a hovered link node.
+
+Example:
+
+```tsx
+import { ExtensiveEditor, type CoreEditorCommands } from "@lyfie/luthor";
+
+function LinkActions({ commands }: { commands: CoreEditorCommands }) {
+  return (
+    <div>
+      <button onClick={() => commands.insertLink()}>Create link</button>
+      <button onClick={() => commands.updateLink?.("https://example.com", "noopener noreferrer", "_blank")}>
+        Update link
+      </button>
+      <button onClick={() => commands.removeLink()}>Remove link</button>
+    </div>
+  );
+}
+
+export function App() {
+  return <ExtensiveEditor placeholder="Start writing..." />;
+}
+```
+
 You can still use the object form:
 
 ```tsx

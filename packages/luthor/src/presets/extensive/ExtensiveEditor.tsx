@@ -10,6 +10,7 @@ import {
   commandsToSlashCommandItems,
   formatJSONBSource,
   ModeTabs,
+  LinkHoverBubble,
   registerKeyboardShortcuts,
   SourceView,
   Toolbar,
@@ -587,6 +588,12 @@ function ExtensiveEditorContent({
           </div>
         )}
       </div>
+      <LinkHoverBubble
+        editor={editor}
+        commands={commands as CoreEditorCommands}
+        editorTheme={isDark ? "dark" : "light"}
+        disabled={mode !== "visual"}
+      />
       {shouldRenderBottomToolbar && (
         <div className="luthor-editor-toolbar-slot luthor-editor-toolbar-slot--bottom">{toolbarNode}</div>
       )}

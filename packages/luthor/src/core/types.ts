@@ -77,7 +77,20 @@ export interface CoreEditorCommands {
   toggleSubscript?: () => void;
   toggleSuperscript?: () => void;
   insertLink: () => void;
+  updateLink?: (url: string, rel?: string, target?: string) => boolean;
   removeLink: () => void;
+  getCurrentLink?: () => Promise<{
+    url: string;
+    rel: string | null;
+    target: string | null;
+  } | null>;
+  getLinkByKey?: (linkNodeKey: string) => Promise<{
+    url: string;
+    rel: string | null;
+    target: string | null;
+  } | null>;
+  updateLinkByKey?: (linkNodeKey: string, url: string, rel?: string, target?: string) => boolean;
+  removeLinkByKey?: (linkNodeKey: string) => boolean;
   toggleParagraph: () => void;
   toggleHeading: (heading: BlockHeadingLevel) => void;
   toggleQuote: () => void;

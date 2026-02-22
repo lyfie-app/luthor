@@ -1,0 +1,397 @@
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
+import { $getNearestNodeFromDOMNode, type LexicalEditor } from "lexical";
+import { $isLinkNode } from "@lexical/link";
+import { UnlinkIcon } from "./icons";
+import { getOverlayThemeStyleFromElement } from "./overlay-theme";
+import type { CoreEditorCommands, CoreTheme } from "./types";
+
+type HoveredLinkState = {
+  nodeKey: string;
+  url: string;
+  anchorEl: HTMLAnchorElement;
+};
+
+type LinkBubblePosition = {
+  top: number;
+  left: number;
+};
+
+export interface LinkHoverBubbleProps {
+  editor: LexicalEditor | null;
+  commands: CoreEditorCommands;
+  editorTheme?: CoreTheme;
+  disabled?: boolean;
+}
+
+const HIDE_DELAY_MS = 120;
+const DEFAULT_MAX_LINK_LENGTH = 58;
+
+function truncateUrl(url: string, maxLength = DEFAULT_MAX_LINK_LENGTH): string {
+  if (url.length <= maxLength) {
+    return url;
+  }
+  return `${url.slice(0, maxLength - 3)}...`;
+}
+
+function hasExpandedSelection(): boolean {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return false;
+  }
+  return !selection.getRangeAt(0).collapsed;
+}
+
+function getLinkFromTarget(target: EventTarget | null, root: HTMLElement): HTMLAnchorElement | null {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  const link = target.closest("a");
+  if (!(link instanceof HTMLAnchorElement)) {
+    return null;
+  }
+
+  if (!root.contains(link)) {
+    return null;
+  }
+
+  return link;
+}
+
+function resolveLinkNodeKey(editor: LexicalEditor, anchorEl: HTMLAnchorElement): string | null {
+  const attributeKey = anchorEl.getAttribute("data-lexical-node-key")?.trim();
+  if (attributeKey) {
+    return attributeKey;
+  }
+
+  let resolvedKey: string | null = null;
+  editor.read(() => {
+    const nearest = $getNearestNodeFromDOMNode(anchorEl);
+    if ($isLinkNode(nearest)) {
+      resolvedKey = nearest.getKey();
+      return;
+    }
+
+    const firstChild = anchorEl.firstChild;
+    if (!firstChild) {
+      return;
+    }
+
+    const childNode = $getNearestNodeFromDOMNode(firstChild);
+    if ($isLinkNode(childNode)) {
+      resolvedKey = childNode.getKey();
+      return;
+    }
+
+    const parent = childNode?.getParent();
+    if (parent && $isLinkNode(parent)) {
+      resolvedKey = parent.getKey();
+    }
+  });
+
+  return resolvedKey;
+}
+
+export function LinkHoverBubble({
+  editor,
+  commands,
+  editorTheme = "light",
+  disabled = false,
+}: LinkHoverBubbleProps) {
+  const bubbleRef = useRef<HTMLDivElement>(null);
+  const hideTimeoutRef = useRef<number | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<HoveredLinkState | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftUrl, setDraftUrl] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [position, setPosition] = useState<LinkBubblePosition | null>(null);
+
+  const clearHideTimeout = () => {
+    if (hideTimeoutRef.current !== null) {
+      window.clearTimeout(hideTimeoutRef.current);
+      hideTimeoutRef.current = null;
+    }
+  };
+
+  const hideBubble = () => {
+    clearHideTimeout();
+    setHoveredLink(null);
+    setIsEditing(false);
+    setDraftUrl("");
+    setUrlError(null);
+    setPosition(null);
+  };
+
+  const scheduleHide = () => {
+    clearHideTimeout();
+    hideTimeoutRef.current = window.setTimeout(() => {
+      hideBubble();
+    }, HIDE_DELAY_MS);
+  };
+
+  const updatePosition = (anchorEl: HTMLAnchorElement) => {
+    const rect = anchorEl.getBoundingClientRect();
+    const nextTop = rect.bottom + 8;
+    const nextLeft = Math.max(10, Math.min(rect.left, window.innerWidth - 340));
+    setPosition({ top: nextTop, left: nextLeft });
+  };
+
+  const syncLinkByKey = (nodeKey: string, fallbackUrl: string) => {
+    if (typeof commands.getLinkByKey !== "function") {
+      setHoveredLink((current) => {
+        if (!current || current.nodeKey !== nodeKey) {
+          return current;
+        }
+        return { ...current, url: fallbackUrl };
+      });
+      return;
+    }
+
+    void commands.getLinkByKey(nodeKey).then((link) => {
+      if (!link) {
+        hideBubble();
+        return;
+      }
+
+      setHoveredLink((current) => {
+        if (!current || current.nodeKey !== nodeKey) {
+          return current;
+        }
+        return { ...current, url: link.url };
+      });
+    });
+  };
+
+  useEffect(() => {
+    if (!editor || disabled || typeof window === "undefined") {
+      hideBubble();
+      return;
+    }
+
+    const root = editor.getRootElement();
+    if (!root) {
+      hideBubble();
+      return;
+    }
+
+    const handlePointerOver = (event: MouseEvent) => {
+      const link = getLinkFromTarget(event.target, root);
+      if (!link) {
+        return;
+      }
+
+      if (hasExpandedSelection()) {
+        hideBubble();
+        return;
+      }
+
+      clearHideTimeout();
+
+      const nodeKey = resolveLinkNodeKey(editor, link);
+      if (!nodeKey) {
+        return;
+      }
+
+      const fallbackUrl = link.getAttribute("href") ?? link.href;
+      setHoveredLink({ nodeKey, url: fallbackUrl, anchorEl: link });
+      updatePosition(link);
+      setUrlError(null);
+      if (!isEditing) {
+        setDraftUrl(fallbackUrl);
+      }
+      syncLinkByKey(nodeKey, fallbackUrl);
+    };
+
+    const handlePointerOut = (event: MouseEvent) => {
+      if (!hoveredLink) {
+        return;
+      }
+
+      const relatedTarget = event.relatedTarget as Node | null;
+      if (relatedTarget && bubbleRef.current?.contains(relatedTarget)) {
+        return;
+      }
+
+      const nextLink = getLinkFromTarget(relatedTarget, root);
+      if (nextLink) {
+        return;
+      }
+
+      scheduleHide();
+    };
+
+    const handleSelectionChange = () => {
+      if (hasExpandedSelection()) {
+        hideBubble();
+      }
+    };
+
+    const handleReposition = () => {
+      setHoveredLink((current) => {
+        if (!current) {
+          return current;
+        }
+
+        const latestAnchor =
+          current.anchorEl.isConnected && root.contains(current.anchorEl)
+            ? current.anchorEl
+            : root.querySelector<HTMLAnchorElement>(`a[data-lexical-node-key="${current.nodeKey}"]`);
+        if (!latestAnchor) {
+          hideBubble();
+          return null;
+        }
+
+        updatePosition(latestAnchor);
+        return {
+          ...current,
+          anchorEl: latestAnchor,
+          url: latestAnchor.getAttribute("href") ?? latestAnchor.href,
+        };
+      });
+    };
+
+    root.addEventListener("mouseover", handlePointerOver);
+    root.addEventListener("mouseout", handlePointerOut);
+    document.addEventListener("selectionchange", handleSelectionChange);
+    window.addEventListener("scroll", handleReposition, true);
+    window.addEventListener("resize", handleReposition);
+
+    return () => {
+      root.removeEventListener("mouseover", handlePointerOver);
+      root.removeEventListener("mouseout", handlePointerOut);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+      window.removeEventListener("scroll", handleReposition, true);
+      window.removeEventListener("resize", handleReposition);
+      clearHideTimeout();
+    };
+  }, [commands, disabled, editor, hoveredLink, isEditing]);
+
+  const bubbleStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!hoveredLink || !position) {
+      return undefined;
+    }
+
+    return {
+      ...getOverlayThemeStyleFromElement(hoveredLink.anchorEl),
+      position: "fixed",
+      top: position.top,
+      left: position.left,
+      zIndex: 10040,
+    };
+  }, [hoveredLink, position]);
+
+  if (!hoveredLink || !position || typeof document === "undefined") {
+    return null;
+  }
+
+  const handleUnlink = () => {
+    const removed = commands.removeLinkByKey?.(hoveredLink.nodeKey) ?? false;
+    if (!removed) {
+      return;
+    }
+    hideBubble();
+  };
+
+  const handleSave = () => {
+    const updated =
+      commands.updateLinkByKey?.(hoveredLink.nodeKey, draftUrl) ??
+      false;
+    if (!updated) {
+      setUrlError("Enter a valid URL");
+      syncLinkByKey(hoveredLink.nodeKey, hoveredLink.url);
+      return;
+    }
+
+    setUrlError(null);
+    setIsEditing(false);
+    syncLinkByKey(hoveredLink.nodeKey, draftUrl);
+  };
+
+  return createPortal(
+    <div
+      ref={bubbleRef}
+      className="luthor-floating-toolbar luthor-link-hover-bubble"
+      data-theme={editorTheme}
+      style={bubbleStyle}
+      onMouseEnter={clearHideTimeout}
+      onMouseLeave={scheduleHide}
+    >
+      {!isEditing ? (
+        <>
+          <span className="luthor-link-hover-bubble-url" title={hoveredLink.url}>
+            {truncateUrl(hoveredLink.url)}
+          </span>
+          <button
+            type="button"
+            className="luthor-toolbar-button luthor-link-hover-bubble-button"
+            onClick={() => {
+              setDraftUrl(hoveredLink.url);
+              setIsEditing(true);
+              setUrlError(null);
+            }}
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            className="luthor-toolbar-button luthor-link-hover-bubble-button luthor-link-hover-bubble-button-danger"
+            onClick={handleUnlink}
+            aria-label="Unlink"
+          >
+            <UnlinkIcon size={13} />
+          </button>
+        </>
+      ) : (
+        <>
+          <input
+            type="url"
+            value={draftUrl}
+            className={`luthor-link-hover-bubble-input${urlError ? " is-error" : ""}`}
+            placeholder="https://example.com"
+            aria-label="Edit link URL"
+            aria-invalid={urlError ? true : undefined}
+            onChange={(event) => {
+              setDraftUrl(event.target.value);
+              if (urlError) {
+                setUrlError(null);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                handleSave();
+                return;
+              }
+              if (event.key === "Escape") {
+                event.preventDefault();
+                setIsEditing(false);
+                setDraftUrl(hoveredLink.url);
+                setUrlError(null);
+              }
+            }}
+          />
+          <button
+            type="button"
+            className="luthor-toolbar-button luthor-link-hover-bubble-button luthor-link-hover-bubble-button-primary"
+            onClick={handleSave}
+          >
+            Update
+          </button>
+          <button
+            type="button"
+            className="luthor-toolbar-button luthor-link-hover-bubble-button"
+            onClick={() => {
+              setIsEditing(false);
+              setDraftUrl(hoveredLink.url);
+              setUrlError(null);
+            }}
+          >
+            Cancel
+          </button>
+        </>
+      )}
+    </div>,
+    document.body,
+  );
+}
