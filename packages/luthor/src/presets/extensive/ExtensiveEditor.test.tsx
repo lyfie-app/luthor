@@ -488,6 +488,25 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     }));
   });
 
+  it("disables draggable block extension and gutter affordances when isDraggableBoxEnabled is false", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isDraggableBoxEnabled={false}
+      />,
+    );
+
+    const lastCall = createExtensiveExtensionsMock.mock.calls.at(-1)?.[0] as {
+      isDraggableBoxEnabled?: boolean;
+      featureFlags?: { draggableBlock?: boolean };
+    };
+
+    expect(lastCall.isDraggableBoxEnabled).toBe(false);
+    expect(lastCall.featureFlags?.draggableBlock).toBe(false);
+    expect(container.querySelector(".luthor-editor")).toHaveClass("luthor-editor--draggable-disabled");
+    expect(container.querySelector(".luthor-editor-visual-gutter")).toBeNull();
+  });
+
   it("passes placeholder text to RichText with preset placeholder class", () => {
     render(<ExtensiveEditor showDefaultContent={false} placeholder="Start here" />);
 

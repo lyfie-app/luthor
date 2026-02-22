@@ -94,6 +94,7 @@ function App() {
             visual: "Write your story...",
             jsonb: "Paste JSONB document...",
           }}
+          isDraggableBoxEnabled={true}
         />
       </div>
     </div>

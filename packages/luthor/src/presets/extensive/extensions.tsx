@@ -141,6 +141,7 @@ export type ExtensiveExtensionsConfig = {
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
   featureFlags?: FeatureFlagOverrides;
+  isDraggableBoxEnabled?: boolean;
   scaleByRatio?: boolean;
   syntaxHighlighting?: "auto" | "disabled";
   codeHighlightProvider?: CodeHighlightProvider | null;
@@ -684,6 +685,7 @@ function buildExtensiveExtensions({
   fontSizeOptions,
   lineHeightOptions,
   featureFlags,
+  isDraggableBoxEnabled,
   scaleByRatio,
   syntaxHighlighting,
   codeHighlightProvider,
@@ -693,6 +695,8 @@ function buildExtensiveExtensions({
 }: ExtensiveExtensionsConfig = {}) {
   const resolvedFeatureFlags = resolveFeatureFlags(featureFlags);
   const enabled = (feature: FeatureFlag) => isFeatureEnabled(resolvedFeatureFlags, feature);
+  const isDraggableFeatureEnabled =
+    (isDraggableBoxEnabled ?? true) && enabled("draggableBlock");
 
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -751,7 +755,7 @@ function buildExtensiveExtensions({
   if (enabled("commandPalette")) extensions.push(commandPaletteExt);
   if (enabled("slashCommand")) extensions.push(slashCommandExt);
   if (enabled("emoji")) extensions.push(emojiExt);
-  if (enabled("draggableBlock")) extensions.push(draggableBlockExt);
+  if (isDraggableFeatureEnabled) extensions.push(draggableBlockExt);
   if (enabled("customNode")) extensions.push(featureCardExtension);
 
   return extensions;

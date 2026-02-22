@@ -639,6 +639,7 @@ function ExtensiveEditorContent({
     () => mergeToolbarVisibilityWithFeatures(toolbarVisibility, featureFlags),
     [toolbarVisibility, featureFlags],
   );
+  const isDraggableBoxEnabled = featureFlags.draggableBlock !== false;
   const slashCommandVisibilityKey = normalizeSlashCommandVisibilityKey(slashCommandVisibility);
   const stableSlashCommandVisibilityRef = useRef<SlashCommandVisibility | undefined>(slashCommandVisibility);
   const stableSlashCommandVisibilityKeyRef = useRef(slashCommandVisibilityKey);
@@ -920,9 +921,17 @@ function ExtensiveEditorContent({
           <div className="luthor-editor-toolbar-slot luthor-editor-toolbar-slot--top">{toolbarNode}</div>
         )}
       </div>
-      <div className="luthor-editor" data-mode={mode}>
-        <div className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}`} aria-hidden={mode !== "visual"}>
-          <div className="luthor-editor-visual-gutter" aria-hidden="true" />
+      <div
+        className={`luthor-editor${isDraggableBoxEnabled ? "" : " luthor-editor--draggable-disabled"}`}
+        data-mode={mode}
+      >
+        <div
+          className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}${isDraggableBoxEnabled ? "" : " luthor-editor-visual-shell--no-gutter"}`}
+          aria-hidden={mode !== "visual"}
+        >
+          {isDraggableBoxEnabled && (
+            <div className="luthor-editor-visual-gutter" aria-hidden="true" />
+          )}
           <RichText
             placeholder={visualPlaceholder}
             classNames={{
@@ -1017,6 +1026,7 @@ export interface ExtensiveEditorProps {
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  isDraggableBoxEnabled?: boolean;
   featureFlags?: FeatureFlagOverrides;
   syntaxHighlighting?: "auto" | "disabled";
   codeHighlightProvider?: CodeHighlightProvider | null;
@@ -1055,6 +1065,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
     slashCommandVisibility,
+    isDraggableBoxEnabled,
     featureFlags,
     syntaxHighlighting,
     codeHighlightProvider,
@@ -1105,19 +1116,29 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         ? maxAutoDetectCodeLength.toString()
         : "unset";
     const copyAllowedKey = isCopyAllowed ? "copy-on" : "copy-off";
+    const effectiveFeatureFlags = useMemo<FeatureFlagOverrides | undefined>(() => {
+      if (typeof isDraggableBoxEnabled !== "boolean") {
+        return featureFlags;
+      }
+
+      return {
+        ...(featureFlags ?? {}),
+        draggableBlock: isDraggableBoxEnabled,
+      };
+    }, [featureFlags, isDraggableBoxEnabled]);
     const featureFlagsKey = useMemo(
-      () => normalizeFeatureFlagsKey(featureFlags),
-      [featureFlags],
+      () => normalizeFeatureFlagsKey(effectiveFeatureFlags),
+      [effectiveFeatureFlags],
     );
     const resolvedFeatureFlags = useMemo(
-      () => resolveFeatureFlags(featureFlags),
+      () => resolveFeatureFlags(effectiveFeatureFlags),
       [featureFlagsKey],
     );
     const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${featureFlagsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
-    const stableFeatureFlagsRef = useRef<FeatureFlagOverrides | undefined>(featureFlags);
+    const stableFeatureFlagsRef = useRef<FeatureFlagOverrides | undefined>(effectiveFeatureFlags);
     const stableCodeHighlightProviderRef = useRef<CodeHighlightProvider | null | undefined>(codeHighlightProvider);
     const stableLoadCodeHighlightProviderRef = useRef<
       (() => Promise<CodeHighlightProvider | null>) | undefined
@@ -1133,7 +1154,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
       stableFontSizeOptionsRef.current = fontSizeOptions;
       stableLineHeightOptionsRef.current = lineHeightOptions;
-      stableFeatureFlagsRef.current = featureFlags;
+      stableFeatureFlagsRef.current = effectiveFeatureFlags;
       stableCodeHighlightProviderRef.current = codeHighlightProvider;
       stableLoadCodeHighlightProviderRef.current = loadCodeHighlightProvider;
     }
@@ -1162,6 +1183,9 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
           ? { maxAutoDetectCodeLength }
           : {}),
         isCopyAllowed,
+        ...(typeof isDraggableBoxEnabled === "boolean"
+          ? { isDraggableBoxEnabled }
+          : {}),
         ...(stableFeatureFlagsRef.current ? { featureFlags: stableFeatureFlagsRef.current } : {}),
       };
 

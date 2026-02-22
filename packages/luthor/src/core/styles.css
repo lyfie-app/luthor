@@ -608,6 +608,10 @@
 	min-height: 0;
 }
 
+.luthor-editor-visual-shell--no-gutter {
+	grid-template-columns: minmax(0, 1fr);
+}
+
 .luthor-editor-visual-shell.is-hidden {
 	position: absolute;
 	inset: 0;
@@ -621,6 +625,14 @@
 	pointer-events: none;
 	background-color: var(--luthor-bg);
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
+}
+
+.luthor-editor--draggable-disabled {
+	--luthor-drag-gutter-width: 0px;
+}
+
+.luthor-editor--draggable-disabled .luthor-editor-visual-gutter {
+	display: none;
 }
 
 .luthor-richtext-container {
@@ -637,6 +649,10 @@
 	grid-column: 2;
 	grid-row: 1;
 	min-width: 0;
+}
+
+.luthor-editor-visual-shell--no-gutter .luthor-richtext-container {
+	grid-column: 1;
 }
 
 .luthor-content-editable {
@@ -2281,6 +2297,13 @@
 
 .luthor-draggable-block-is-dragging {
 	opacity: 0.6;
+}
+
+.luthor-editor--draggable-disabled .luthor-draggable-button-stack,
+.luthor-editor--draggable-disabled .luthor-draggable-handle,
+.luthor-editor--draggable-disabled .luthor-draggable-add-button,
+.luthor-editor--draggable-disabled .luthor-draggable-drop-indicator {
+	display: none !important;
 }
 
 @media (max-width: 768px) {
