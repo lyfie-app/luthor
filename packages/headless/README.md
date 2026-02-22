@@ -102,6 +102,40 @@ The exact exported surface is documented in:
 - Import/export: HTML and Markdown extensions
 - Custom: factory for custom node-based extensions
 
+## Image resize ratio behavior
+
+Use `scaleByRatio` in `imageExtension.configure(...)` to control default resize behavior.
+
+```tsx
+import {
+  createEditorSystem,
+  RichText,
+  richTextExtension,
+  imageExtension,
+} from "@lyfie/luthor-headless";
+
+const extensions = [
+  richTextExtension,
+  imageExtension.configure({
+    resizable: true,
+    scaleByRatio: true,
+  }),
+] as const;
+
+const { Provider } = createEditorSystem<typeof extensions>();
+
+export function Editor() {
+  return (
+    <Provider extensions={extensions} config={{ namespace: "LuthorEditor" }}>
+      <RichText placeholder="Write here..." />
+    </Provider>
+  );
+}
+```
+
+- `scaleByRatio: false` (default): free resize by default, hold `Shift` to keep aspect ratio.
+- `scaleByRatio: true`: keep aspect ratio by default, hold `Shift` to temporarily free resize.
+
 ## Import and export support
 
 - Canonical fidelity: Lexical JSON

@@ -547,6 +547,7 @@ export interface ExtensiveEditorProps {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  scaleByRatio?: boolean;
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
@@ -576,6 +577,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     fontFamilyOptions,
     fontSizeOptions,
     lineHeightOptions,
+    scaleByRatio = false,
     headingOptions,
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
@@ -604,7 +606,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeLineHeightOptionsKey(lineHeightOptions),
       [lineHeightOptions],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}`;
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
@@ -629,6 +631,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
           fontFamilyOptions: stableFontFamilyOptionsRef.current,
           fontSizeOptions: stableFontSizeOptionsRef.current,
           lineHeightOptions: stableLineHeightOptionsRef.current,
+          scaleByRatio,
         }),
       };
     }

@@ -43,6 +43,7 @@ export type ExtensiveExtensionsConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  scaleByRatio?: boolean;
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -579,6 +580,7 @@ function buildExtensiveExtensions({
   fontFamilyOptions,
   fontSizeOptions,
   lineHeightOptions,
+  scaleByRatio,
 }: ExtensiveExtensionsConfig = {}) {
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -589,6 +591,9 @@ function buildExtensiveExtensions({
   });
   const lineHeightExt = new LineHeightExtension().configure({
     options: resolveLineHeightOptions(lineHeightOptions),
+  });
+  extensiveImageExtension.configure({
+    scaleByRatio: scaleByRatio ?? false,
   });
 
   return [

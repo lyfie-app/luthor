@@ -1,4 +1,3 @@
-// ...existing code...
 import { ExtensiveEditor } from "@lyfie/luthor";
 import "@lyfie/luthor/styles.css";
 import { useDemoTheme } from "./hooks/useDemoTheme";
@@ -34,6 +33,7 @@ function App() {
       >
         {theme === "dark" ? "Switch to Light" : "Switch to Dark"}
       </button>
+      
       <div
         style={{
           minHeight: "100vh",
@@ -72,6 +72,7 @@ function App() {
           ]}
           paragraphLabel="Normal"
           headingOptions={['h1', 'h2', 'h3']}
+          scaleByRatio={false}
           />
       </div>
     </div>

@@ -57,6 +57,8 @@ const INSERT_IMAGE_COMMAND = createCommand<ImagePayload>("insert-image");
  * Default image component used for rendering in the editor
  */
 let defaultImageComponent: ComponentType<ImageComponentProps> = ImageComponent;
+let defaultImageResizable = true;
+let defaultScaleByRatio = false;
 
 const MIN_IMAGE_WIDTH = 50;
 const MIN_IMAGE_HEIGHT = 50;
@@ -91,6 +93,7 @@ function ImageComponent({
   width,
   height,
   resizable = true,
+  scaleByRatio = false,
   uploading = false,
 }: ImageComponentProps): ReactNode {
   const [editor] = useLexicalComposerContext();
@@ -180,8 +183,18 @@ function ImageComponent({
 
     const startX = event.clientX;
     const startY = event.clientY;
-    const startWidth = imageRef.current.clientWidth || 100;
-    const startHeight = imageRef.current.clientHeight || 100;
+    const startWidth =
+      imageRef.current.clientWidth ||
+      (typeof currentWidth === "number" ? currentWidth : 100);
+    const startHeight =
+      imageRef.current.clientHeight ||
+      (typeof currentHeight === "number" ? currentHeight : 100);
+    const hasRatioBaseline =
+      Number.isFinite(startWidth) &&
+      Number.isFinite(startHeight) &&
+      startWidth > 0 &&
+      startHeight > 0;
+    const aspectRatio = hasRatioBaseline ? startWidth / startHeight : null;
 
     widthRef.current = startWidth;
     heightRef.current = startHeight;
@@ -197,14 +210,41 @@ function ImageComponent({
     };
 
     const onMove = (moveEvent: MouseEvent) => {
-      const nextWidth =
+      const useRatio =
+        !!aspectRatio &&
+        (scaleByRatio ? !moveEvent.shiftKey : moveEvent.shiftKey);
+      let nextWidth =
         axis === "width"
-          ? clampSize(startWidth + (moveEvent.clientX - startX), MIN_IMAGE_WIDTH, MAX_IMAGE_WIDTH)
+          ? clampSize(
+              startWidth + (moveEvent.clientX - startX),
+              MIN_IMAGE_WIDTH,
+              MAX_IMAGE_WIDTH,
+            )
           : widthRef.current;
-      const nextHeight =
+      let nextHeight =
         axis === "height"
-          ? clampSize(startHeight + (moveEvent.clientY - startY), MIN_IMAGE_HEIGHT, MAX_IMAGE_HEIGHT)
+          ? clampSize(
+              startHeight + (moveEvent.clientY - startY),
+              MIN_IMAGE_HEIGHT,
+              MAX_IMAGE_HEIGHT,
+            )
           : heightRef.current;
+
+      if (useRatio && aspectRatio) {
+        if (axis === "width") {
+          nextHeight = clampSize(
+            nextWidth / aspectRatio,
+            MIN_IMAGE_HEIGHT,
+            MAX_IMAGE_HEIGHT,
+          );
+        } else {
+          nextWidth = clampSize(
+            nextHeight * aspectRatio,
+            MIN_IMAGE_WIDTH,
+            MAX_IMAGE_WIDTH,
+          );
+        }
+      }
 
       widthRef.current = nextWidth;
       heightRef.current = nextHeight;
@@ -549,7 +589,8 @@ export class ImageNode extends DecoratorNode<ReactNode> {
           nodeKey={this.getKey()}
           width={this.__width}
           height={this.__height}
-          resizable={true}
+          resizable={defaultImageResizable}
+          scaleByRatio={defaultScaleByRatio}
           uploading={this.__uploading}
         />
       );
@@ -614,10 +655,13 @@ export class ImageExtension extends BaseExtension<
       // Set defaults
       ...this.config,
       resizable: true,
+      scaleByRatio: false,
       pasteListener: { insert: true, replace: true },
       debug: false,
       forceUpload: false,
     };
+    defaultImageResizable = true;
+    defaultScaleByRatio = false;
   }
 
   configure(config: Partial<ImageExtensionConfig>): this {
@@ -648,11 +692,15 @@ export class ImageExtension extends BaseExtension<
         true,
     };
     this.config.debug = config.debug ?? this.config.debug ?? false;
-    this.config = {
+    const nextConfig = {
       ...this.config,
       ...config,
-      resizable: config.resizable ?? true,
+      resizable: config.resizable ?? this.config.resizable ?? true,
+      scaleByRatio: config.scaleByRatio ?? this.config.scaleByRatio ?? false,
     };
+    this.config = nextConfig;
+    defaultImageResizable = nextConfig.resizable ?? true;
+    defaultScaleByRatio = nextConfig.scaleByRatio ?? false;
     return this;
   }
 

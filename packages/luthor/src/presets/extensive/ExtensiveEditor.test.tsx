@@ -260,6 +260,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       fontFamilyOptions,
       fontSizeOptions: undefined,
       lineHeightOptions: undefined,
+      scaleByRatio: false,
     });
   });
 
@@ -326,6 +327,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       fontFamilyOptions: undefined,
       fontSizeOptions,
       lineHeightOptions: undefined,
+      scaleByRatio: false,
     });
   });
 
@@ -347,6 +349,23 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       fontFamilyOptions: undefined,
       fontSizeOptions: undefined,
       lineHeightOptions,
+      scaleByRatio: false,
+    });
+  });
+
+  it("passes scaleByRatio to extension factory", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        scaleByRatio
+      />,
+    );
+
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+      fontFamilyOptions: undefined,
+      fontSizeOptions: undefined,
+      lineHeightOptions: undefined,
+      scaleByRatio: true,
     });
   });
 });
