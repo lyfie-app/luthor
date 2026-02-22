@@ -87,6 +87,7 @@ export interface CoreEditorCommands {
   autoDetectCodeLanguage?: () => Promise<string | null>;
   getCurrentCodeLanguage?: () => Promise<string | null>;
   getCodeLanguageOptions?: () => string[];
+  copySelectedCodeBlock?: () => Promise<boolean>;
   toggleUnorderedList: () => void;
   toggleOrderedList: () => void;
   toggleCheckList: () => void;

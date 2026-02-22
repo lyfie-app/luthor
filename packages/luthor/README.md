@@ -102,6 +102,7 @@ export function App() {
 - `codeHighlightProvider`: optional injected provider object for code language detection/highlighting adapters.
 - `loadCodeHighlightProvider`: optional async loader for provider injection (lazy-load path).
 - `maxAutoDetectCodeLength`: optional guard for language auto-detect input size (default `12000` characters).
+- `isCopyAllowed`: `true` by default. Set `false` to hide code-block copy buttons and disable code-block copy command execution.
 - `headingOptions`: optional heading level list for the block format dropdown (`h1`-`h6`).
 - `paragraphLabel`: optional paragraph label override for the block format dropdown (for example `"Normal"`).
 - `syncHeadingOptionsWithCommands`: `true` by default. Set `false` to keep slash/command-palette/keyboard heading commands independent from `headingOptions`.

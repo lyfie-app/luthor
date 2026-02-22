@@ -57,6 +57,7 @@ export type ExtensivePresetConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  isCopyAllowed?: boolean;
 };
 
 export function createExtensivePreset(
@@ -68,6 +69,7 @@ export function createExtensivePreset(
       fontFamilyOptions: config.fontFamilyOptions,
       fontSizeOptions: config.fontSizeOptions,
       lineHeightOptions: config.lineHeightOptions,
+      isCopyAllowed: config.isCopyAllowed,
     })],
   };
 }

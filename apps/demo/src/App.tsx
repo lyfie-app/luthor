@@ -80,6 +80,7 @@ function App() {
             { "block.paragraph": true },
             { "block.heading1": true },
           ]}
+          isCopyAllowed={true}
         />
       </div>
     </div>

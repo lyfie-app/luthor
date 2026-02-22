@@ -45,6 +45,7 @@ export type CodeIntelligenceCommands = {
   autoDetectCodeLanguage: () => Promise<string | null>;
   getCurrentCodeLanguage: () => Promise<string | null>;
   getCodeLanguageOptions: () => string[];
+  copySelectedCodeBlock: () => Promise<boolean>;
 };
 
 const DEFAULT_LANGUAGE_OPTIONS = [
@@ -72,6 +73,7 @@ const DEFAULT_MAX_AUTODETECT_LENGTH = 12_000;
 
 export type CodeIntelligenceConfig = CodeHighlightProviderConfig & {
   maxAutoDetectLength?: number;
+  isCopyAllowed?: boolean;
 };
 
 export class CodeIntelligenceExtension extends BaseExtension<
@@ -91,6 +93,7 @@ export class CodeIntelligenceExtension extends BaseExtension<
     super("codeIntelligence");
     this.config = {
       maxAutoDetectLength: DEFAULT_MAX_AUTODETECT_LENGTH,
+      isCopyAllowed: true,
     };
   }
 
@@ -197,7 +200,23 @@ export class CodeIntelligenceExtension extends BaseExtension<
           });
         }),
       getCodeLanguageOptions: () => this.getLanguageOptions(),
+      copySelectedCodeBlock: async () => {
+        if (!this.isCopyAllowed()) {
+          return false;
+        }
+
+        const target = await this.getPrimaryCodeBlockText(editor);
+        if (!target || !target.text.trim()) {
+          return false;
+        }
+
+        return writeTextToClipboard(target.text);
+      },
     };
+  }
+
+  isCopyAllowed(): boolean {
+    return this.config.isCopyAllowed !== false;
   }
 
   getLanguageOptionsSnapshot(): string[] {
@@ -645,8 +664,14 @@ function CodeBlockControlsPlugin({
     [editor, extension, scheduleSyncControls],
   );
 
+  const canCopy = extension.isCopyAllowed();
+
   const handleCopyClick = useCallback(
     async (nodeKey: string) => {
+      if (!canCopy) {
+        return;
+      }
+
       const text = extension.getCodeBlockText(editor, nodeKey);
       if (!text.trim()) {
         return;
@@ -660,7 +685,7 @@ function CodeBlockControlsPlugin({
 
       setFeedbackState(nodeKey, "error");
     },
-    [editor, extension, setFeedbackState],
+    [canCopy, editor, extension, setFeedbackState],
   );
 
   useEffect(() => {
@@ -792,22 +817,24 @@ function CodeBlockControlsPlugin({
           createElement(
             "span",
             { className: "luthor-codeblock-controls-right" },
-            createElement("button", {
-              className: copyClassName,
-              type: "button",
-              "aria-label": "Copy code",
-              title: copyTitle,
-              "data-tooltip": copyTitle,
-              onMouseDown: (event: MouseEvent) => {
-                event.preventDefault();
-              },
-              onClick: () => {
-                void handleCopyClick(control.key);
-              },
-              dangerouslySetInnerHTML: {
-                __html: feedbackState === "copied" ? CHECK_ICON_SVG : COPY_ICON_SVG,
-              },
-            }),
+            canCopy
+              ? createElement("button", {
+                  className: copyClassName,
+                  type: "button",
+                  "aria-label": "Copy code",
+                  title: copyTitle,
+                  "data-tooltip": copyTitle,
+                  onMouseDown: (event: MouseEvent) => {
+                    event.preventDefault();
+                  },
+                  onClick: () => {
+                    void handleCopyClick(control.key);
+                  },
+                  dangerouslySetInnerHTML: {
+                    __html: feedbackState === "copied" ? CHECK_ICON_SVG : COPY_ICON_SVG,
+                  },
+                })
+              : null,
           ),
         );
       }),

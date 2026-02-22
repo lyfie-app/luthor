@@ -49,6 +49,7 @@ export type ExtensiveExtensionsConfig = {
   codeHighlightProvider?: CodeHighlightProvider | null;
   loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
   maxAutoDetectCodeLength?: number;
+  isCopyAllowed?: boolean;
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -590,6 +591,7 @@ function buildExtensiveExtensions({
   codeHighlightProvider,
   loadCodeHighlightProvider,
   maxAutoDetectCodeLength,
+  isCopyAllowed,
 }: ExtensiveExtensionsConfig = {}) {
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -613,6 +615,7 @@ function buildExtensiveExtensions({
     provider: codeHighlightProvider ?? undefined,
     loadProvider: loadCodeHighlightProvider,
     maxAutoDetectLength: maxAutoDetectCodeLength,
+    isCopyAllowed: isCopyAllowed ?? true,
   });
 
   return [

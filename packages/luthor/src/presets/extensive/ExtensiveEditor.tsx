@@ -652,6 +652,7 @@ export interface ExtensiveEditorProps {
   codeHighlightProvider?: CodeHighlightProvider | null;
   loadCodeHighlightProvider?: () => Promise<CodeHighlightProvider | null>;
   maxAutoDetectCodeLength?: number;
+  isCopyAllowed?: boolean;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -688,6 +689,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     codeHighlightProvider,
     loadCodeHighlightProvider,
     maxAutoDetectCodeLength,
+    isCopyAllowed = true,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -718,7 +720,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       typeof maxAutoDetectCodeLength === "number"
         ? maxAutoDetectCodeLength.toString()
         : "unset";
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}`;
+    const copyAllowedKey = isCopyAllowed ? "copy-on" : "copy-off";
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
@@ -764,6 +767,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         ...(maxAutoDetectCodeLength !== undefined
           ? { maxAutoDetectCodeLength }
           : {}),
+        isCopyAllowed,
       };
 
       memoizedExtensionsRef.current = {
