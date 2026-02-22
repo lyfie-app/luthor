@@ -626,6 +626,9 @@
 .luthor-richtext-container {
 	position: relative;
 	flex: 1;
+	--luthor-editor-content-padding-y: 20px;
+	--luthor-editor-content-padding-x: 20px;
+	--luthor-first-block-offset: calc(8px * var(--luthor-line-height-ratio, 1));
 	background-color: var(--luthor-bg);
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
@@ -638,7 +641,7 @@
 
 .luthor-content-editable {
 	flex: 1;
-	padding: 20px;
+	padding: var(--luthor-editor-content-padding-y) var(--luthor-editor-content-padding-x);
 	outline: none;
 	color: var(--luthor-fg);
 	line-height: 1.7;
@@ -662,8 +665,8 @@
 	color: var(--luthor-muted-fg);
 	pointer-events: none;
 	position: absolute;
-	top: 20px;
-	left: 20px;
+	top: calc(var(--luthor-editor-content-padding-y) + var(--luthor-first-block-offset));
+	left: var(--luthor-editor-content-padding-x);
 	font-size: 16px;
 	line-height: 1.7;
 	z-index: 1;
@@ -1643,7 +1646,7 @@
 }
 
 .luthor-paragraph {
-	margin: calc(8px * var(--luthor-line-height-ratio, 1)) 0;
+	margin: var(--luthor-first-block-offset) 0;
 }
 
 .luthor-heading-h1,
@@ -2308,14 +2311,13 @@
 		padding-right: 6px;
 	}
 
-	.luthor-content-editable {
-		padding: 16px;
-		font-size: 16px;
+	.luthor-richtext-container {
+		--luthor-editor-content-padding-y: 16px;
+		--luthor-editor-content-padding-x: 16px;
 	}
 
-	.luthor-placeholder {
-		top: 16px;
-		left: 16px;
+	.luthor-content-editable {
+		font-size: 16px;
 	}
 
 	.luthor-select-trigger {

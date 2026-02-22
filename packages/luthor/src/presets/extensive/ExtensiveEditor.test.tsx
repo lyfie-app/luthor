@@ -10,6 +10,8 @@ const {
   toolbarMock,
   createExtensiveExtensionsMock,
   providerMock,
+  richTextMock,
+  sourceViewMock,
 } = vi.hoisted(() => ({
   registerKeyboardShortcutsMock: vi.fn(() => vi.fn()),
   commandsToCommandPaletteItemsMock: vi.fn(() => [{ id: "mock-command" }]),
@@ -19,6 +21,14 @@ const {
   )),
   createExtensiveExtensionsMock: vi.fn(() => []),
   providerMock: vi.fn(),
+  richTextMock: vi.fn(({ placeholder, classNames }: { placeholder?: string; classNames?: { placeholder?: string } }) => (
+    <div data-testid="richtext" data-placeholder-class={classNames?.placeholder}>{placeholder}</div>
+  )),
+  sourceViewMock: vi.fn(
+    ({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) => (
+      <textarea data-testid="source-view" data-placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
+    ),
+  ),
 }));
 
 vi.mock("lexical", () => ({
@@ -111,9 +121,7 @@ vi.mock("../../core", () => ({
   formatJSONBSource: (value: string) => value,
   ModeTabs: () => <div data-testid="mode-tabs" />,
   registerKeyboardShortcuts: registerKeyboardShortcutsMock,
-  SourceView: ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
-    <textarea value={value} onChange={(event) => onChange(event.target.value)} />
-  ),
+  SourceView: sourceViewMock,
   LinkHoverBubble: () => null,
   Toolbar: toolbarMock,
   TRADITIONAL_TOOLBAR_LAYOUT: { sections: [] },
@@ -159,7 +167,7 @@ vi.mock("@lyfie/luthor-headless", () => ({
     },
     useEditor: () => mockEditorApi,
   }),
-  RichText: () => <div data-testid="richtext" />,
+  RichText: richTextMock,
   defaultLuthorTheme: { quote: "luthor-quote" },
   mergeThemes: (_base: unknown, override: Record<string, unknown>) => ({
     quote: "luthor-quote",
@@ -478,5 +486,46 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       scaleByRatio: true,
       isCopyAllowed: true,
     }));
+  });
+
+  it("passes placeholder text to RichText with preset placeholder class", () => {
+    render(<ExtensiveEditor showDefaultContent={false} placeholder="Start here" />);
+
+    expect(screen.getByText("Start here")).toBeInTheDocument();
+    const richTextCall = richTextMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+      classNames?: { placeholder?: string };
+    };
+    expect(richTextCall.placeholder).toBe("Start here");
+    expect(richTextCall.classNames?.placeholder).toBe(
+      "luthor-placeholder luthor-preset-extensive__placeholder",
+    );
+  });
+
+  it("supports mode-specific placeholder pass-through for visual and jsonb modes", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="jsonb"
+        placeholder={{
+          visual: "Write in visual mode",
+          jsonb: "Paste JSONB here",
+        }}
+      />,
+    );
+
+    const richTextCall = richTextMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(richTextCall.placeholder).toBe("Write in visual mode");
+
+    const sourceViewCall = sourceViewMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(sourceViewCall.placeholder).toBe("Paste JSONB here");
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-placeholder",
+      "Paste JSONB here",
+    );
   });
 });

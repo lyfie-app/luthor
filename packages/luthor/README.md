@@ -32,6 +32,39 @@ export function App() {
 }
 ```
 
+## Placeholder usage
+
+Use a single string to set the visual editor placeholder:
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return <ExtensiveEditor placeholder="Write your story..." />;
+}
+```
+
+Use per-mode placeholders when you want different text for visual and JSONB tabs:
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      initialMode="visual"
+      placeholder={{
+        visual: "Write your story...",
+        jsonb: "Paste JSONB document...",
+      }}
+    />
+  );
+}
+```
+
+- `placeholder` default (visual): `"Write anything..."`
+- `placeholder.jsonb` default (source mode): `"Enter JSONB document content..."`
+
 ## Toolbar placement and alignment
 
 ```tsx

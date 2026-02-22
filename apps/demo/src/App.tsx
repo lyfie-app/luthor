@@ -90,6 +90,10 @@ function App() {
           featureFlags={{
             emoji: false,
           }}
+          placeholder={{
+            visual: "Write your story...",
+            jsonb: "Paste JSONB document...",
+          }}
         />
       </div>
     </div>

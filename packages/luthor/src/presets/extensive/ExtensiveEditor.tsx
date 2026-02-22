@@ -53,6 +53,15 @@ import "./styles.css";
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
 export type ExtensiveEditorMode = "visual" | "jsonb";
+export type ExtensiveEditorPlaceholder =
+  | string
+  | {
+      visual?: string;
+      jsonb?: string;
+    };
+
+const DEFAULT_VISUAL_PLACEHOLDER = "Write anything...";
+const DEFAULT_JSONB_PLACEHOLDER = "Enter JSONB document content...";
 
 export interface ExtensiveEditorRef {
   injectJSONB: (content: string) => void;
@@ -538,7 +547,8 @@ function normalizeSlashCommandVisibilityKey(visibility?: SlashCommandVisibility)
 function ExtensiveEditorContent({
   isDark,
   toggleTheme,
-  placeholder,
+  visualPlaceholder,
+  jsonbPlaceholder,
   initialMode,
   availableModes,
   onReady,
@@ -557,7 +567,8 @@ function ExtensiveEditorContent({
 }: {
   isDark: boolean;
   toggleTheme: () => void;
-  placeholder: string;
+  visualPlaceholder: string;
+  jsonbPlaceholder: string;
   initialMode: ExtensiveEditorMode;
   availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
@@ -913,7 +924,7 @@ function ExtensiveEditorContent({
         <div className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}`} aria-hidden={mode !== "visual"}>
           <div className="luthor-editor-visual-gutter" aria-hidden="true" />
           <RichText
-            placeholder={placeholder}
+            placeholder={visualPlaceholder}
             classNames={{
               container: "luthor-richtext-container luthor-preset-extensive__container",
               contentEditable: "luthor-content-editable luthor-preset-extensive__content",
@@ -934,7 +945,7 @@ function ExtensiveEditorContent({
               </div>
             )}
             {mode === "jsonb" && (
-              <SourceView value={content.jsonb} onChange={(value) => setContent((prev) => ({ ...prev, jsonb: value }))} placeholder="Enter JSONB document content..." />
+              <SourceView value={content.jsonb} onChange={(value) => setContent((prev) => ({ ...prev, jsonb: value }))} placeholder={jsonbPlaceholder} />
             )}
           </div>
         )}
@@ -984,7 +995,7 @@ export interface ExtensiveEditorProps {
   theme?: Partial<LuthorTheme>;
   defaultContent?: string;
   showDefaultContent?: boolean;
-  placeholder?: string;
+  placeholder?: ExtensiveEditorPlaceholder;
   initialMode?: ExtensiveEditorMode;
   availableModes?: readonly ExtensiveEditorMode[];
   variantClassName?: string;
@@ -1022,7 +1033,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     theme,
     defaultContent,
     showDefaultContent = true,
-    placeholder = "Write anything...",
+    placeholder = DEFAULT_VISUAL_PLACEHOLDER,
     initialMode = "visual",
     availableModes = ["visual", "jsonb"],
     variantClassName,
@@ -1058,6 +1069,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       : (availableModes[0] ?? "visual");
 
     const toggleTheme = () => setEditorTheme(isDark ? "light" : "dark");
+    const resolvedPlaceholders = useMemo(() => {
+      if (typeof placeholder === "string") {
+        return {
+          visual: placeholder,
+          jsonb: DEFAULT_JSONB_PLACEHOLDER,
+        };
+      }
+
+      return {
+        visual: placeholder.visual ?? DEFAULT_VISUAL_PLACEHOLDER,
+        jsonb: placeholder.jsonb ?? DEFAULT_JSONB_PLACEHOLDER,
+      };
+    }, [placeholder]);
 
     useEffect(() => {
       setEditorTheme(initialTheme);
@@ -1218,7 +1242,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
           <ExtensiveEditorContent
             isDark={isDark}
             toggleTheme={toggleTheme}
-            placeholder={placeholder}
+            visualPlaceholder={resolvedPlaceholders.visual}
+            jsonbPlaceholder={resolvedPlaceholders.jsonb}
             initialMode={resolvedInitialMode}
             availableModes={availableModes}
             onReady={handleReady}
