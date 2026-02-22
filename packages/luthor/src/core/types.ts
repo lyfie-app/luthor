@@ -113,6 +113,8 @@ export interface CoreEditorCommands {
   insertIframeEmbed?: (inputUrl: string, width?: number, height?: number, title?: string) => void;
   setIframeEmbedAlignment?: (alignment: ImageAlignment) => void;
   resizeIframeEmbed?: (width: number, height: number) => void;
+  setIframeEmbedCaption?: (caption: string) => void;
+  getIframeEmbedCaption?: () => Promise<string>;
   insertYouTubeEmbed?: (inputUrl: string, width?: number, height?: number, start?: number) => void;
   setYouTubeEmbedAlignment?: (alignment: ImageAlignment) => void;
   resizeYouTubeEmbed?: (width: number, height: number) => void;

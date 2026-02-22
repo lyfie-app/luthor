@@ -1,4 +1,4 @@
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   AlignCenterIcon,
   AlignLeftIcon,
@@ -42,6 +42,10 @@ export function FloatingToolbar({
   hide,
 }: FloatingToolbarProps) {
   const toolbarRef = useRef<HTMLDivElement>(null);
+  const [iframeCaptionDraft, setIframeCaptionDraft] = useState("");
+  const iframeEmbedSelected = !!activeStates.isIframeEmbedSelected;
+  const youTubeEmbedSelected = !!activeStates.isYouTubeEmbedSelected;
+  const embedSelected = iframeEmbedSelected || youTubeEmbedSelected;
 
   useEffect(() => {
     if (!isVisible) return;
@@ -62,6 +66,23 @@ export function FloatingToolbar({
     };
   }, [isVisible, hide]);
 
+  useEffect(() => {
+    if (!isVisible || !iframeEmbedSelected || typeof commands.getIframeEmbedCaption !== "function") {
+      return;
+    }
+
+    let disposed = false;
+    void commands.getIframeEmbedCaption().then((caption) => {
+      if (!disposed) {
+        setIframeCaptionDraft(caption ?? "");
+      }
+    });
+
+    return () => {
+      disposed = true;
+    };
+  }, [commands, iframeEmbedSelected, isVisible]);
+
   if (!isVisible || !selectionRect) return null;
 
   const style: CSSProperties = {
@@ -72,10 +93,6 @@ export function FloatingToolbar({
     zIndex: 9999,
     pointerEvents: "auto",
   };
-
-  const iframeEmbedSelected = !!activeStates.isIframeEmbedSelected;
-  const youTubeEmbedSelected = !!activeStates.isYouTubeEmbedSelected;
-  const embedSelected = iframeEmbedSelected || youTubeEmbedSelected;
 
   if (embedSelected) {
     const setAlignment = (alignment: "left" | "center" | "right") => {
@@ -99,6 +116,15 @@ export function FloatingToolbar({
       ? activeStates.isIframeEmbedAlignedRight
       : activeStates.isYouTubeEmbedAlignedRight;
 
+    const canEditIframeCaption =
+      iframeEmbedSelected && typeof commands.setIframeEmbedCaption === "function";
+    const commitIframeCaption = () => {
+      if (!canEditIframeCaption) {
+        return;
+      }
+      commands.setIframeEmbedCaption?.(iframeCaptionDraft);
+    };
+
     return (
       <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
         <IconButton onClick={() => setAlignment("left")} active={isLeftAligned} title="Align Left">
@@ -110,6 +136,26 @@ export function FloatingToolbar({
         <IconButton onClick={() => setAlignment("right")} active={isRightAligned} title="Align Right">
           <AlignRightIcon size={14} />
         </IconButton>
+        {canEditIframeCaption ? (
+          <>
+            <div className="luthor-floating-toolbar-separator" />
+            <input
+              type="text"
+              value={iframeCaptionDraft}
+              className="luthor-floating-toolbar-input"
+              placeholder="Add caption"
+              aria-label="Iframe caption"
+              onChange={(event) => setIframeCaptionDraft(event.target.value)}
+              onBlur={commitIframeCaption}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  (event.target as HTMLInputElement).blur();
+                }
+              }}
+            />
+          </>
+        ) : null}
       </div>
     );
   }
