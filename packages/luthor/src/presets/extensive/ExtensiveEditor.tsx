@@ -28,6 +28,7 @@ import type {
   EmojiExtension,
   EmojiCatalogItem,
   FontFamilyOption,
+  FontSizeOption,
 } from "@lyfie/luthor-headless";
 import "./styles.css";
 
@@ -128,6 +129,20 @@ function normalizeFontFamilyOptionsKey(options?: readonly FontFamilyOption[]): s
       label: option.label.trim(),
       fontFamily: option.fontFamily.trim(),
       cssImportUrl: option.cssImportUrl?.trim() || "",
+    })),
+  );
+}
+
+function normalizeFontSizeOptionsKey(options?: readonly FontSizeOption[]): string {
+  if (!options || options.length === 0) {
+    return "__default__";
+  }
+
+  return JSON.stringify(
+    options.map((option) => ({
+      value: String(option.value).trim(),
+      label: String(option.label).trim(),
+      fontSize: String(option.fontSize).trim(),
     })),
   );
 }
@@ -467,6 +482,7 @@ export interface ExtensiveEditorProps {
   toolbarStyleVars?: ToolbarStyleVars;
   isToolbarEnabled?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
+  fontSizeOptions?: readonly FontSizeOption[];
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -488,6 +504,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     toolbarStyleVars,
     isToolbarEnabled = true,
     fontFamilyOptions,
+    fontSizeOptions,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const isDark = editorTheme === "dark";
@@ -505,12 +522,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeFontFamilyOptionsKey(fontFamilyOptions),
       [fontFamilyOptions],
     );
+    const fontSizeOptionsKey = useMemo(
+      () => normalizeFontSizeOptionsKey(fontSizeOptions),
+      [fontSizeOptions],
+    );
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
-    const stableFontFamilyOptionsKeyRef = useRef(fontFamilyOptionsKey);
+    const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
+    const stableExtensionsKeyRef = useRef(extensionsKey);
 
-    if (stableFontFamilyOptionsKeyRef.current !== fontFamilyOptionsKey) {
-      stableFontFamilyOptionsKeyRef.current = fontFamilyOptionsKey;
+    if (stableExtensionsKeyRef.current !== extensionsKey) {
+      stableExtensionsKeyRef.current = extensionsKey;
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
+      stableFontSizeOptionsRef.current = fontSizeOptions;
     }
 
     const memoizedExtensionsRef = useRef<{
@@ -518,11 +542,12 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       value: ReturnType<typeof createExtensiveExtensions>;
     } | null>(null);
 
-    if (!memoizedExtensionsRef.current || memoizedExtensionsRef.current.key !== fontFamilyOptionsKey) {
+    if (!memoizedExtensionsRef.current || memoizedExtensionsRef.current.key !== extensionsKey) {
       memoizedExtensionsRef.current = {
-        key: fontFamilyOptionsKey,
+        key: extensionsKey,
         value: createExtensiveExtensions({
           fontFamilyOptions: stableFontFamilyOptionsRef.current,
+          fontSizeOptions: stableFontSizeOptionsRef.current,
         }),
       };
     }

@@ -48,6 +48,12 @@ function App() {
               cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
             },
           ]}
+          fontSizeOptions={[
+            { value: "default", label: "Default", fontSize: "inherit" },
+            { value: "13", label: "13px", fontSize: "13px" },
+            { value: "17", label: "17px", fontSize: "17px" },
+            { value: "21", label: "21px", fontSize: "21px" },
+          ]}
           />
       </div>
     </div>

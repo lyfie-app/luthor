@@ -16,7 +16,8 @@ import {
   strikethroughExtension,
   FontFamilyExtension,
   type FontFamilyOption,
-  fontSizeExtension,
+  FontSizeExtension,
+  type FontSizeOption,
   lineHeightExtension,
   textColorExtension,
   textHighlightExtension,
@@ -39,6 +40,7 @@ export { setFloatingToolbarContext };
 
 export type ExtensiveExtensionsConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
+  fontSizeOptions?: readonly FontSizeOption[];
 };
 
 const DEFAULT_EXTENSIVE_FONT_FAMILY_OPTIONS: readonly FontFamilyOption[] = [
@@ -70,6 +72,23 @@ const DEFAULT_FONT_FAMILY_OPTION: FontFamilyOption = {
   value: "default",
   label: "Default",
   fontFamily: "inherit",
+};
+
+const DEFAULT_EXTENSIVE_FONT_SIZE_OPTIONS: readonly FontSizeOption[] = [
+  { value: "default", label: "Default", fontSize: "inherit" },
+  { value: "12", label: "12px", fontSize: "12px" },
+  { value: "14", label: "14px", fontSize: "14px" },
+  { value: "16", label: "16px", fontSize: "16px" },
+  { value: "18", label: "18px", fontSize: "18px" },
+  { value: "20", label: "20px", fontSize: "20px" },
+  { value: "24", label: "24px", fontSize: "24px" },
+  { value: "32", label: "32px", fontSize: "32px" },
+];
+
+const DEFAULT_FONT_SIZE_OPTION: FontSizeOption = {
+  value: "default",
+  label: "Default",
+  fontSize: "inherit",
 };
 
 function normalizeOptionToken(value: string): string {
@@ -124,6 +143,54 @@ function resolveFontFamilyOptions(
 
   if (!hasDefaultOption) {
     return [DEFAULT_FONT_FAMILY_OPTION, ...sanitized];
+  }
+
+  return sanitized;
+}
+
+function resolveFontSizeOptions(
+  inputOptions?: readonly FontSizeOption[],
+): readonly FontSizeOption[] {
+  const candidateOptions = inputOptions ?? DEFAULT_EXTENSIVE_FONT_SIZE_OPTIONS;
+  const seen = new Set<string>();
+  const sanitized: FontSizeOption[] = [];
+
+  for (const option of candidateOptions) {
+    const value = String(option.value).trim();
+    const label = String(option.label).trim();
+    const fontSize = String(option.fontSize).trim();
+
+    if (!value || !label || !fontSize) {
+      continue;
+    }
+
+    if (!isValidOptionToken(value)) {
+      continue;
+    }
+
+    const normalizedValue = normalizeOptionToken(value);
+    if (seen.has(normalizedValue)) {
+      continue;
+    }
+
+    seen.add(normalizedValue);
+    sanitized.push({
+      value,
+      label,
+      fontSize,
+    });
+  }
+
+  if (sanitized.length === 0) {
+    return DEFAULT_EXTENSIVE_FONT_SIZE_OPTIONS;
+  }
+
+  const hasDefaultOption = sanitized.some((option) => {
+    return normalizeOptionToken(option.value) === "default";
+  });
+
+  if (!hasDefaultOption) {
+    return [DEFAULT_FONT_SIZE_OPTION, ...sanitized];
   }
 
   return sanitized;
@@ -387,19 +454,6 @@ const textHighlightExt = textHighlightExtension.configure({
   ],
 });
 
-const fontSizeExt = fontSizeExtension.configure({
-  options: [
-    { value: "default", label: "Default", fontSize: "inherit" },
-    { value: "12", label: "12px", fontSize: "12px" },
-    { value: "14", label: "14px", fontSize: "14px" },
-    { value: "16", label: "16px", fontSize: "16px" },
-    { value: "18", label: "18px", fontSize: "18px" },
-    { value: "20", label: "20px", fontSize: "20px" },
-    { value: "24", label: "24px", fontSize: "24px" },
-    { value: "32", label: "32px", fontSize: "32px" },
-  ],
-});
-
 const lineHeightExt = lineHeightExtension.configure({
   options: [
     { value: "default", label: "Default", lineHeight: "normal" },
@@ -432,10 +486,14 @@ const { extension: featureCardExtension } = createCustomNodeExtension({
 
 function buildExtensiveExtensions({
   fontFamilyOptions,
+  fontSizeOptions,
 }: ExtensiveExtensionsConfig = {}) {
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
     cssLoadStrategy: "on-demand",
+  });
+  const fontSizeExt = new FontSizeExtension().configure({
+    options: resolveFontSizeOptions(fontSizeOptions),
   });
 
   return [

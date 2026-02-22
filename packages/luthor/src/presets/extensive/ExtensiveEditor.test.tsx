@@ -190,6 +190,27 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
       fontFamilyOptions,
+      fontSizeOptions: undefined,
+    });
+  });
+
+  it("passes fontSizeOptions to extension factory", () => {
+    const fontSizeOptions = [
+      { value: "default", label: "Default", fontSize: "inherit" },
+      { value: "13", label: "13px", fontSize: "13px" },
+      { value: "17", label: "17px", fontSize: "17px" },
+    ] as const;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        fontSizeOptions={fontSizeOptions}
+      />,
+    );
+
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith({
+      fontFamilyOptions: undefined,
+      fontSizeOptions,
     });
   });
 });

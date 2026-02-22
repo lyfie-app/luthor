@@ -38,6 +38,67 @@ const DEFAULT_FONT_SIZE_OPTIONS: readonly FontSizeOption[] = [
   { value: "32", label: "32px", fontSize: "32px" },
 ];
 
+const DEFAULT_FONT_SIZE_OPTION: FontSizeOption = {
+  value: "default",
+  label: "Default",
+  fontSize: "inherit",
+};
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isValidOptionToken(value: string): boolean {
+  return /^[a-z0-9][a-z0-9-]*$/i.test(value);
+}
+
+function sanitizeFontSizeOptions(
+  options: readonly FontSizeOption[],
+): readonly FontSizeOption[] {
+  const seenValues = new Set<string>();
+  const sanitized: FontSizeOption[] = [];
+
+  for (const option of options) {
+    const value = String(option.value).trim();
+    const label = String(option.label).trim();
+    const fontSize = String(option.fontSize).trim();
+
+    if (!value || !label || !fontSize) {
+      continue;
+    }
+
+    if (!isValidOptionToken(value)) {
+      continue;
+    }
+
+    const normalizedValue = normalizeToken(value);
+    if (seenValues.has(normalizedValue)) {
+      continue;
+    }
+
+    seenValues.add(normalizedValue);
+    sanitized.push({
+      value,
+      label,
+      fontSize,
+    });
+  }
+
+  if (sanitized.length === 0) {
+    return DEFAULT_FONT_SIZE_OPTIONS;
+  }
+
+  const hasDefaultOption = sanitized.some((option) => {
+    return normalizeToken(option.value) === "default";
+  });
+
+  if (!hasDefaultOption) {
+    return [DEFAULT_FONT_SIZE_OPTION, ...sanitized];
+  }
+
+  return sanitized;
+}
+
 export class FontSizeExtension extends BaseExtension<
   "fontSize",
   FontSizeConfig,
@@ -55,6 +116,16 @@ export class FontSizeExtension extends BaseExtension<
 
   register(): () => void {
     return () => {};
+  }
+
+  configure(config: Partial<FontSizeConfig>) {
+    const nextConfig: Partial<FontSizeConfig> = { ...config };
+
+    if (config.options) {
+      nextConfig.options = sanitizeFontSizeOptions(config.options);
+    }
+
+    return super.configure(nextConfig);
   }
 
   getCommands(editor: LexicalEditor): FontSizeCommands {

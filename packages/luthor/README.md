@@ -87,6 +87,7 @@ export function App() {
 - `toolbarClassName`: optional class appended to the toolbar root (`.luthor-toolbar`) for CSS overrides.
 - `toolbarStyleVars`: optional map of `--luthor-toolbar-*` custom properties applied to the toolbar root.
 - `fontFamilyOptions`: optional per-editor font-family option list for the `fontFamily` toolbar select.
+- `fontSizeOptions`: optional per-editor font-size option list for the `fontSize` toolbar select.
 
 ### Font family options
 
@@ -104,6 +105,25 @@ export function App() {
           fontFamily: "'Geist', 'Segoe UI', Arial, sans-serif",
           cssImportUrl: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;700&display=swap",
         },
+      ]}
+    />
+  );
+}
+```
+
+### Font size options
+
+```tsx
+import { ExtensiveEditor } from "@lyfie/luthor";
+
+export function App() {
+  return (
+    <ExtensiveEditor
+      fontSizeOptions={[
+        { value: "default", label: "Default", fontSize: "inherit" },
+        { value: "13", label: "13px", fontSize: "13px" },
+        { value: "17", label: "17px", fontSize: "17px" },
+        { value: "21", label: "21px", fontSize: "21px" },
       ]}
     />
   );

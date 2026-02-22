@@ -188,27 +188,27 @@ function resolveFontFamilyOptionValue(
 
 function resolveFontSizeOptionValue(
   computedFontSize: string | undefined,
-  options: readonly { value: string; fontSize: string }[],
+  options: readonly { value: string | number; fontSize: string | number }[],
 ): string | null {
   if (!computedFontSize) return null;
 
   const normalized = normalizeToken(computedFontSize);
   const directMatch = options.find((option) => {
-    if (normalizeToken(option.value) === normalized) return true;
-    return normalizeToken(option.fontSize) === normalized;
+    if (normalizeToken(String(option.value)) === normalized) return true;
+    return normalizeToken(String(option.fontSize)) === normalized;
   });
-  if (directMatch) return directMatch.value;
+  if (directMatch) return String(directMatch.value);
 
   const targetPx = parsePixelValue(computedFontSize);
   if (targetPx == null) return null;
 
   let closest: { value: string; distance: number } | null = null;
   for (const option of options) {
-    const optionPx = parsePixelValue(option.fontSize);
+    const optionPx = parsePixelValue(String(option.fontSize));
     if (optionPx == null) continue;
     const distance = Math.abs(optionPx - targetPx);
     if (!closest || distance < closest.distance) {
-      closest = { value: option.value, distance };
+      closest = { value: String(option.value), distance };
     }
   }
 
@@ -822,13 +822,23 @@ export function Toolbar({
     }
 
     const options = commands.getFontSizeOptions().map((option) => ({
-      value: option.value,
-      label: option.label,
-    }));
+      value: String(option.value).trim(),
+      label: String(option.label).trim(),
+    })).filter((option) => option.value.length > 0 && option.label.length > 0);
 
-    if (options.length > 0) {
-      setFontSizeOptions(options);
-    }
+    const hasDefaultOption = options.some((option) => normalizeToken(option.value) === "default");
+    const normalizedOptions = options.length === 0
+      ? [{ value: "default", label: "Default" }]
+      : hasDefaultOption
+        ? options
+        : [{ value: "default", label: "Default" }, ...options];
+    setFontSizeOptions(normalizedOptions);
+    setFontSizeValue((previousValue) => {
+      if (normalizedOptions.some((option) => option.value === previousValue)) {
+        return previousValue;
+      }
+      return "default";
+    });
   }, [commands, hasExtension]);
 
   useEffect(() => {
