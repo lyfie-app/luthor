@@ -742,11 +742,32 @@ export function Toolbar({
     { value: "default", label: "Default", color: "transparent" },
   ]);
   const [recentHighlightColors, setRecentHighlightColors] = useState<string[]>([]);
+  const [selectionVersion, setSelectionVersion] = useState(0);
   const [tableConfig, setTableConfig] = useState<InsertTableConfig>({
     rows: 3,
     columns: 3,
     includeHeaders: false,
   });
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const handleSelectionChange = () => {
+      const typography = getSelectionTypographyValues();
+      if (!typography) {
+        return;
+      }
+
+      setSelectionVersion((previous) => previous + 1);
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, []);
 
   const emojiOptions = useMemo<EmojiOption[]>(() => {
     if (!hasExtension("emoji")) {
@@ -818,7 +839,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("fontSize") || typeof commands.getFontSizeOptions !== "function") {
@@ -877,7 +898,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("lineHeight") || typeof commands.getLineHeightOptions !== "function") {
@@ -927,7 +948,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("textColor") || typeof commands.getTextColorOptions !== "function") {
@@ -960,7 +981,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("textHighlight") || typeof commands.getTextHighlightOptions !== "function") {
@@ -993,7 +1014,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   const availableHeadingOptions = useMemo(() => {
     if (!headingOptions || headingOptions.length === 0) {
