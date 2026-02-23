@@ -3,7 +3,7 @@
 Concatenated markdown corpus for AI ingestion.
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\documentation
-Generated at: 2026-02-23T08:46:54.356Z
+Generated at: 2026-02-23T11:20:22.845Z
 
 ---
 ## FILE: demo-app/website-development-phased-plan.md
@@ -2207,6 +2207,12 @@ const configuredFontFamily = fontFamilyExtension.configure({
 });
 ```
 
+Line-height option note:
+
+- `lineHeightExtension` accepts `default` and numeric ratios `>= 1.0`.
+- `default` maps to `defaultLineHeight` (default `"1.5"` when not configured).
+- Applying line height updates the entire selected block (not only the selected word span).
+
 ## Theme configuration
 
 Pass theme through provider config:
@@ -2546,6 +2552,7 @@ The extensive preset is the full-feature default and includes:
 - `className`
 - `variantClassName`
 - `onReady`
+- `minimumLineHeight` (line-height lower-bound for baseline/default behavior, default `1.5`, minimum `1.0`)
 - `defaultSettings` (typed visual defaults for font/link/list/quote/table/hr/placeholder/codeblock/toolbar)
 
 ## Source-mode behavior
@@ -2593,6 +2600,7 @@ Precedence (highest to lowest):
 The extensive preset internally configures options such as:
 
 - font family option catalogs
+- line-height option ratios (`default` + numeric values `>= 1.0`, with `default` controlled by `minimumLineHeight`)
 - text/background color option catalogs
 - image upload and alignment behavior
 - embed defaults and URL handling

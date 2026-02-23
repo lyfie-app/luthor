@@ -62,6 +62,7 @@ export type ExtensivePresetConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  minimumDefaultLineHeight?: string | number;
   isCopyAllowed?: boolean;
   languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
 };
@@ -75,6 +76,7 @@ export function createExtensivePreset(
       fontFamilyOptions: config.fontFamilyOptions,
       fontSizeOptions: config.fontSizeOptions,
       lineHeightOptions: config.lineHeightOptions,
+      minimumDefaultLineHeight: config.minimumDefaultLineHeight,
       isCopyAllowed: config.isCopyAllowed,
       languageOptions: config.languageOptions,
     })],

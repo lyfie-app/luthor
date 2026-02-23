@@ -141,6 +141,7 @@ export type ExtensiveExtensionsConfig = {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  minimumDefaultLineHeight?: string | number;
   featureFlags?: FeatureFlagOverrides;
   isDraggableBoxEnabled?: boolean;
   scaleByRatio?: boolean;
@@ -201,7 +202,7 @@ const DEFAULT_FONT_SIZE_OPTION: FontSizeOption = {
 };
 
 const DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS: readonly LineHeightOption[] = [
-  { value: "default", label: "Default", lineHeight: "normal" },
+  { value: "default", label: "Default", lineHeight: "1.5" },
   { value: "1", label: "1.0", lineHeight: "1" },
   { value: "1.15", label: "1.15", lineHeight: "1.15" },
   { value: "1.5", label: "1.5", lineHeight: "1.5" },
@@ -212,8 +213,10 @@ const DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS: readonly LineHeightOption[] = [
 const DEFAULT_LINE_HEIGHT_OPTION: LineHeightOption = {
   value: "default",
   label: "Default",
-  lineHeight: "normal",
+  lineHeight: "1.5",
 };
+const DEFAULT_LINE_HEIGHT_RATIO = "1.5";
+const MIN_LINE_HEIGHT_RATIO = 1;
 
 function normalizeOptionToken(value: string): string {
   return value.trim().toLowerCase();
@@ -336,15 +339,34 @@ function parseLineHeightRatio(value: string): string | null {
   }
 
   const parsed = Number(trimmed);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
+  if (!Number.isFinite(parsed) || parsed < MIN_LINE_HEIGHT_RATIO) {
     return null;
   }
 
   return parsed.toString();
 }
 
+function normalizeMinimumDefaultLineHeight(input: string | number | undefined): string {
+  if (typeof input === "number") {
+    if (!Number.isFinite(input)) {
+      return DEFAULT_LINE_HEIGHT_RATIO;
+    }
+
+    const normalized = parseLineHeightRatio(input.toString());
+    return normalized ?? DEFAULT_LINE_HEIGHT_RATIO;
+  }
+
+  if (typeof input === "string") {
+    const normalized = parseLineHeightRatio(input);
+    return normalized ?? DEFAULT_LINE_HEIGHT_RATIO;
+  }
+
+  return DEFAULT_LINE_HEIGHT_RATIO;
+}
+
 function resolveLineHeightOptions(
   inputOptions?: readonly LineHeightOption[],
+  minimumDefaultLineHeight: string = DEFAULT_LINE_HEIGHT_RATIO,
 ): readonly LineHeightOption[] {
   const candidateOptions = inputOptions ?? DEFAULT_EXTENSIVE_LINE_HEIGHT_OPTIONS;
   const seen = new Set<string>();
@@ -372,7 +394,7 @@ function resolveLineHeightOptions(
       sanitized.push({
         value,
         label,
-        lineHeight: "normal",
+        lineHeight: minimumDefaultLineHeight,
       });
       continue;
     }
@@ -399,7 +421,7 @@ function resolveLineHeightOptions(
   });
 
   if (!hasDefaultOption) {
-    return [DEFAULT_LINE_HEIGHT_OPTION, ...sanitized];
+    return [{ ...DEFAULT_LINE_HEIGHT_OPTION, lineHeight: minimumDefaultLineHeight }, ...sanitized];
   }
 
   return sanitized;
@@ -686,6 +708,7 @@ function buildExtensiveExtensions({
   fontFamilyOptions,
   fontSizeOptions,
   lineHeightOptions,
+  minimumDefaultLineHeight,
   featureFlags,
   isDraggableBoxEnabled,
   scaleByRatio,
@@ -700,6 +723,7 @@ function buildExtensiveExtensions({
   const enabled = (feature: FeatureFlag) => isFeatureEnabled(resolvedFeatureFlags, feature);
   const isDraggableFeatureEnabled =
     (isDraggableBoxEnabled ?? true) && enabled("draggableBlock");
+  const resolvedMinimumDefaultLineHeight = normalizeMinimumDefaultLineHeight(minimumDefaultLineHeight);
 
   const fontFamilyExt = new FontFamilyExtension().configure({
     options: resolveFontFamilyOptions(fontFamilyOptions),
@@ -709,7 +733,8 @@ function buildExtensiveExtensions({
     options: resolveFontSizeOptions(fontSizeOptions),
   });
   const lineHeightExt = new LineHeightExtension().configure({
-    options: resolveLineHeightOptions(lineHeightOptions),
+    options: resolveLineHeightOptions(lineHeightOptions, resolvedMinimumDefaultLineHeight),
+    defaultLineHeight: resolvedMinimumDefaultLineHeight,
   });
   extensiveImageExtension.configure({
     scaleByRatio: scaleByRatio ?? false,

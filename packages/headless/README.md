@@ -203,11 +203,13 @@ Nuances:
 `LineHeightConfig`:
 
 - `options: readonly LineHeightOption[]`
+- `defaultLineHeight?: string` (default `"1.5"`)
 
 Nuances:
 
-- `value: "default"` maps to `lineHeight: "normal"`.
-- Non-default entries should use positive numeric ratios (`"1.5"`, `"2"`).
+- `value: "default"` maps to `defaultLineHeight` (or `"1.5"` when not configured).
+- Non-default entries should use numeric ratios `>= 1.0` (`"1"`, `"1.5"`, `"2"`).
+- Line height is applied at block level (TinyMCE-style): selecting text inside a block updates that whole block.
 
 #### `TextColorExtension`
 

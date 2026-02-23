@@ -684,7 +684,7 @@
 	padding: var(--luthor-editor-content-padding-y) var(--luthor-editor-content-padding-x);
 	outline: none;
 	color: var(--luthor-fg);
-	line-height: 1.7;
+	line-height: 1;
 	font-size: 16px;
 	background-color: var(--luthor-bg);
 	transition: background-color var(--luthor-theme-transition), color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
@@ -708,7 +708,7 @@
 	top: calc(var(--luthor-editor-content-padding-y) + var(--luthor-first-block-offset));
 	left: var(--luthor-editor-content-padding-x);
 	font-size: 16px;
-	line-height: 1.7;
+	line-height: var(--luthor-default-line-height, 1.5);
 	z-index: 1;
 	transition: color var(--luthor-theme-transition), background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
@@ -1689,6 +1689,7 @@
 
 .luthor-paragraph {
 	margin: var(--luthor-first-block-offset) 0;
+	line-height: var(--luthor-default-line-height, 1.5);
 }
 
 .luthor-heading-h1,
@@ -1698,6 +1699,7 @@
 .luthor-heading-h5,
 .luthor-heading-h6 {
 	margin: calc(16px * var(--luthor-line-height-ratio, 1)) 0 calc(8px * var(--luthor-line-height-ratio, 1));
+	line-height: var(--luthor-default-line-height, 1.5);
 	font-weight: 700;
 }
 
@@ -1715,6 +1717,7 @@
 
 .luthor-list-li {
 	margin: calc(4px * var(--luthor-line-height-ratio, 1)) 0;
+	line-height: var(--luthor-default-line-height, 1.5);
 }
 
 .luthor-list-ul .luthor-list-li::marker,
@@ -1786,6 +1789,7 @@
 	padding: 10px 14px;
 	margin: 12px 0;
 	color: var(--luthor-quote-fg, var(--luthor-fg));
+	line-height: var(--luthor-default-line-height, 1.5);
 }
 
 .luthor-link {

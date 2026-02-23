@@ -74,13 +74,13 @@ function App() {
             { value: "17", label: "17px", fontSize: "17px" },
             { value: "21", label: "21px", fontSize: "21px" },
           ]}
+          minimumDefaultLineHeight={1}
           lineHeightOptions={[
             { value: "default", label: "Default", lineHeight: "normal" },
-            { value: "0.25", label: "0.25", lineHeight: "0.25" },
-            { value: "0.5", label: "0.5", lineHeight: "0.5" },
             { value: "1", label: "1.0", lineHeight: "1" },
-            { value: "1.25", label: "1.25", lineHeight: "1.25" },
+            { value: "1.15", label: "1.15", lineHeight: "1.15" },
             { value: "1.5", label: "1.5", lineHeight: "1.5" },
+            { value: "1.75", label: "1.75", lineHeight: "1.75" },
             { value: "2", label: "2.0", lineHeight: "2" },
           ]}
           paragraphLabel="Normal"

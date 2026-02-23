@@ -193,6 +193,31 @@ function normalizeLineHeightOptionsKey(options?: readonly LineHeightOption[]): s
   );
 }
 
+function normalizeMinimumDefaultLineHeightKey(value: string | number | undefined): string {
+  const fallback = "1.5";
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value < 1) {
+      return fallback;
+    }
+    return value.toString();
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return fallback;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      return fallback;
+    }
+    return parsed.toString();
+  }
+
+  return fallback;
+}
+
 function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): string {
   if (!styleVars) {
     return "__default__";
@@ -1268,6 +1293,7 @@ export interface ExtensiveEditorProps {
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
+  minimumDefaultLineHeight?: string | number;
   scaleByRatio?: boolean;
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
@@ -1311,6 +1337,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     fontFamilyOptions,
     fontSizeOptions,
     lineHeightOptions,
+    minimumDefaultLineHeight = 1.5,
     scaleByRatio = false,
     headingOptions,
     paragraphLabel,
@@ -1364,6 +1391,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => normalizeLineHeightOptionsKey(lineHeightOptions),
       [lineHeightOptions],
     );
+    const minimumDefaultLineHeightKey = useMemo(
+      () => normalizeMinimumDefaultLineHeightKey(minimumDefaultLineHeight),
+      [minimumDefaultLineHeight],
+    );
     const syntaxHighlightKey = syntaxHighlighting ?? "unset";
     const maxAutoDetectKey =
       typeof maxAutoDetectCodeLength === "number"
@@ -1392,10 +1423,11 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => resolveFeatureFlags(effectiveFeatureFlags),
       [featureFlagsKey],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${languageOptionsKey}::${featureFlagsKey}`;
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${minimumDefaultLineHeightKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${languageOptionsKey}::${featureFlagsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
+    const stableMinimumDefaultLineHeightRef = useRef<string | number | undefined>(minimumDefaultLineHeight);
     const stableFeatureFlagsRef = useRef<FeatureFlagOverrides | undefined>(effectiveFeatureFlags);
     const stableLanguageOptionsRef = useRef<
       readonly string[] | CodeLanguageOptionsConfig | undefined
@@ -1415,6 +1447,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       stableFontFamilyOptionsRef.current = fontFamilyOptions;
       stableFontSizeOptionsRef.current = fontSizeOptions;
       stableLineHeightOptionsRef.current = lineHeightOptions;
+      stableMinimumDefaultLineHeightRef.current = minimumDefaultLineHeight;
       stableFeatureFlagsRef.current = effectiveFeatureFlags;
       stableLanguageOptionsRef.current = languageOptions;
       stableCodeHighlightProviderRef.current = codeHighlightProvider;
@@ -1431,6 +1464,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         fontFamilyOptions: stableFontFamilyOptionsRef.current,
         fontSizeOptions: stableFontSizeOptionsRef.current,
         lineHeightOptions: stableLineHeightOptionsRef.current,
+        minimumDefaultLineHeight: stableMinimumDefaultLineHeightRef.current,
         scaleByRatio,
         ...(syntaxHighlighting !== undefined
           ? { syntaxHighlighting }
@@ -1513,16 +1547,20 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       const defaultVars = stableDefaultSettingsRef.current as CSSProperties | undefined;
       const editorThemeVars = createEditorThemeStyleVars(stableEditorThemeOverridesRef.current);
       const quoteVars = stableQuoteStyleVarsRef.current as CSSProperties | undefined;
+      const lineHeightVars = {
+        "--luthor-default-line-height": minimumDefaultLineHeightKey,
+      } as CSSProperties;
       if (!defaultVars && !editorThemeVars && !quoteVars) {
-        return undefined;
+        return lineHeightVars;
       }
 
       return {
         ...(defaultVars ?? {}),
         ...(editorThemeVars as CSSProperties | undefined),
         ...(quoteVars ?? {}),
+        ...lineHeightVars,
       };
-    }, [defaultSettingsKey, editorThemeOverridesKey, quoteStyleVarsKey]);
+    }, [defaultSettingsKey, editorThemeOverridesKey, quoteStyleVarsKey, minimumDefaultLineHeightKey]);
 
     const [methods, setMethods] = useState<ExtensiveEditorRef | null>(null);
     useImperativeHandle(ref, () => methods as ExtensiveEditorRef, [methods]);

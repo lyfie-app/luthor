@@ -563,6 +563,20 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     });
   });
 
+  it("applies minimumDefaultLineHeight as editor baseline CSS variable", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        minimumDefaultLineHeight={1.2}
+      />,
+    );
+
+    const wrapper = document.querySelector(".luthor-editor-wrapper");
+    expect(wrapper).toHaveStyle({
+      "--luthor-default-line-height": "1.2",
+    });
+  });
+
   it("prioritizes editorThemeOverrides over defaultSettings for overlapping tokens", () => {
     render(
       <ExtensiveEditor
@@ -626,9 +640,25 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       fontFamilyOptions: undefined,
       fontSizeOptions: undefined,
       lineHeightOptions,
+      minimumDefaultLineHeight: 1.5,
       scaleByRatio: false,
       isCopyAllowed: true,
     }));
+  });
+
+  it("passes minimumDefaultLineHeight to extension factory", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        minimumDefaultLineHeight={1.2}
+      />,
+    );
+
+    expect(createExtensiveExtensionsMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        minimumDefaultLineHeight: 1.2,
+      }),
+    );
   });
 
   it("passes code language options to extension factory", () => {

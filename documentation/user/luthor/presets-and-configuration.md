@@ -43,6 +43,7 @@ The extensive preset is the full-feature default and includes:
 - `className`
 - `variantClassName`
 - `onReady`
+- `minimumDefaultLineHeight` (line-height lower-bound for baseline/default behavior, default `1.5`, minimum `1.0`)
 - `defaultSettings` (typed visual defaults for font/link/list/quote/table/hr/placeholder/codeblock/toolbar)
 
 ## Source-mode behavior
@@ -90,6 +91,7 @@ Precedence (highest to lowest):
 The extensive preset internally configures options such as:
 
 - font family option catalogs
+- line-height option ratios (`default` + numeric values `>= 1.0`, with `default` controlled by `minimumDefaultLineHeight`)
 - text/background color option catalogs
 - image upload and alignment behavior
 - embed defaults and URL handling

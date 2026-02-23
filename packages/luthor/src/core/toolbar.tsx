@@ -930,7 +930,7 @@ export function Toolbar({
     void commands.getCurrentLineHeight().then((value) => {
       if (isCancelled) return;
 
-      if (value && value !== "default") {
+      if (value) {
         setLineHeightValue(value);
         return;
       }
@@ -1085,7 +1085,7 @@ export function Toolbar({
 
   const handleLineHeightChange = (value: string) => {
     if (value === "default") {
-      commands.clearLineHeight?.();
+      commands.setLineHeight?.(value);
     } else {
       commands.setLineHeight?.(value);
     }

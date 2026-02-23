@@ -59,6 +59,12 @@ const configuredFontFamily = fontFamilyExtension.configure({
 });
 ```
 
+Line-height option note:
+
+- `lineHeightExtension` accepts `default` and numeric ratios `>= 1.0`.
+- `default` maps to `defaultLineHeight` (default `"1.5"` when not configured).
+- Applying line height updates the entire selected block (not only the selected word span).
+
 ## Theme configuration
 
 Pass theme through provider config:

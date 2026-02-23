@@ -63,7 +63,8 @@ const { createEditorSystem, richTextExtension, boldExtension } = headless;
 | `editorThemeOverrides` | `LuthorEditorThemeOverrides` | `undefined` | Inline editor-wide `--luthor-*` token overrides. |
 | `fontFamilyOptions` | `readonly FontFamilyOption[]` | preset defaults | Sanitized: duplicates removed, invalid tokens removed, `default` auto-added if missing. |
 | `fontSizeOptions` | `readonly FontSizeOption[]` | preset defaults | Sanitized similarly to font family options. |
-| `lineHeightOptions` | `readonly LineHeightOption[]` | preset defaults | Uses unitless ratios (`"1.5"`) for non-default values. |
+| `minimumDefaultLineHeight` | `string \| number` | `1.5` | Sets the editor default line height and the minimum selectable/accepted line-height floor for the line-height feature; minimum accepted value is `1.0`. |
+| `lineHeightOptions` | `readonly LineHeightOption[]` | preset defaults | Uses unitless ratios (`"1.5"`) for non-default values; minimum allowed is `1.0`. |
 | `scaleByRatio` | `boolean` | `false` | Image resize behavior (`true` = keep ratio by default, Shift unlocks). |
 | `headingOptions` | `readonly ("h1"\|"h2"\|"h3"\|"h4"\|"h5"\|"h6")[]` | all headings | Invalid/duplicate entries are removed. |
 | `paragraphLabel` | `string` | `"Paragraph"` behavior | Label for paragraph entry in block format menu/commands. |
