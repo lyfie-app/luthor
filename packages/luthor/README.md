@@ -69,6 +69,8 @@ const { createEditorSystem, richTextExtension, boldExtension } = headless;
 | `paragraphLabel` | `string` | `"Paragraph"` behavior | Label for paragraph entry in block format menu/commands. |
 | `syncHeadingOptionsWithCommands` | `boolean` | `true` | Syncs heading command generation with `headingOptions`. |
 | `slashCommandVisibility` | `SlashCommandVisibility` | `undefined` | Slash command filter using allowlist/denylist or enabled-ID selection array form. |
+| `shortcutConfig` | `ShortcutConfig` | `undefined` | Per-instance command shortcut config (disable/remap, collision and native conflict prevention). |
+| `commandPaletteShortcutOnly` | `boolean` | `false` | When `true`, command palette only shows commands that have a visible keyboard shortcut. |
 | `isDraggableBoxEnabled` | `boolean` | `undefined` | Shortcut for enabling/disabling draggable block UI (maps into `featureFlags.draggableBlock`). |
 | `featureFlags` | `Partial<Record<FeatureFlag, boolean>>` | all `true` | Central capability switchboard; affects extensions, toolbar, commands, shortcuts. |
 | `syntaxHighlighting` | `"auto" \| "disabled"` | extension default (`"auto"`) | Code block syntax highlighting strategy. |
@@ -171,7 +173,29 @@ export function App() {
 />
 ```
 
-### 6) Style token overrides
+### 6) Per-instance shortcut remap/disable
+
+```tsx
+<ExtensiveEditor
+  shortcutConfig={{
+    disabledCommandIds: ["format.italic"],
+    bindings: {
+      "format.bold": { key: "m", ctrlKey: true },
+      "palette.show": [
+        { key: "k", ctrlKey: true, shiftKey: true },
+      ],
+    },
+  }}
+/>
+```
+
+### 7) Command palette shortcut-only mode
+
+```tsx
+<ExtensiveEditor commandPaletteShortcutOnly />
+```
+
+### 8) Style token overrides
 
 ```tsx
 <ExtensiveEditor
@@ -192,7 +216,7 @@ export function App() {
 />
 ```
 
-### 7) Emoji library auto-detection (works in `apps/demo`)
+### 9) Emoji library auto-detection (works in `apps/demo`)
 
 Install emoji-mart data in the app:
 
@@ -221,6 +245,9 @@ What happens:
 
 - `featureFlags` are authoritative. If a feature is disabled, related toolbar items and commands are removed/no-op even if you attempt to show them.
 - `slashCommandVisibility` keeps original command ordering; it only filters visibility.
+- `shortcutConfig.disabledCommandIds` removes commands from keyboard handling and command UIs for that editor instance.
+- `shortcutConfig` drops duplicate bindings by default and blocks native editable conflicts by default.
+- `commandPaletteShortcutOnly` is optional; by default command palette can include command items without shortcuts.
 - `languageOptions` normalizes aliases (for example `js` becomes `javascript`) and rejects duplicates after normalization.
 - Emoji suggestions/tooling auto-detect external emoji-mart data when available, and otherwise use the built-in default emoji catalog.
 - `defaultSettings` is style-only; behavior is controlled by explicit props (for example `featureFlags`, `availableModes`).

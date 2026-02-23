@@ -7,6 +7,7 @@ const {
   registerKeyboardShortcutsMock,
   commandsToCommandPaletteItemsMock,
   commandsToSlashCommandItemsMock,
+  commandPaletteMock,
   toolbarMock,
   createExtensiveExtensionsMock,
   createEditorThemeStyleVarsMock,
@@ -17,6 +18,7 @@ const {
   registerKeyboardShortcutsMock: vi.fn(() => vi.fn()),
   commandsToCommandPaletteItemsMock: vi.fn(() => [{ id: "mock-command" }]),
   commandsToSlashCommandItemsMock: vi.fn(() => [{ id: "mock-slash-command" }]),
+  commandPaletteMock: vi.fn(() => null),
   toolbarMock: vi.fn(({ classNames, toolbarStyleVars }: { classNames?: { toolbar?: string }; toolbarStyleVars?: Record<string, string> }) => (
     <div data-testid="toolbar" className={classNames?.toolbar} style={toolbarStyleVars} />
   )),
@@ -115,7 +117,7 @@ vi.mock("./extensions", () => ({
 }));
 
 vi.mock("../../core", () => ({
-  CommandPalette: () => null,
+  CommandPalette: commandPaletteMock,
   SlashCommandMenu: () => null,
   EmojiSuggestionMenu: () => null,
   commandsToCommandPaletteItems: commandsToCommandPaletteItemsMock,
@@ -123,6 +125,11 @@ vi.mock("../../core", () => ({
   formatJSONBSource: (value: string) => value,
   ModeTabs: () => <div data-testid="mode-tabs" />,
   registerKeyboardShortcuts: registerKeyboardShortcutsMock,
+  generateCommands: vi.fn(() => [
+    { id: "format.bold", shortcuts: [{ key: "b", ctrlKey: true }] },
+    { id: "format.italic", shortcuts: [{ key: "i", ctrlKey: true }] },
+    { id: "insert.table", shortcuts: [] },
+  ]),
   SourceView: sourceViewMock,
   LinkHoverBubble: () => null,
   Toolbar: toolbarMock,
@@ -183,6 +190,7 @@ import { ExtensiveEditor } from "./ExtensiveEditor";
 describe("ExtensiveEditor toolbar placement and alignment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEditorApi.extensions = [];
   });
 
   it("renders toolbar in the header by default with left alignment", () => {
@@ -336,6 +344,93 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([]);
     expect(mockEditorApi.commands.setSlashCommands).toHaveBeenCalledWith([{ id: "insert.image" }]);
+  });
+
+  it("passes shortcutConfig through command mapping and keyboard registration", () => {
+    const shortcutConfig = {
+      disabledCommandIds: ["format.italic"],
+      bindings: {
+        "format.bold": { key: "m", ctrlKey: true },
+      },
+    } as const;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        shortcutConfig={shortcutConfig}
+      />,
+    );
+
+    expect(commandsToCommandPaletteItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ shortcutConfig }),
+    );
+    expect(commandsToSlashCommandItemsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ shortcutConfig }),
+    );
+    expect(registerKeyboardShortcutsMock).toHaveBeenCalledWith(
+      expect.anything(),
+      document.body,
+      expect.objectContaining({ shortcutConfig, scope: expect.any(Function) }),
+    );
+  });
+
+  it("filters command palette extension items without shortcuts when commandPaletteShortcutOnly is enabled", () => {
+    const subscribe = vi.fn((listener: (isOpen: boolean, items: Array<{ id: string; shortcut?: string }>) => void) => {
+      listener(true, [
+        { id: "table.insertRowAbove" },
+        { id: "format.bold", shortcut: "Ctrl+M" },
+      ]);
+      return () => {};
+    });
+    mockEditorApi.extensions = [{ name: "commandPalette", subscribe }] as any;
+
+    render(<ExtensiveEditor showDefaultContent={false} commandPaletteShortcutOnly />);
+
+    const lastCall = commandPaletteMock.mock.calls.at(-1)?.[0] as { commands?: Array<{ id: string }> };
+    expect(lastCall.commands).toEqual([{ id: "format.bold", shortcut: "Ctrl+M" }]);
+  });
+
+  it("keeps command palette extension items without shortcuts by default", () => {
+    const subscribe = vi.fn((listener: (isOpen: boolean, items: Array<{ id: string; shortcut?: string }>) => void) => {
+      listener(true, [
+        { id: "table.insertRowAbove" },
+        { id: "format.bold", shortcut: "Ctrl+M" },
+      ]);
+      return () => {};
+    });
+    mockEditorApi.extensions = [{ name: "commandPalette", subscribe }] as any;
+
+    render(<ExtensiveEditor showDefaultContent={false} />);
+
+    const lastCall = commandPaletteMock.mock.calls.at(-1)?.[0] as { commands?: Array<{ id: string }> };
+    expect(lastCall.commands).toEqual([
+      { id: "table.insertRowAbove" },
+      { id: "format.bold", shortcut: "Ctrl+M" },
+    ]);
+  });
+
+  it("blocks default lexical shortcut when command is disabled via disabledCommandIds", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        shortcutConfig={{ disabledCommandIds: ["format.bold"] }}
+      />,
+    );
+
+    const input = document.createElement("input");
+    document.body.appendChild(input);
+    const event = new KeyboardEvent("keydown", {
+      key: "b",
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    input.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    input.remove();
   });
 
   it("applies toolbarClassName and passes toolbarStyleVars to toolbar rendering", () => {

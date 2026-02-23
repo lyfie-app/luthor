@@ -106,6 +106,16 @@ function App() {
             placeholder: { color: "#94a3b8" },
             toolbar: { backgroundColor: "#f8fafc" },
           }}
+          commandPaletteShortcutOnly={false}
+          shortcutConfig={{
+            disabledCommandIds: ["format.italic", "format.bold"],
+            bindings: {
+              "format.bold": { key: "m", ctrlKey: true },
+              "palette.show": [
+                { key: "k", ctrlKey: true, shiftKey: true },
+              ],
+            },
+          }}
         />
       </div>
     </div>

@@ -18,6 +18,7 @@ import {
   commandsToCommandPaletteItems,
   commandsToSlashCommandItems,
   formatJSONBSource,
+  generateCommands,
   ModeTabs,
   LinkHoverBubble,
   registerKeyboardShortcuts,
@@ -37,6 +38,8 @@ import {
   type ToolbarVisibility,
   type ToolbarPosition,
   type SlashCommandVisibility,
+  type KeyboardShortcut,
+  type ShortcutConfig as CommandShortcutConfig,
 } from "../../core";
 import { EXTENSIVE_WELCOME_CONTENT_JSONB as extensiveWelcomeContent } from "./welcomeContent";
 import type {
@@ -607,6 +610,88 @@ function normalizeSlashCommandVisibilityKey(visibility?: SlashCommandVisibility)
   return JSON.stringify({ allowlist, denylist });
 }
 
+function normalizeCommandIdList(ids?: readonly string[]): string[] {
+  if (!ids || ids.length === 0) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+  for (const id of ids) {
+    const value = id.trim();
+    if (!value || seen.has(value)) {
+      continue;
+    }
+    seen.add(value);
+    normalized.push(value);
+  }
+
+  return normalized;
+}
+
+function isKeyboardShortcutMatch(event: KeyboardEvent, shortcut: KeyboardShortcut): boolean {
+  return (
+    event.key.toLowerCase() === shortcut.key.toLowerCase() &&
+    !!event.ctrlKey === !!shortcut.ctrlKey &&
+    !!event.metaKey === !!shortcut.metaKey &&
+    !!event.shiftKey === !!shortcut.shiftKey &&
+    !!event.altKey === !!shortcut.altKey
+  );
+}
+
+function normalizeShortcutConfigKey(shortcutConfig?: CommandShortcutConfig): string {
+  if (!shortcutConfig) {
+    return "__default__";
+  }
+
+  const disabledCommandIds = Array.isArray(shortcutConfig.disabledCommandIds)
+    ? [...shortcutConfig.disabledCommandIds]
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0)
+      .sort((left, right) => left.localeCompare(right))
+    : [];
+
+  const bindings = shortcutConfig.bindings
+    ? Object.entries(shortcutConfig.bindings)
+      .map(([commandId, override]) => {
+        if (override === false || override === null) {
+          return [commandId, false] as const;
+        }
+
+        const shortcuts = Array.isArray(override) ? override : [override];
+        const normalizedShortcuts = shortcuts
+          .map((shortcut) => ({
+            key: shortcut.key.trim(),
+            ctrlKey: !!shortcut.ctrlKey,
+            metaKey: !!shortcut.metaKey,
+            shiftKey: !!shortcut.shiftKey,
+            altKey: !!shortcut.altKey,
+            preventDefault: shortcut.preventDefault,
+          }))
+          .filter((shortcut) => shortcut.key.length > 0)
+          .sort((left, right) => {
+            const leftKey = `${left.key}:${left.ctrlKey ? 1 : 0}:${left.metaKey ? 1 : 0}:${left.shiftKey ? 1 : 0}:${left.altKey ? 1 : 0}`;
+            const rightKey = `${right.key}:${right.ctrlKey ? 1 : 0}:${right.metaKey ? 1 : 0}:${right.shiftKey ? 1 : 0}:${right.altKey ? 1 : 0}`;
+            return leftKey.localeCompare(rightKey);
+          });
+
+        if (normalizedShortcuts.length === 0) {
+          return [commandId, false] as const;
+        }
+
+        return [commandId, normalizedShortcuts] as const;
+      })
+      .sort(([left], [right]) => left.localeCompare(right))
+    : [];
+
+  return JSON.stringify({
+    disabledCommandIds,
+    bindings,
+    preventCollisions: shortcutConfig.preventCollisions !== false,
+    preventNativeConflicts: shortcutConfig.preventNativeConflicts !== false,
+  });
+}
+
 function ExtensiveEditorContent({
   isDark,
   toggleTheme,
@@ -626,6 +711,8 @@ function ExtensiveEditorContent({
   paragraphLabel,
   syncHeadingOptionsWithCommands,
   slashCommandVisibility,
+  shortcutConfig,
+  commandPaletteShortcutOnly,
   featureFlags,
 }: {
   isDark: boolean;
@@ -646,6 +733,8 @@ function ExtensiveEditorContent({
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  shortcutConfig?: CommandShortcutConfig;
+  commandPaletteShortcutOnly: boolean;
   featureFlags: FeatureFlags;
 }) {
   const {
@@ -706,10 +795,44 @@ function ExtensiveEditorContent({
   const slashCommandVisibilityKey = normalizeSlashCommandVisibilityKey(slashCommandVisibility);
   const stableSlashCommandVisibilityRef = useRef<SlashCommandVisibility | undefined>(slashCommandVisibility);
   const stableSlashCommandVisibilityKeyRef = useRef(slashCommandVisibilityKey);
+  const shortcutConfigKey = normalizeShortcutConfigKey(shortcutConfig);
+  const stableShortcutConfigRef = useRef<CommandShortcutConfig | undefined>(shortcutConfig);
+  const stableShortcutConfigKeyRef = useRef(shortcutConfigKey);
+  const disabledCommandIds = useMemo(
+    () => normalizeCommandIdList(shortcutConfig?.disabledCommandIds),
+    [shortcutConfigKey],
+  );
+  const disabledCommandIdsSet = useMemo(
+    () => new Set(disabledCommandIds),
+    [disabledCommandIds],
+  );
+  const blockedDefaultShortcuts = useMemo<KeyboardShortcut[]>(() => {
+    if (disabledCommandIdsSet.size === 0) {
+      return [];
+    }
+
+    return generateCommands({
+      headingOptions: commandHeadingOptions,
+      paragraphLabel: commandParagraphLabel,
+      isFeatureEnabled,
+    })
+      .filter((command) => disabledCommandIdsSet.has(command.id))
+      .flatMap((command) => command.shortcuts ?? []);
+  }, [
+    disabledCommandIdsSet,
+    commandHeadingOptions,
+    commandParagraphLabel,
+    isFeatureEnabled,
+  ]);
 
   if (stableSlashCommandVisibilityKeyRef.current !== slashCommandVisibilityKey) {
     stableSlashCommandVisibilityKeyRef.current = slashCommandVisibilityKey;
     stableSlashCommandVisibilityRef.current = slashCommandVisibility;
+  }
+
+  if (stableShortcutConfigKeyRef.current !== shortcutConfigKey) {
+    stableShortcutConfigKeyRef.current = shortcutConfigKey;
+    stableShortcutConfigRef.current = shortcutConfig;
   }
   
   // Lazy conversion state: track which formats are valid cache
@@ -751,6 +874,8 @@ function ExtensiveEditorContent({
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
       isFeatureEnabled,
+      shortcutConfig: stableShortcutConfigRef.current,
+      commandPaletteShortcutOnly,
     });
     if (typeof commandApi.registerCommand === "function") {
       paletteItems.forEach((cmd) => commandApi.registerCommand(cmd));
@@ -760,6 +885,7 @@ function ExtensiveEditorContent({
       paragraphLabel: commandParagraphLabel,
       slashCommandVisibility: stableSlashCommandVisibilityRef.current,
       isFeatureEnabled,
+      shortcutConfig: stableShortcutConfigRef.current,
     });
     if (typeof commandApi.setSlashCommands === "function") {
       commandApi.setSlashCommands(slashItems);
@@ -771,6 +897,8 @@ function ExtensiveEditorContent({
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
       isFeatureEnabled,
+      shortcutConfig: stableShortcutConfigRef.current,
+      scope: () => editor.getRootElement(),
     });
 
     if (!readyRef.current) {
@@ -797,10 +925,12 @@ function ExtensiveEditorContent({
     commandHeadingOptions,
     commandParagraphLabel,
     slashCommandVisibilityKey,
+    shortcutConfigKey,
     isFeatureEnabled,
   ]);
 
   useEffect(() => {
+    const resolveScopeElement = () => editor?.getRootElement();
     const disabledShortcutSpecs = FEATURE_SHORTCUT_SPECS.filter(
       (shortcut) => featureFlags[shortcut.feature] === false,
     );
@@ -810,6 +940,11 @@ function ExtensiveEditorContent({
     }
 
     const handleKeydown = (event: KeyboardEvent) => {
+      const scopeElement = resolveScopeElement();
+      if (scopeElement && event.target instanceof Node && !scopeElement.contains(event.target)) {
+        return;
+      }
+
       if (!isEditableCommandTarget(event.target)) {
         return;
       }
@@ -830,7 +965,7 @@ function ExtensiveEditorContent({
     return () => {
       document.removeEventListener("keydown", handleKeydown, true);
     };
-  }, [featureFlags]);
+  }, [editor, featureFlags]);
 
   useEffect(() => {
     const commandPaletteExtension = extensions.find(
@@ -840,9 +975,57 @@ function ExtensiveEditorContent({
     if (!commandPaletteExtension || !commandPaletteExtension.subscribe) return;
 
     return commandPaletteExtension.subscribe((isOpen, items) => {
-      setCommandPaletteState({ isOpen, commands: items });
+      const filteredItems = items.filter((item) => {
+        if (disabledCommandIdsSet.has(item.id)) {
+          return false;
+        }
+
+        if (commandPaletteShortcutOnly) {
+          const hasShortcut = typeof item.shortcut === "string" && item.shortcut.trim().length > 0;
+          return hasShortcut;
+        }
+
+        return true;
+      });
+
+      setCommandPaletteState({ isOpen, commands: filteredItems });
     });
-  }, [extensions]);
+  }, [extensions, disabledCommandIdsSet, commandPaletteShortcutOnly]);
+
+  useEffect(() => {
+    if (blockedDefaultShortcuts.length === 0) {
+      return;
+    }
+
+    const resolveScopeElement = () => editor?.getRootElement();
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      const scopeElement = resolveScopeElement();
+      if (scopeElement && event.target instanceof Node && !scopeElement.contains(event.target)) {
+        return;
+      }
+
+      if (!isEditableCommandTarget(event.target)) {
+        return;
+      }
+
+      const isBlockedShortcut = blockedDefaultShortcuts.some((shortcut) => {
+        return isKeyboardShortcutMatch(event, shortcut);
+      });
+
+      if (!isBlockedShortcut) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    document.addEventListener("keydown", handleKeydown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeydown, true);
+    };
+  }, [editor, blockedDefaultShortcuts]);
 
   useEffect(() => {
     const slashCommandExtension = extensions.find(
@@ -1090,6 +1273,8 @@ export interface ExtensiveEditorProps {
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands?: boolean;
   slashCommandVisibility?: SlashCommandVisibility;
+  shortcutConfig?: CommandShortcutConfig;
+  commandPaletteShortcutOnly?: boolean;
   isDraggableBoxEnabled?: boolean;
   featureFlags?: FeatureFlagOverrides;
   syntaxHighlighting?: "auto" | "disabled";
@@ -1131,6 +1316,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     paragraphLabel,
     syncHeadingOptionsWithCommands = true,
     slashCommandVisibility,
+    shortcutConfig,
+    commandPaletteShortcutOnly = false,
     isDraggableBoxEnabled,
     featureFlags,
     syntaxHighlighting,
@@ -1377,6 +1564,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
             slashCommandVisibility={slashCommandVisibility}
+            shortcutConfig={shortcutConfig}
+            commandPaletteShortcutOnly={commandPaletteShortcutOnly}
             featureFlags={resolvedFeatureFlags}
           />
         </Provider>

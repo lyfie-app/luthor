@@ -15,6 +15,19 @@ export type KeyboardShortcut = {
   preventDefault?: boolean;
 };
 
+export type ShortcutBindingOverride =
+  | KeyboardShortcut
+  | readonly KeyboardShortcut[]
+  | false
+  | null;
+
+export type ShortcutConfig = {
+  disabledCommandIds?: readonly string[];
+  bindings?: Readonly<Record<string, ShortcutBindingOverride>>;
+  preventCollisions?: boolean;
+  preventNativeConflicts?: boolean;
+};
+
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
 
@@ -26,11 +39,16 @@ function isEditableTarget(target: EventTarget | null): boolean {
 
 function isNativeLexicalShortcutConflict(event: KeyboardEvent, shortcut: KeyboardShortcut): boolean {
   if (!isEditableTarget(event.target)) return false;
+  return isNativeShortcutConflict(shortcut);
+}
 
+function isNativeShortcutConflict(shortcut: KeyboardShortcut): boolean {
   const shortcutKey = shortcut.key.toLowerCase();
   const usesPrimaryModifier = !!shortcut.ctrlKey || !!shortcut.metaKey;
 
-  if (!usesPrimaryModifier || shortcut.altKey) return false;
+  if (!usesPrimaryModifier || shortcut.altKey) {
+    return false;
+  }
 
   const isBoldItalicUnderline = shortcutKey === "b" || shortcutKey === "i" || shortcutKey === "u";
   const isLink = shortcutKey === "k";
@@ -57,6 +75,8 @@ export type CommandGenerationOptions = {
   paragraphLabel?: string;
   slashCommandVisibility?: SlashCommandVisibility;
   isFeatureEnabled?: (feature: string) => boolean;
+  shortcutConfig?: ShortcutConfig;
+  commandPaletteShortcutOnly?: boolean;
 };
 
 function supportsCodeLanguageCommands(commands: CoreEditorCommands): boolean {
@@ -129,7 +149,8 @@ function resolveAvailableCommands(
   commands: CoreEditorCommands,
   options?: CommandGenerationOptions,
 ): CommandConfig[] {
-  return generateCommands(options).filter((command) => !command.condition || command.condition(commands));
+  const resolvedCommands = applyShortcutConfig(generateCommands(options), options?.shortcutConfig);
+  return resolvedCommands.filter((command) => !command.condition || command.condition(commands));
 }
 
 function isCommandAvailable(
@@ -180,6 +201,107 @@ function resolveSlashCommandVisibility(
     allowlist: normalizeCommandIdList(visibilityFilters.allowlist),
     denylist: normalizeCommandIdList(visibilityFilters.denylist),
   };
+}
+
+function normalizeShortcut(shortcut: KeyboardShortcut): KeyboardShortcut | null {
+  const key = shortcut.key.trim();
+  if (!key) {
+    return null;
+  }
+
+  return {
+    key,
+    ctrlKey: !!shortcut.ctrlKey,
+    metaKey: !!shortcut.metaKey,
+    shiftKey: !!shortcut.shiftKey,
+    altKey: !!shortcut.altKey,
+    preventDefault: shortcut.preventDefault,
+  };
+}
+
+function normalizeShortcutOverride(override: ShortcutBindingOverride): KeyboardShortcut[] {
+  if (override === false || override === null) {
+    return [];
+  }
+
+  const rawShortcuts = Array.isArray(override) ? override : [override];
+  const normalized: KeyboardShortcut[] = [];
+  for (const rawShortcut of rawShortcuts) {
+    const shortcut = normalizeShortcut(rawShortcut);
+    if (!shortcut) {
+      continue;
+    }
+    normalized.push(shortcut);
+  }
+  return normalized;
+}
+
+function shortcutSignature(shortcut: KeyboardShortcut): string {
+  return [
+    shortcut.key.toLowerCase(),
+    shortcut.ctrlKey ? "ctrl" : "",
+    shortcut.metaKey ? "meta" : "",
+    shortcut.shiftKey ? "shift" : "",
+    shortcut.altKey ? "alt" : "",
+  ].join(":");
+}
+
+function applyShortcutConfig(
+  commands: readonly CommandConfig[],
+  shortcutConfig?: ShortcutConfig,
+): CommandConfig[] {
+  if (!shortcutConfig) {
+    return [...commands];
+  }
+
+  const disabledCommandIds = normalizeCommandIdList(shortcutConfig.disabledCommandIds);
+  const bindings = shortcutConfig.bindings;
+  const preventNativeConflicts = shortcutConfig.preventNativeConflicts !== false;
+  const preventCollisions = shortcutConfig.preventCollisions !== false;
+  const usedSignatures = new Set<string>();
+
+  const resolvedCommands = commands
+    .filter((command) => !disabledCommandIds.has(command.id))
+    .map((command) => {
+    let nextShortcuts = command.shortcuts ? [...command.shortcuts] : undefined;
+    const hasOverride = !!bindings && Object.prototype.hasOwnProperty.call(bindings, command.id);
+
+    if (hasOverride && bindings) {
+      const override = bindings[command.id];
+      const normalizedOverride = override === undefined
+        ? []
+        : normalizeShortcutOverride(override);
+      nextShortcuts = normalizedOverride.length > 0 ? normalizedOverride : undefined;
+    }
+
+    if (nextShortcuts && nextShortcuts.length > 0) {
+      const filtered: KeyboardShortcut[] = [];
+      for (const shortcut of nextShortcuts) {
+        const normalizedShortcut = normalizeShortcut(shortcut);
+        if (!normalizedShortcut) {
+          continue;
+        }
+        if (preventNativeConflicts && isNativeShortcutConflict(normalizedShortcut)) {
+          continue;
+        }
+
+        const signature = shortcutSignature(normalizedShortcut);
+        if (preventCollisions && usedSignatures.has(signature)) {
+          continue;
+        }
+        usedSignatures.add(signature);
+        filtered.push(normalizedShortcut);
+      }
+      nextShortcuts = filtered.length > 0 ? filtered : undefined;
+    }
+
+    return {
+      ...command,
+      shortcuts: nextShortcuts,
+    };
+  });
+
+  return resolvedCommands;
 }
 
 export function generateCommands(options?: CommandGenerationOptions): CommandConfig[] {
@@ -572,15 +694,19 @@ export function commandsToCommandPaletteItems(
   commands: CoreEditorCommands,
   options?: CommandGenerationOptions,
 ): CommandPaletteItem[] {
-  return resolveAvailableCommands(commands, options).map((command) => ({
-    id: command.id,
-    label: command.label,
-    description: command.description,
-    category: command.category,
-    action: () => command.action(commands),
-    keywords: command.keywords,
-    shortcut: command.shortcuts?.[0] ? formatShortcut(command.shortcuts[0]) : undefined,
-  }));
+  const shortcutOnly = options?.commandPaletteShortcutOnly === true;
+
+  return resolveAvailableCommands(commands, options)
+    .filter((command) => !shortcutOnly || (!!command.shortcuts && command.shortcuts.length > 0))
+    .map((command) => ({
+      id: command.id,
+      label: command.label,
+      description: command.description,
+      category: command.category,
+      action: () => command.action(commands),
+      keywords: command.keywords,
+      shortcut: command.shortcuts?.[0] ? formatShortcut(command.shortcuts[0]) : undefined,
+    }));
 }
 
 export function commandsToSlashCommandItems(
@@ -643,16 +769,28 @@ function formatShortcut(shortcut: KeyboardShortcut): string {
 export function registerKeyboardShortcuts(
   commands: CoreEditorCommands,
   element: HTMLElement = document.body,
-  options?: CommandGenerationOptions,
+  options?: CommandGenerationOptions & {
+    scope?: HTMLElement | null | (() => HTMLElement | null);
+  },
 ): () => void {
   const commandConfigs = resolveAvailableCommands(commands, options);
 
   const handleKeyDown = (event: KeyboardEvent) => {
+    const scopeElement = typeof options?.scope === "function"
+      ? options.scope()
+      : options?.scope;
+    if (scopeElement && event.target instanceof Node && !scopeElement.contains(event.target)) {
+      return;
+    }
+
     for (const config of commandConfigs) {
       if (!config.shortcuts) continue;
 
       for (const shortcut of config.shortcuts) {
-        if (isNativeLexicalShortcutConflict(event, shortcut)) {
+        if (
+          options?.shortcutConfig?.preventNativeConflicts !== false &&
+          isNativeLexicalShortcutConflict(event, shortcut)
+        ) {
           continue;
         }
 
