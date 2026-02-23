@@ -46,6 +46,8 @@ This layer intentionally avoids hard-coding one preset shell.
 - extension stack composition (`extensions.tsx`)
 - final editor shell component (`ExtensiveEditor.tsx`)
 
+Other preset modules (`simple-text`, `rich-text-box`, `chat-window`, `email-compose`, `md-text`, `notion-like`, `headless-editor`, `notes`) compose reusable core/headless capabilities with focused UX defaults.
+
 `src/presets/index.ts` exposes a registry model for discoverable presets.
 
 ## Data and command flow

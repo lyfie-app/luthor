@@ -1,0 +1,30 @@
+.luthor-headless-preset {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.luthor-headless-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.luthor-headless-controls button {
+  height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #0f172a;
+  text-transform: lowercase;
+  padding: 0 10px;
+}
+
+.luthor-headless-editor-content {
+  min-height: 160px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+}

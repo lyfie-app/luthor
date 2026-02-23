@@ -18,3 +18,4 @@ export type {
   FeatureFlagOverrides,
 } from "./extensions";
 export type { ExtensivePresetConfig } from "./preset";
+export type { FeatureShortcutSpec, ToolbarFeatureMap } from "../_shared";

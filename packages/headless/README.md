@@ -126,6 +126,15 @@ Returns strongly typed surface based on `extensions`:
 
 `LuthorEditorThemeOverrides` is a token map with keys from `LUTHOR_EDITOR_THEME_TOKENS` and string values.
 
+## Markdown Bridge API
+
+Headless now exposes lightweight markdown bridge helpers:
+
+- `markdownToJSONB(markdown: string): JsonbDocument`
+- `jsonbToMarkdown(input: unknown): string`
+
+These are intended as conversion primitives for preset mode-switch UIs (for example `MDTextEditor` in `@lyfie/luthor`).
+
 ## Base Extension Config
 
 All extension configs support `BaseExtensionConfig`:

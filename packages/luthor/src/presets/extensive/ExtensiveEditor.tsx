@@ -33,13 +33,26 @@ import {
   type DefaultSettings,
   type EditorThemeOverrides,
   type ToolbarLayout,
-  type ToolbarItemType,
   type ToolbarVisibility,
   type ToolbarPosition,
   type SlashCommandVisibility,
   type KeyboardShortcut,
   type ShortcutConfig as CommandShortcutConfig,
 } from "../../core";
+import {
+  createDefaultSettingsStyleVarRecord as sharedCreateDefaultSettingsStyleVarRecord,
+  createFeatureGuardedCommands as sharedCreateFeatureGuardedCommands,
+  createModeCache,
+  invalidateModeCache,
+  isEditableCommandTarget as sharedIsEditableCommandTarget,
+  isModeCached,
+  isShortcutMatch as sharedIsShortcutMatch,
+  markModeCached,
+  mergeToolbarVisibilityWithFeatures as sharedMergeToolbarVisibilityWithFeatures,
+  normalizeStyleVarsKey as sharedNormalizeStyleVarsKey,
+  type FeatureShortcutSpec,
+  type ToolbarFeatureMap,
+} from "../_shared";
 import { EXTENSIVE_WELCOME_CONTENT_JSONB as extensiveWelcomeContent } from "./welcomeContent";
 import type {
   CommandPaletteExtension,
@@ -218,15 +231,7 @@ function normalizeMinimumDefaultLineHeightKey(value: string | number | undefined
 }
 
 function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): string {
-  if (!styleVars) {
-    return "__default__";
-  }
-
-  const entries = Object.entries(styleVars)
-    .filter(([, value]) => typeof value === "string" && value.trim().length > 0)
-    .sort(([left], [right]) => left.localeCompare(right));
-
-  return entries.length > 0 ? JSON.stringify(entries) : "__default__";
+  return sharedNormalizeStyleVarsKey(styleVars);
 }
 
 function normalizeLanguageOptionsKey(
@@ -253,33 +258,7 @@ function normalizeLanguageOptionsKey(
 }
 
 function createDefaultSettingsStyleVarRecord(defaultSettings?: DefaultSettings): Record<string, string> | undefined {
-  if (!defaultSettings) {
-    return undefined;
-  }
-
-  const styleVars: Record<string, string> = {};
-  const assign = (token: string, value: string | undefined) => {
-    if (typeof value === "string" && value.trim().length > 0) {
-      styleVars[token] = value.trim();
-    }
-  };
-
-  assign("--luthor-fg", defaultSettings.font?.color);
-  assign("--luthor-text-bold-color", defaultSettings.font?.boldColor);
-  assign("--luthor-link-color", defaultSettings.link?.color);
-  assign("--luthor-list-marker-color", defaultSettings.list?.markerColor);
-  assign("--luthor-list-checkbox-color", defaultSettings.list?.checkboxColor);
-  assign("--luthor-quote-bg", defaultSettings.quote?.backgroundColor);
-  assign("--luthor-quote-fg", defaultSettings.quote?.color);
-  assign("--luthor-quote-border", defaultSettings.quote?.indicatorColor);
-  assign("--luthor-table-border-color", defaultSettings.table?.borderColor);
-  assign("--luthor-table-header-bg", defaultSettings.table?.headerBackgroundColor);
-  assign("--luthor-hr-color", defaultSettings.hr?.color);
-  assign("--luthor-placeholder-color", defaultSettings.placeholder?.color);
-  assign("--luthor-codeblock-bg", defaultSettings.codeblock?.backgroundColor);
-  assign("--luthor-toolbar-bg", defaultSettings.toolbar?.backgroundColor);
-
-  return Object.keys(styleVars).length > 0 ? styleVars : undefined;
+  return sharedCreateDefaultSettingsStyleVarRecord(defaultSettings);
 }
 
 function normalizeFeatureFlagsKey(overrides?: FeatureFlagOverrides): string {
@@ -290,27 +269,10 @@ function normalizeFeatureFlagsKey(overrides?: FeatureFlagOverrides): string {
 }
 
 function isEditableCommandTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) {
-    return false;
-  }
-
-  if (target.closest('[contenteditable="true"]')) {
-    return true;
-  }
-
-  const tagName = target.tagName.toLowerCase();
-  return tagName === "input" || tagName === "textarea" || tagName === "select";
+  return sharedIsEditableCommandTarget(target);
 }
 
-type FeatureShortcutSpec = {
-  feature: FeatureFlag;
-  key: string;
-  requiresPrimary: boolean;
-  shift?: boolean;
-  alt?: boolean;
-};
-
-const FEATURE_SHORTCUT_SPECS: readonly FeatureShortcutSpec[] = [
+const FEATURE_SHORTCUT_SPECS: readonly FeatureShortcutSpec<FeatureFlag>[] = [
   { feature: "bold", key: "b", requiresPrimary: true },
   { feature: "italic", key: "i", requiresPrimary: true },
   { feature: "underline", key: "u", requiresPrimary: true },
@@ -334,24 +296,7 @@ const FEATURE_SHORTCUT_SPECS: readonly FeatureShortcutSpec[] = [
 ];
 
 function isShortcutMatch(event: KeyboardEvent, shortcut: FeatureShortcutSpec): boolean {
-  if (event.key.toLowerCase() !== shortcut.key.toLowerCase()) {
-    return false;
-  }
-
-  const hasPrimaryModifier = event.ctrlKey || event.metaKey;
-  if (!!shortcut.requiresPrimary !== hasPrimaryModifier) {
-    return false;
-  }
-
-  if (!!shortcut.shift !== !!event.shiftKey) {
-    return false;
-  }
-
-  if (!!shortcut.alt !== !!event.altKey) {
-    return false;
-  }
-
-  return true;
+  return sharedIsShortcutMatch(event, shortcut);
 }
 
 function createFeatureGuardedCommands(
@@ -359,198 +304,10 @@ function createFeatureGuardedCommands(
   featureFlags: FeatureFlags,
   isInCodeBlock: boolean,
 ): CoreEditorCommands {
-  const guarded = { ...commands } as CoreEditorCommands;
-  const disable = (feature: FeatureFlag, apply: () => void) => {
-    if (featureFlags[feature] === false) {
-      apply();
-    }
-  };
-
-  disable("bold", () => {
-    guarded.toggleBold = () => {};
-  });
-  disable("italic", () => {
-    guarded.toggleItalic = () => {};
-  });
-  disable("underline", () => {
-    guarded.toggleUnderline = () => {};
-  });
-  disable("strikethrough", () => {
-    guarded.toggleStrikethrough = () => {};
-  });
-  disable("codeFormat", () => {
-    guarded.formatText = () => {};
-  });
-  disable("fontFamily", () => {
-    guarded.setFontFamily = () => {};
-    guarded.clearFontFamily = () => {};
-  });
-  disable("fontSize", () => {
-    guarded.setFontSize = () => {};
-    guarded.clearFontSize = () => {};
-  });
-  disable("lineHeight", () => {
-    guarded.setLineHeight = () => {};
-    guarded.clearLineHeight = () => {};
-  });
-  disable("textColor", () => {
-    guarded.setTextColor = () => {};
-    guarded.clearTextColor = () => {};
-  });
-  disable("textHighlight", () => {
-    guarded.setTextHighlight = () => {};
-    guarded.clearTextHighlight = () => {};
-  });
-  disable("subscript", () => {
-    guarded.toggleSubscript = () => {};
-  });
-  disable("superscript", () => {
-    guarded.toggleSuperscript = () => {};
-  });
-  disable("link", () => {
-    guarded.insertLink = () => {};
-    guarded.removeLink = () => {};
-    guarded.updateLink = () => false;
-    guarded.getCurrentLink = async () => null;
-    guarded.getLinkByKey = async () => null;
-    guarded.updateLinkByKey = () => false;
-    guarded.removeLinkByKey = () => false;
-  });
-  disable("blockFormat", () => {
-    guarded.toggleParagraph = () => {};
-    guarded.toggleHeading = () => {};
-    guarded.toggleQuote = () => {};
-    guarded.setTextAlignment = () => {};
-  });
-  disable("code", () => {
-    guarded.toggleCodeBlock = () => {};
-  });
-  disable("codeIntelligence", () => {
-    guarded.setCodeLanguage = () => {};
-    guarded.autoDetectCodeLanguage = async () => null;
-    guarded.copySelectedCodeBlock = async () => false;
-  });
-  disable("list", () => {
-    guarded.toggleUnorderedList = () => {};
-    guarded.toggleOrderedList = () => {};
-    guarded.toggleCheckList = () => {};
-    guarded.indentList = () => {};
-    guarded.outdentList = () => {};
-  });
-  disable("horizontalRule", () => {
-    guarded.insertHorizontalRule = () => {};
-  });
-  disable("table", () => {
-    guarded.insertTable = () => {};
-  });
-  disable("image", () => {
-    guarded.insertImage = () => {};
-    guarded.setImageAlignment = () => {};
-    guarded.setImageCaption = () => {};
-    guarded.getImageCaption = async () => "";
-  });
-  disable("emoji", () => {
-    guarded.insertEmoji = () => {};
-    guarded.executeEmojiSuggestion = () => false;
-    guarded.closeEmojiSuggestions = () => {};
-    guarded.getEmojiSuggestions = () => [];
-    guarded.getEmojiCatalog = () => [];
-    guarded.resolveEmojiShortcode = () => null;
-    guarded.setEmojiCatalog = () => {};
-    guarded.setEmojiCatalogAdapter = () => {};
-    guarded.getEmojiCatalogAdapter = () => ({
-      search: () => [],
-      resolveShortcode: () => null,
-      getAll: () => [],
-    });
-  });
-  disable("iframeEmbed", () => {
-    guarded.insertIframeEmbed = () => {};
-    guarded.setIframeEmbedAlignment = () => {};
-    guarded.resizeIframeEmbed = () => {};
-    guarded.setIframeEmbedCaption = () => {};
-    guarded.getIframeEmbedCaption = async () => "";
-    guarded.updateIframeEmbedUrl = () => false;
-    guarded.getIframeEmbedUrl = async () => "";
-  });
-  disable("youTubeEmbed", () => {
-    guarded.insertYouTubeEmbed = () => {};
-    guarded.setYouTubeEmbedAlignment = () => {};
-    guarded.resizeYouTubeEmbed = () => {};
-    guarded.setYouTubeEmbedCaption = () => {};
-    guarded.getYouTubeEmbedCaption = async () => "";
-    guarded.updateYouTubeEmbedUrl = () => false;
-    guarded.getYouTubeEmbedUrl = async () => "";
-  });
-  disable("history", () => {
-    guarded.undo = () => {};
-    guarded.redo = () => {};
-  });
-  disable("commandPalette", () => {
-    guarded.showCommandPalette = () => {};
-    guarded.hideCommandPalette = () => {};
-    guarded.registerCommand = () => {};
-    guarded.unregisterCommand = () => {};
-  });
-  disable("slashCommand", () => {
-    guarded.registerSlashCommand = () => {};
-    guarded.unregisterSlashCommand = () => {};
-    guarded.setSlashCommands = () => {};
-    guarded.closeSlashMenu = () => {};
-    guarded.executeSlashCommand = () => false;
-  });
-
-  if (isInCodeBlock) {
-    guarded.toggleBold = () => {};
-    guarded.toggleItalic = () => {};
-    guarded.toggleUnderline = () => {};
-    guarded.toggleStrikethrough = () => {};
-    guarded.formatText = () => {};
-    guarded.setFontFamily = () => {};
-    guarded.clearFontFamily = () => {};
-    guarded.setFontSize = () => {};
-    guarded.clearFontSize = () => {};
-    guarded.setLineHeight = () => {};
-    guarded.clearLineHeight = () => {};
-    guarded.setTextColor = () => {};
-    guarded.clearTextColor = () => {};
-    guarded.setTextHighlight = () => {};
-    guarded.clearTextHighlight = () => {};
-    guarded.toggleSubscript = () => {};
-    guarded.toggleSuperscript = () => {};
-    guarded.insertLink = () => {};
-    guarded.removeLink = () => {};
-    guarded.updateLink = () => false;
-    guarded.toggleParagraph = () => {};
-    guarded.toggleHeading = () => {};
-    guarded.toggleQuote = () => {};
-    guarded.setTextAlignment = () => {};
-    guarded.toggleUnorderedList = () => {};
-    guarded.toggleOrderedList = () => {};
-    guarded.toggleCheckList = () => {};
-    guarded.indentList = () => {};
-    guarded.outdentList = () => {};
-    guarded.insertHorizontalRule = () => {};
-    guarded.insertTable = () => {};
-    guarded.insertImage = () => {};
-    guarded.setImageAlignment = () => {};
-    guarded.setImageCaption = () => {};
-    guarded.insertIframeEmbed = () => {};
-    guarded.setIframeEmbedAlignment = () => {};
-    guarded.resizeIframeEmbed = () => {};
-    guarded.setIframeEmbedCaption = () => {};
-    guarded.updateIframeEmbedUrl = () => false;
-    guarded.insertYouTubeEmbed = () => {};
-    guarded.setYouTubeEmbedAlignment = () => {};
-    guarded.resizeYouTubeEmbed = () => {};
-    guarded.setYouTubeEmbedCaption = () => {};
-    guarded.updateYouTubeEmbedUrl = () => false;
-  }
-
-  return guarded;
+  return sharedCreateFeatureGuardedCommands(commands, featureFlags, isInCodeBlock);
 }
 
-const TOOLBAR_FEATURE_MAP: Partial<Record<ToolbarItemType, FeatureFlag | readonly FeatureFlag[]>> = {
+const TOOLBAR_FEATURE_MAP: ToolbarFeatureMap<FeatureFlag> = {
   fontFamily: "fontFamily",
   fontSize: "fontSize",
   lineHeight: "lineHeight",
@@ -591,19 +348,11 @@ function mergeToolbarVisibilityWithFeatures(
   toolbarVisibility: ToolbarVisibility | undefined,
   featureFlags: FeatureFlags,
 ): ToolbarVisibility {
-  const merged: ToolbarVisibility = { ...(toolbarVisibility ?? {}) };
-
-  for (const [itemType, featureSelection] of Object.entries(TOOLBAR_FEATURE_MAP) as [ToolbarItemType, FeatureFlag | readonly FeatureFlag[]][]) {
-    const requiredFeatures: readonly FeatureFlag[] = Array.isArray(featureSelection)
-      ? featureSelection
-      : [featureSelection];
-    const supported = requiredFeatures.some((feature) => featureFlags[feature] !== false);
-    if (!supported) {
-      merged[itemType] = false;
-    }
-  }
-
-  return merged;
+  return sharedMergeToolbarVisibilityWithFeatures(
+    toolbarVisibility,
+    featureFlags,
+    TOOLBAR_FEATURE_MAP,
+  );
 }
 
 function normalizeHeadingOptions(input?: readonly BlockHeadingLevel[]): BlockHeadingLevel[] {
@@ -909,7 +658,7 @@ function ExtensiveEditorContent({
   }
   
   // Lazy conversion state: track which formats are valid cache
-  const cacheValidRef = useRef<Set<ExtensiveEditorMode>>(new Set(["visual"]));
+  const cacheValidRef = useRef(createModeCache<ExtensiveEditorMode>(["visual"]));
   const editorChangeCountRef = useRef(0);
 
   useEffect(() => {
@@ -1142,8 +891,7 @@ function ExtensiveEditorContent({
       // When visual editor changes, mark all cached formats as stale
       // This prevents stale cache but doesn't do any actual export work
       editorChangeCountRef.current += 1;
-      cacheValidRef.current.clear();
-      cacheValidRef.current.add("visual"); // visual is always valid (it IS the editor state)
+      invalidateModeCache(cacheValidRef.current, ["visual"]);
     });
 
     return unsubscribe;
@@ -1178,13 +926,13 @@ function ExtensiveEditorContent({
       // Step 2: Lazy export - only convert format if not cached
       // This ensures smooth tab switching with progressive conversion
       if (newMode === "jsonb" && mode !== "jsonb") {
-        if (!cacheValidRef.current.has("jsonb")) {
+        if (!isModeCached(cacheValidRef.current, "jsonb")) {
           setConvertingMode("jsonb");
           await new Promise((resolve) => setTimeout(resolve, 50));
           try {
             const jsonb = formatJSONBSource(JSON.stringify(exportApi.toJSON()));
             setContent((prev) => ({ ...prev, jsonb }));
-            cacheValidRef.current.add("jsonb");
+            markModeCached(cacheValidRef.current, "jsonb");
           } finally {
             setConvertingMode(null);
           }
@@ -1652,3 +1400,4 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
 );
 
 ExtensiveEditor.displayName = "ExtensiveEditor";
+

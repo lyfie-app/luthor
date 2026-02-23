@@ -3,7 +3,7 @@
 Concatenated markdown corpus for AI ingestion.
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\documentation
-Generated at: 2026-02-23T14:31:50.805Z
+Generated at: 2026-02-23T15:11:04.374Z
 
 ---
 ## FILE: demo-app/website-development-phased-plan.md
@@ -866,6 +866,8 @@ This layer intentionally avoids hard-coding one preset shell.
 - static preset metadata (`preset.ts`)
 - extension stack composition (`extensions.tsx`)
 - final editor shell component (`ExtensiveEditor.tsx`)
+
+Other preset modules (`simple-text`, `rich-text-box`, `chat-window`, `email-compose`, `md-text`, `notion-like`, `headless-editor`, `notes`) compose reusable core/headless capabilities with focused UX defaults.
 
 `src/presets/index.ts` exposes a registry model for discoverable presets.
 
@@ -2560,6 +2562,19 @@ export function App() {
 - image, iframe, and YouTube embedding support
 - tables, lists, code/code-block, typography and color tools
 - visual/source mode switching (`visual`, `jsonb`)
+
+## Additional presets
+
+`@lyfie/luthor` also exports:
+
+- `SimpleTextEditor`
+- `RichTextBoxEditor`
+- `ChatWindowEditor`
+- `EmailComposeEditor`
+- `MDTextEditor`
+- `NotionLikeEditor`
+- `HeadlessEditorPreset`
+- `NotesEditor`
 
 ## Headless access from the same package
 

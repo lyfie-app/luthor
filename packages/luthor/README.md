@@ -28,6 +28,7 @@ export function App() {
 ## What This Package Exposes
 
 - Preset editor component: `ExtensiveEditor`
+- Additional preset editors: `SimpleTextEditor`, `RichTextBoxEditor`, `ChatWindowEditor`, `EmailComposeEditor`, `MDTextEditor`, `NotionLikeEditor`, `HeadlessEditorPreset`, `NotesEditor`
 - Preset builder helpers: `extensivePreset`, `createExtensivePreset`, `presetRegistry`
 - Extension composition helpers: `createExtensiveExtensions`, `extensiveExtensions`
 - Feature flag helpers: `resolveFeatureFlags`, `isFeatureEnabled`, `DEFAULT_FEATURE_FLAGS`
@@ -39,6 +40,18 @@ import { headless } from "@lyfie/luthor";
 
 const { createEditorSystem, richTextExtension, boldExtension } = headless;
 ```
+
+## Preset Catalog
+
+- `ExtensiveEditor`: full-feature visual/jsonb preset.
+- `SimpleTextEditor`: plain-text locked preset.
+- `RichTextBoxEditor`: inline formatting + list preset with optional compact toolbar.
+- `ChatWindowEditor`: chat composer with send action row.
+- `EmailComposeEditor`: compose shell (To/CC/BCC/Subject) + rich body.
+- `MDTextEditor`: visual/markdown mode switching.
+- `NotionLikeEditor`: slash-first + draggable defaults.
+- `HeadlessEditorPreset`: minimal plain-control reference.
+- `NotesEditor`: note-taking shell with title/actions callbacks.
 
 ## ExtensiveEditor API
 

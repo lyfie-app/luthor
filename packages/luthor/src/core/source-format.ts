@@ -15,3 +15,7 @@ export function formatJSONBSource(input: string): string {
     return normalized;
   }
 }
+
+export function formatMarkdownSource(input: string): string {
+  return normalizeLineBreaks(input).trim();
+}

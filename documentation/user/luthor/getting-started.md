@@ -35,6 +35,19 @@ export function App() {
 - tables, lists, code/code-block, typography and color tools
 - visual/source mode switching (`visual`, `jsonb`)
 
+## Additional presets
+
+`@lyfie/luthor` also exports:
+
+- `SimpleTextEditor`
+- `RichTextBoxEditor`
+- `ChatWindowEditor`
+- `EmailComposeEditor`
+- `MDTextEditor`
+- `NotionLikeEditor`
+- `HeadlessEditorPreset`
+- `NotesEditor`
+
 ## Headless access from the same package
 
 ```ts
