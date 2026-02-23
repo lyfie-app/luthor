@@ -218,7 +218,17 @@ export class LinkExtension extends BaseExtension<
     const unregisterSelectionTracking = editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
         const linkNode = this.getSelectedLinkNode();
-        this.lastSelectedLinkNodeKey = linkNode?.getKey() ?? null;
+        if (linkNode) {
+          this.lastSelectedLinkNodeKey = linkNode.getKey();
+          return;
+        }
+
+        if (this.lastSelectedLinkNodeKey) {
+          const cachedNode = $getNodeByKey(this.lastSelectedLinkNodeKey);
+          if (!$isLinkNode(cachedNode)) {
+            this.lastSelectedLinkNodeKey = null;
+          }
+        }
       });
     });
 

@@ -67,6 +67,27 @@ describe("FloatingToolbar media editing", () => {
     expect(setImageCaption).toHaveBeenCalledWith("updated image caption");
   });
 
+  it("commits image caption via update button", async () => {
+    const getImageCaption = vi.fn().mockResolvedValue("existing image caption");
+    const setImageCaption = vi.fn();
+    const commands = createCommands({ getImageCaption, setImageCaption });
+
+    render(
+      <FloatingToolbar
+        isVisible
+        selectionRect={DEFAULT_RECT}
+        commands={commands}
+        activeStates={{ imageSelected: true } as CoreEditorActiveStates}
+      />,
+    );
+
+    const input = await screen.findByLabelText("Image caption");
+    fireEvent.change(input, { target: { value: "updated via button" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update Caption" }));
+
+    expect(setImageCaption).toHaveBeenCalledWith("updated via button");
+  });
+
   it("loads and commits YouTube caption draft", async () => {
     const getYouTubeEmbedCaption = vi.fn().mockResolvedValue("existing youtube caption");
     const setYouTubeEmbedCaption = vi.fn();
@@ -149,5 +170,33 @@ describe("FloatingToolbar media editing", () => {
       expect(input).toHaveValue(existingUrl);
       expect(input).toHaveAttribute("aria-invalid", "true");
     });
+  });
+
+  it("updates selected link URL using explicit button", async () => {
+    const updateLink = vi.fn().mockReturnValue(true);
+    const getCurrentLink = vi.fn().mockResolvedValue({
+      url: "https://example.com/current",
+      rel: null,
+      target: null,
+    });
+    const commands = createCommands({ updateLink, getCurrentLink });
+
+    render(
+      <FloatingToolbar
+        isVisible
+        selectionRect={DEFAULT_RECT}
+        commands={commands}
+        activeStates={{ isLink: true } as CoreEditorActiveStates}
+      />,
+    );
+
+    const input = await screen.findByLabelText("Link URL");
+    await waitFor(() => {
+      expect(input).toHaveValue("https://example.com/current");
+    });
+    fireEvent.change(input, { target: { value: "https://example.com/updated" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update Link" }));
+
+    expect(updateLink).toHaveBeenCalledWith("https://example.com/updated");
   });
 });

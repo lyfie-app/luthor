@@ -50,8 +50,10 @@ export function FloatingToolbar({
   const [imageCaptionDraft, setImageCaptionDraft] = useState("");
   const [youTubeCaptionDraft, setYouTubeCaptionDraft] = useState("");
   const [youTubeUrlDraft, setYouTubeUrlDraft] = useState("");
+  const [linkUrlDraft, setLinkUrlDraft] = useState("");
   const [iframeUrlError, setIframeUrlError] = useState<string | null>(null);
   const [youTubeUrlError, setYouTubeUrlError] = useState<string | null>(null);
+  const [linkUrlError, setLinkUrlError] = useState<string | null>(null);
   const iframeEmbedSelected = !!activeStates.isIframeEmbedSelected;
   const youTubeEmbedSelected = !!activeStates.isYouTubeEmbedSelected;
   const iframeEmbedEnabled = isFeatureEnabled("iframeEmbed");
@@ -153,6 +155,26 @@ export function FloatingToolbar({
     };
   }, [commands, isVisible, youTubeEmbedSelected]);
 
+  useEffect(() => {
+    if (!isVisible || !activeStates.isLink) {
+      return;
+    }
+
+    let disposed = false;
+    if (typeof commands.getCurrentLink === "function") {
+      void commands.getCurrentLink().then((link) => {
+        if (!disposed && link) {
+          setLinkUrlDraft(link.url ?? "");
+        }
+      });
+    }
+    setLinkUrlError(null);
+
+    return () => {
+      disposed = true;
+    };
+  }, [activeStates.isLink, commands, isVisible]);
+
   if (!isVisible || !selectionRect) return null;
 
   const style: CSSProperties = {
@@ -241,6 +263,7 @@ export function FloatingToolbar({
       }
       setEmbedUrlError(null);
     };
+    const hasEmbedFields = canEditCaption || canEditEmbedUrl;
 
     return (
       <div className="luthor-floating-toolbar" data-theme={editorTheme} ref={toolbarRef} style={style}>
@@ -253,48 +276,68 @@ export function FloatingToolbar({
         <IconButton onClick={() => setAlignment("right")} active={isRightAligned} title="Align Right">
           <AlignRightIcon size={14} />
         </IconButton>
-        {canEditCaption || canEditEmbedUrl ? (
+        {hasEmbedFields ? (
           <>
             <div className="luthor-floating-toolbar-separator" />
             <div className="luthor-floating-toolbar-fields">
               {canEditEmbedUrl ? (
-                <input
-                  type="url"
-                  value={urlDraft}
-                  className={`luthor-floating-toolbar-input${urlError ? " is-error" : ""}`}
-                  placeholder={iframeEmbedSelected ? "https://example.com/embed" : "https://youtube.com/watch?v=..."}
-                  aria-label={iframeEmbedSelected ? "Iframe URL" : "YouTube URL"}
-                  aria-invalid={urlError ? true : undefined}
-                  onChange={(event) => {
-                    setEmbedUrlDraft(event.target.value);
-                    if (urlError) {
-                      setEmbedUrlError(null);
-                    }
-                  }}
-                  onBlur={commitEmbedUrl}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      (event.target as HTMLInputElement).blur();
-                    }
-                  }}
-                />
+                <div className="luthor-floating-toolbar-field-row">
+                  <input
+                    type="url"
+                    value={urlDraft}
+                    className={`luthor-floating-toolbar-input${urlError ? " is-error" : ""}`}
+                    placeholder={iframeEmbedSelected ? "https://example.com/embed" : "https://youtube.com/watch?v=..."}
+                    aria-label={iframeEmbedSelected ? "Iframe URL" : "YouTube URL"}
+                    aria-invalid={urlError ? true : undefined}
+                    onChange={(event) => {
+                      setEmbedUrlDraft(event.target.value);
+                      if (urlError) {
+                        setEmbedUrlError(null);
+                      }
+                    }}
+                    onBlur={commitEmbedUrl}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        commitEmbedUrl();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="luthor-toolbar-button luthor-floating-toolbar-action luthor-floating-toolbar-action-primary"
+                    onClick={commitEmbedUrl}
+                  >
+                    Update URL
+                  </button>
+                </div>
               ) : null}
-              <input
-                type="text"
-                value={captionDraft}
-                className="luthor-floating-toolbar-input"
-                placeholder="Add caption"
-                aria-label={iframeEmbedSelected ? "Iframe caption" : "YouTube caption"}
-                onChange={(event) => setCaptionDraft(event.target.value)}
-                onBlur={commitEmbedCaption}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    (event.target as HTMLInputElement).blur();
-                  }
-                }}
-              />
+              {canEditCaption ? (
+                <div className="luthor-floating-toolbar-field-row">
+                  <input
+                    type="text"
+                    value={captionDraft}
+                    className="luthor-floating-toolbar-input"
+                    placeholder="Add caption"
+                    aria-label={iframeEmbedSelected ? "Iframe caption" : "YouTube caption"}
+                    onChange={(event) => setCaptionDraft(event.target.value)}
+                    onBlur={commitEmbedCaption}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        commitEmbedCaption();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="luthor-toolbar-button luthor-floating-toolbar-action"
+                    onClick={commitEmbedCaption}
+                  >
+                    Update Caption
+                  </button>
+                </div>
+              ) : null}
             </div>
           </>
         ) : null}
@@ -325,21 +368,30 @@ export function FloatingToolbar({
         {canEditImageCaption ? (
           <>
             <div className="luthor-floating-toolbar-separator" />
-            <input
-              type="text"
-              value={imageCaptionDraft}
-              className="luthor-floating-toolbar-input"
-              placeholder="Add caption"
-              aria-label="Image caption"
-              onChange={(event) => setImageCaptionDraft(event.target.value)}
-              onBlur={commitImageCaption}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  (event.target as HTMLInputElement).blur();
-                }
-              }}
-            />
+            <div className="luthor-floating-toolbar-field-row">
+              <input
+                type="text"
+                value={imageCaptionDraft}
+                className="luthor-floating-toolbar-input"
+                placeholder="Add caption"
+                aria-label="Image caption"
+                onChange={(event) => setImageCaptionDraft(event.target.value)}
+                onBlur={commitImageCaption}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    commitImageCaption();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className="luthor-toolbar-button luthor-floating-toolbar-action"
+                onClick={commitImageCaption}
+              >
+                Update Caption
+              </button>
+            </div>
           </>
         ) : null}
       </div>
@@ -357,6 +409,27 @@ export function FloatingToolbar({
   const showFormattingGroup = canShowBold || canShowItalic || canShowUnderline || canShowStrikethrough;
   const showBlockGroup = canShowInlineCode || canShowQuote || canShowLink;
   const showListGroup = canShowList;
+
+  const canEditSelectedLink =
+    !!activeStates.isLink &&
+    typeof commands.updateLink === "function" &&
+    typeof commands.removeLink === "function";
+  const commitLinkUrl = () => {
+    if (!canEditSelectedLink) {
+      return;
+    }
+    const updated = commands.updateLink?.(linkUrlDraft) ?? false;
+    if (!updated) {
+      setLinkUrlError("Enter a valid URL");
+      if (typeof commands.getCurrentLink === "function") {
+        void commands.getCurrentLink().then((link) => {
+          setLinkUrlDraft(link?.url ?? "");
+        });
+      }
+      return;
+    }
+    setLinkUrlError(null);
+  };
 
   if (!showFormattingGroup && !showBlockGroup && !showListGroup) {
     return null;
@@ -402,13 +475,55 @@ export function FloatingToolbar({
             </IconButton>
           ) : null}
           {canShowLink ? (
-            <IconButton
-              onClick={() => (activeStates.isLink ? commands.removeLink() : commands.insertLink())}
-              active={activeStates.isLink}
-              title={activeStates.isLink ? "Remove Link" : "Insert Link"}
-            >
-              {activeStates.isLink ? <UnlinkIcon size={14} /> : <LinkIcon size={14} />}
-            </IconButton>
+            <>
+              <IconButton
+                onClick={() => (activeStates.isLink ? commands.removeLink() : commands.insertLink())}
+                active={activeStates.isLink}
+                title={activeStates.isLink ? "Remove Link" : "Insert Link"}
+              >
+                {activeStates.isLink ? <UnlinkIcon size={14} /> : <LinkIcon size={14} />}
+              </IconButton>
+              {canEditSelectedLink ? (
+                <div className="luthor-floating-toolbar-field-row">
+                  <input
+                    type="url"
+                    value={linkUrlDraft}
+                    className={`luthor-floating-toolbar-input${linkUrlError ? " is-error" : ""}`}
+                    placeholder="https://example.com"
+                    aria-label="Link URL"
+                    aria-invalid={linkUrlError ? true : undefined}
+                    onChange={(event) => {
+                      setLinkUrlDraft(event.target.value);
+                      if (linkUrlError) {
+                        setLinkUrlError(null);
+                      }
+                    }}
+                    onBlur={commitLinkUrl}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        commitLinkUrl();
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="luthor-toolbar-button luthor-floating-toolbar-action luthor-floating-toolbar-action-primary"
+                    onClick={commitLinkUrl}
+                  >
+                    Update Link
+                  </button>
+                  <button
+                    type="button"
+                    className="luthor-toolbar-button luthor-floating-toolbar-action luthor-floating-toolbar-action-danger"
+                    onClick={() => commands.removeLink()}
+                    aria-label="Unlink"
+                  >
+                    <UnlinkIcon size={13} />
+                  </button>
+                </div>
+              ) : null}
+            </>
           ) : null}
         </>
       ) : null}

@@ -294,8 +294,9 @@ export function LinkHoverBubble({
   };
 
   const handleSave = () => {
+    const nextUrl = draftUrl.trim();
     const updated =
-      commands.updateLinkByKey?.(hoveredLink.nodeKey, draftUrl) ??
+      commands.updateLinkByKey?.(hoveredLink.nodeKey, nextUrl) ??
       false;
     if (!updated) {
       setUrlError("Enter a valid URL");
@@ -303,9 +304,19 @@ export function LinkHoverBubble({
       return;
     }
 
+    // Optimistically update bubble text so the URL reflects the saved value
+    // even if Lexical reconciliation settles on the next microtask/frame.
+    setHoveredLink((current) => {
+      if (!current || current.nodeKey !== hoveredLink.nodeKey) {
+        return current;
+      }
+      return { ...current, url: nextUrl };
+    });
     setUrlError(null);
     setIsEditing(false);
-    syncLinkByKey(hoveredLink.nodeKey, draftUrl);
+    queueMicrotask(() => {
+      syncLinkByKey(hoveredLink.nodeKey, nextUrl);
+    });
   };
 
   return createPortal(

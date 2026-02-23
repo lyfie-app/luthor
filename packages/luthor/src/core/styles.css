@@ -2063,6 +2063,52 @@
 	gap: 6px;
 }
 
+.luthor-floating-toolbar-field-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.luthor-floating-toolbar-action {
+	height: 30px;
+	min-width: 30px;
+	width: auto;
+	padding: 0 10px;
+	font-size: 12px;
+	font-weight: 600;
+	border-color: var(--luthor-floating-border);
+	background: var(--luthor-floating-muted);
+	color: var(--luthor-floating-fg);
+	transform: none;
+	box-shadow: none;
+}
+
+.luthor-floating-toolbar .luthor-floating-toolbar-action:hover {
+	border-color: var(--luthor-floating-border-hover);
+	background: var(--luthor-floating-muted);
+	color: var(--luthor-floating-fg);
+	transform: none;
+	box-shadow: none;
+}
+
+.luthor-floating-toolbar-action-primary {
+	border-color: var(--luthor-floating-accent);
+	background: var(--luthor-floating-accent);
+	color: var(--luthor-floating-accent-fg);
+}
+
+.luthor-floating-toolbar .luthor-floating-toolbar-action-primary:hover {
+	border-color: var(--luthor-floating-accent);
+	background: var(--luthor-floating-accent);
+	color: var(--luthor-floating-accent-fg);
+}
+
+.luthor-floating-toolbar-action-danger:hover {
+	border-color: #dc2626;
+	background: #dc2626;
+	color: #ffffff;
+}
+
 .luthor-floating-toolbar-input:focus {
 	border-color: var(--luthor-floating-border-active);
 	box-shadow: 0 0 0 2px color-mix(in srgb, var(--luthor-floating-accent) 18%, transparent);
