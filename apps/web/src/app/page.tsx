@@ -334,7 +334,7 @@ export default async function HomePage() {
       </section>
 
       <section className="section">
-        <div className="container keyword-strip">
+        <div className="container faq-shell">
           <h2 className="section-title">Frequently asked questions.</h2>
           <div className="faq-grid">
             {SEO_FAQS.map((item) => (

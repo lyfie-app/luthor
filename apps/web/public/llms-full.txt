@@ -3,2617 +3,176 @@
 Concatenated markdown corpus for AI ingestion.
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\apps\web\src\content\docs
-Generated at: 2026-02-24T09:11:35.515Z
+Generated at: 2026-02-24T10:58:58.192Z
 
 ---
-## FILE: getting-started.md
+## FILE: getting-started/index.md
 ## URL: https://www.luthor.fyi/docs/getting-started/
 ---
 
 ---
-title: Getting Started with @lyfie/luthor
-description: Install and run the plug-and-play editor package.
+title: Introduction
+description: What Luthor and Luthor Headless are, and when to use each package.
 ---
 
-# Getting Started with `@lyfie/luthor`
+# Introduction
 
-Use this package when you want a complete editor quickly, with preset UX already wired.
+`@lyfie/luthor` and `@lyfie/luthor-headless` solve different needs.
+
+## @lyfie/luthor
+
+Use this when you want a production-ready editor quickly.
+
+- Includes preset editors and prebuilt UI
+- Includes `@lyfie/luthor-headless` under the hood
+- Best for fast shipping with strong defaults
+
+## @lyfie/luthor-headless
+
+Use this when you want full control over UI and behavior.
+
+- Extension-first architecture
+- Bring your own toolbar and app UX
+- Best for custom product-specific editing flows
+
+## Compatibility
+
+Based on package metadata in `packages/luthor/package.json` and `packages/headless/package.json`:
+
+- React: `^18.0.0 || ^19.0.0`
+- React DOM: `^18.0.0 || ^19.0.0`
+- TypeScript/TSX: fully supported (the APIs are TypeScript-first)
+- Lexical:
+  - `@lyfie/luthor`: uses Lexical `^0.40.0` dependencies internally
+  - `@lyfie/luthor-headless`: peer dependency `>=0.40.0` for `lexical` and required `@lexical/*` packages
+
+## Which package should you choose?
+
+- Choose `@lyfie/luthor` if you want speed and ready-made preset UX.
+- Choose `@lyfie/luthor-headless` if you need deep customization and your own UI.
+
+## Next
+
+- [Installation](/docs/getting-started/installation/)
+- [Get Started @lyfie/luthor](/docs/getting-started/luthor/)
+- [Get Started @lyfie/luthor-headless](/docs/getting-started/luthor-headless/)
+
+---
+## FILE: getting-started/installation.md
+## URL: https://www.luthor.fyi/docs/getting-started/installation/
+---
+
+---
+title: Installation
+description: Install, update, uninstall, and avoid common mistakes for both packages.
+---
+
+# Installation
+
+This page covers install, update, and uninstall for both packages.
+
+## Install @lyfie/luthor
+
+```bash
+npm install @lyfie/luthor react react-dom
+```
+
+## Install @lyfie/luthor-headless
+
+```bash
+npm install @lyfie/luthor-headless lexical @lexical/code @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
+```
+
+Optional for headless:
+
+```bash
+npm install highlight.js
+```
+
+```bash
+npm install @emoji-mart/data
+```
+
+## Update packages
+
+```bash
+npm update @lyfie/luthor @lyfie/luthor-headless
+```
+
+## Uninstall packages
+
+```bash
+npm uninstall @lyfie/luthor @lyfie/luthor-headless
+```
+
+If you installed headless peers directly and want to remove them too:
+
+```bash
+npm uninstall lexical @lexical/code @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils highlight.js @emoji-mart/data
+```
+
+## Common mistakes and things to keep in mind
+
+### 1) Missing Lexical peer dependencies (headless only)
+
+`@lyfie/luthor-headless` requires `lexical` + key `@lexical/*` packages. If these are missing, runtime/editor init fails.
+
+### 2) Missing styles with @lyfie/luthor
+
+Always import preset styles:
+
+```tsx
+import '@lyfie/luthor/styles.css';
+```
+
+### 3) Version mismatches across React/Lexical
+
+Keep React and Lexical versions compatible with package peer ranges from `package.json`.
+
+### 4) Using preset docs for headless setup (or vice versa)
+
+- `@lyfie/luthor`: preset-first, ready UI
+- `@lyfie/luthor-headless`: extension-first, custom UI
+
+### 5) Optional dependencies confusion
+
+`highlight.js` and `@emoji-mart/data` are optional for headless. The editor still works without them.
+
+## Next
+
+- [Get Started @lyfie/luthor](/docs/getting-started/luthor/)
+- [Get Started @lyfie/luthor-headless](/docs/getting-started/luthor-headless/)
+
+---
+## FILE: getting-started/luthor-headless.md
+## URL: https://www.luthor.fyi/docs/getting-started/luthor-headless/
+---
+
+---
+title: Get Started @lyfie/luthor-headless
+description: Minimal setup and validation for the headless package.
+---
+
+# Get Started @lyfie/luthor-headless
+
+Use this when you need full control over editor UI.
 
 ## 1) Install
 
 ```bash
-pnpm add @lyfie/luthor react react-dom
+npm install @lyfie/luthor-headless lexical @lexical/code @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
 ```
 
-## 2) Import
-
-```tsx
-import { ExtensiveEditor } from '@lyfie/luthor';
-import '@lyfie/luthor/styles.css';
-```
-
-## 3) Render
-
-```tsx
-<ExtensiveEditor />
-```
-
-## Next Steps
-
-- Package user guide: [Luthor getting started reference](/docs/reference/user/luthor/getting-started/)
-- Preset configuration: [Presets and configuration](/docs/reference/user/luthor/presets-and-configuration/)
-- Toolbar layout controls: [Toolbar customization](/docs/reference/user/luthor/toolbar-customization/)
-- Rich feature walkthrough: [Extensive editor guide](/docs/reference/user/luthor/extensive-editor/)
-
----
-## FILE: headless-usage.md
-## URL: https://www.luthor.fyi/docs/headless-usage/
----
-
----
-title: Headless Usage
-description: Build custom editor UI with @lyfie/luthor-headless.
----
-
-# Headless Usage
-
-Use `@lyfie/luthor-headless` when your product needs custom UI, layout, and interaction patterns.
-
-You keep full rendering control while relying on typed commands and extension contracts.
-
-## Install
-
-```bash
-pnpm add @lyfie/luthor-headless lexical react react-dom
-```
-
-## Continue With
-
-- Integration quick start: [Headless getting started](/docs/reference/user/headless/getting-started/)
-- Extension catalog and options: [Extensions and configuration](/docs/reference/user/headless/extensions-and-configuration/)
-- JSON/JSONB data flow: [Import and export](/docs/reference/user/headless/import-export/)
-- Architecture for contributors: [Headless architecture](/docs/reference/developer/headless/architecture/)
-
----
-## FILE: index.md
-## URL: https://www.luthor.fyi/docs/
----
-
----
-title: Luthor Documentation
-description: Central documentation for @lyfie/luthor and @lyfie/luthor-headless.
----
-
-# Luthor Docs
-
-Luthor offers two ways to build rich text editors:
-
-- `@lyfie/luthor`: preset-first, ready to ship quickly
-- `@lyfie/luthor-headless`: extension-first, full UI control
-
-## Start Here
-
-- New to Luthor: [Getting started](/docs/getting-started/)
-- Building custom editor UX: [Headless usage](/docs/headless-usage/)
-- Want preset details: [Presets](/docs/presets/)
-- Toolbar and UI behaviors: [UI components](/docs/ui-components/)
-
-## Canonical References
-
-- Full reference index: [Reference docs](/docs/reference/)
-- User docs: [Reference user docs](/docs/reference/user/luthor/getting-started/)
-- Developer docs: [Reference developer docs](/docs/reference/developer/luthor/architecture/)
-- Tutorials: [Reference tutorials](/docs/reference/tutorials/enhanced-markdown-quick-start/)
-
-## Open Documentation Policy
-
-All docs are publicly accessible and crawlable:
-
-- HTML pages under `/docs/**` for search indexing
-- `sitemap.xml` for crawler discovery
-- `llms.txt` and `llms-full.txt` for AI ingestion
-
-Looking for a live editor first? Open the [Luthor demo](/demo/).
-
----
-## FILE: presets.md
-## URL: https://www.luthor.fyi/docs/presets/
----
-
----
-title: Presets
-description: Preset-level usage and configuration documentation.
----
-
-# Presets
-
-Presets provide production-ready editor experiences with minimal setup.
-
-## Recommended Reading
-
-- Preset overview and roadmap: [Preset README](/docs/reference/readmes/presets/README/)
-- Full extensive preset details: [Extensive preset reference](/docs/reference/readmes/presets/extensive-preset-readme/)
-- Architecture map for docs and package structure: [Luthor docs architecture map](/docs/reference/readmes/packages/luthor-docs/architecture-map/)
-
-## When to Use Presets
-
-- You want strong defaults with minimal configuration
-- You need full toolbar, formatting, and media support quickly
-- You still want opt-in customization through documented props
-
----
-## FILE: reference/demo-app/website-development-phased-plan.md
-## URL: https://www.luthor.fyi/docs/reference/demo-app/website-development-phased-plan/
----
-
----
-title: "Demo App Website Development Plan"
----
-
-# Demo App Website Development Plan
-
-## Goal
-
-Transform `apps/demo` from a feature showcase into a full product website for `@lyfie/luthor` and `@lyfie/luthor-headless`.
-
-The website must:
-
-- sell the product clearly to developers
-- keep the **Extensive Editor** as the first visual focus on load
-- promote trust (MIT, free/open-source, stable, type-safe, React compatible, Lexical-based)
-- provide a clear path to docs, npm, and GitHub
-- keep messaging evidence-backed by repository documentation
-
-## Product Positioning (Messaging Source of Truth)
-
-Use the following anchors for claims and copy:
-
-- MIT + open-source: `LICENSE`, package metadata in `packages/headless/package.json` and `packages/luthor/package.json`
-- Lexical foundation and architecture: `README.md`, `documentation/developer/headless/architecture.md`, `documentation/developer/luthor/architecture.md`
-- React compatibility: `documentation/user/headless/getting-started.md`, `documentation/user/luthor/getting-started.md`
-- Type-safe extension model: `documentation/user/headless/extensions-and-configuration.md`
-- Import/export fidelity and persistence: `documentation/user/headless/import-export.md`, `documentation/tutorials/enhanced-markdown-quick-start.md`
-- Extensive Editor capabilities: `documentation/user/luthor/extensive-editor.md`
-
-## Implementation Phases
-
-### Phase 1 — Website Foundation in Current Demo App
-
-**Objective**
-
-Ship a marketing-first landing experience in the existing Vite app while preserving the live editor workflow.
-
-**Deliverables**
-
-- top navigation with clear product CTAs
-- Extensive Editor centered above the fold
-- strong value proposition and trust messaging
-- links to docs, npm, GitHub, issues, sponsor/donation
-- initial package metrics panel (npm downloads and package metadata)
-
-**Primary Files**
-
-- `apps/demo/src/App.tsx`
-- `apps/demo/src/components/DemoTopBar.tsx`
-- `apps/demo/src/components/ShowcaseHero.tsx`
-- `apps/demo/src/data/demoContent.ts`
-- `apps/demo/src/styles/*.css`
-
-**Acceptance Criteria**
-
-- first meaningful paint presents the Extensive Editor as the central wow element
-- users can discover both packages in less than one screen scroll
-- users can click through to docs/npm/GitHub without searching
-
----
-
-### Phase 2 — SSG Conversion (Vite + vite-ssg)
-
-**Objective**
-
-Convert app rendering to static generation for route pre-rendering, SEO, and fast initial load.
-
-**Deliverables**
-
-- integrate `vite-react-ssg` (React equivalent of Vite SSG flow)
-- static route generation for Home, Demo, Docs, Ecosystem pages
-- metadata strategy (titles/descriptions/open graph)
-- stable deployment output for static hosting
-
-**Primary Files**
-
-- `apps/demo/package.json`
-- `apps/demo/vite.config.ts`
-- `apps/demo/src/main.tsx`
-
-**Acceptance Criteria**
-
-- build outputs pre-rendered HTML for route entry points
-- all core pages indexable without client runtime dependency
-
----
-
-### Phase 3 — Website Information Architecture
-
-**Objective**
-
-Split single long page into website-grade routes and conversion flow.
-
-**Routes**
-
-- `/` → marketing landing with editor spotlight
-- `/demo` → interactive Extensive Editor playground
-- `/docs` → curated docs entry page for user + developer paths
-- `/ecosystem` → npm/GitHub/trust/performance snapshot
-
-**Deliverables**
-
-- route-level navigation and section anchors
-- consistent layout shell and footer with package links
-- CTA ladder: Try Demo → Read Docs → Install → Star/Sponsor
-
----
-
-### Phase 4 — Curated Docs Experience
-
-**Objective**
-
-Create documentation-facing pages with curated copy that map to canonical markdown docs.
-
-**Deliverables**
-
-- docs index cards by audience (User, Developer, Tutorials)
-- “Start here” pathways for both packages
-- direct deep-links to existing docs under `documentation/`
-- capability matrix for `luthor` vs `luthor-headless`
-
-**Primary Sources**
-
-- `documentation/documentation-hub.md`
-- `documentation/index.md`
-- `documentation/markdown-catalog.md`
-- user/developer docs under `documentation/user/**` and `documentation/developer/**`
-
----
-
-### Phase 5 — Trust, Security, and Performance Surface
-
-**Objective**
-
-Make reliability and production suitability explicit, with conservative evidence-backed claims.
-
-**Deliverables**
-
-- trust section: MIT, free forever, open source
-- compatibility section: React 18/19 and Lexical ecosystem
-- safe-by-default section: validation notes from import/export and extension docs
-- performance section: conversion behavior and optimization principles from docs
-
-**Claim Rule**
-
-Only ship claims that can be traced to documented behavior or package metadata.
-
----
-
-### Phase 6 — Data Signals and Ecosystem Intelligence
-
-**Objective**
-
-Show live package momentum and distribution quality indicators.
-
-**Deliverables**
-
-- npm weekly downloads for both packages (client-side fetch)
-- latest package version and unpacked size where available
-- resilient loading/error/fallback states
-- optional trend sparkline in follow-up iteration
-
-**Data Endpoints**
-
-- `https://api.npmjs.org/downloads/point/last-week/@lyfie/luthor`
-- `https://api.npmjs.org/downloads/point/last-week/@lyfie/luthor-headless`
-- `https://registry.npmjs.org/@lyfie/luthor`
-- `https://registry.npmjs.org/@lyfie/luthor-headless`
-
----
-
-### Phase 7 — Conversion and Production Hardening
-
-**Objective**
-
-Finalize website quality for public launch.
-
-**Deliverables**
-
-- accessibility pass (keyboard/focus/contrast/semantic headings)
-- responsive QA pass for mobile/tablet/desktop
-- link integrity checks
-- Lighthouse budget and basic performance budget
-- deploy and rollback runbook in demo maintainer docs
-
-## Content Framework for Website Copy
-
-Use this narrative pattern across hero and sections:
-
-1. **Promise**: Free, open-source, production-ready editor stack.
-2. **Proof**: Live Extensive Editor directly on landing.
-3. **Choice**: Use plug-and-play `@lyfie/luthor` or fully controlled `@lyfie/luthor-headless`.
-4. **Trust**: MIT, React-compatible, Lexical-powered, type-safe extension model.
-5. **Action**: Try demo, read docs, install from npm, star/sponsor on GitHub.
-
-## Current Phase Status
-
-- [x] Planning document created
-- [x] Phase 1 implementation complete
-- [x] Phase 2 implementation complete
-- [x] Phase 3 implementation complete
-- [x] Phase 4 implementation complete
-- [x] Phase 5 implementation complete
-- [ ] Phase 6+ rollout
-
----
-## FILE: reference/developer_notes/readme-map.md
-## URL: https://www.luthor.fyi/docs/reference/developer_notes/readme-map/
----
-
----
-title: "Developer Notes"
----
-
-# Developer Notes
-
-This index groups every README used by contributors so you can quickly jump to implementation-level guidance.
-
-## Canonical npm READMEs
-
-- Monorepo root README (GitHub landing): [../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- `@lyfie/luthor` npm README: [../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-- `@lyfie/luthor-headless` npm README: [../../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
-
-## [Luthor](/demo/) Package Deep Docs
-
-- Architecture: [../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- Source file reference: [../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- Maintainer notes: [../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-- User getting started: [../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- User configuration guide: [../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor guide: [../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
-## Workspace READMEs
-
-- Demo app README: [../readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
-- Demo architecture: [../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- Demo source-file reference: [../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- Demo maintainer notes: [../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-- Demo getting started: [../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-- Demo usage guide: [../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- ESLint config README: [../readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
-- TypeScript config README: [../readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
-
-## Preset READMEs (`@lyfie/luthor` source)
-
-- Extensive preset: [../readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
-- Future preset authoring notes: [../readmes/presets/README.md](/docs/reference/readmes/presets/README/)
-
-## Additional Markdown Resources
-
-- Documentation root index: [../index.md](/docs/reference/)
-- Headless architecture: [../developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
-- Headless source file reference: [../developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
-- Headless maintainer notes: [../developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
-- Full Markdown catalog: [../markdown-catalog.md](/docs/reference/markdown-catalog/)
-
----
-## FILE: reference/developer/demo/architecture.md
-## URL: https://www.luthor.fyi/docs/reference/developer/demo/architecture/
----
-
----
-title: "Demo App Architecture (`apps/demo`)"
----
-
-# Demo App Architecture (`apps/demo`)
-
-This document explains how the demo app is structured and how it validates `@lyfie/luthor` and `@lyfie/luthor-headless` behavior.
-
-## Purpose
-
-The demo app is a focused Vite + React sandbox used to:
-
-- exercise the extensive preset in a real app shell
-- validate import/export and persistence flows
-- provide a reproducible environment for contributor debugging
-
-## Runtime entry flow
-
-Browser app flow:
-
-1. `index.html` mounts `#root`.
-2. `src/main.tsx` bootstraps React and renders `App`.
-3. `src/App.tsx` composes all demo panels and the `ExtensiveEditor` instance.
-
-Worker/deploy flow:
-
-- `src/index.ts` is the Cloudflare Worker entry.
-- `wrangler.jsonc` points `main` at `./src/index.ts` for deploys.
-
-## App composition
-
-`src/App.tsx` orchestrates:
-
-- `DemoTopBar`
-- `ShowcaseHero`
-- `FeatureCoveragePanel`
-- `PersistencePanel`
-- `EditorPlayground` containing `ExtensiveEditor`
-
-The app keeps behavior clear by separating display-only components from editor-bridge logic.
-
-## Editor bridge model
-
-The integration uses `ExtensiveEditorRef` methods to control content and persistence:
-
-- `injectJSONB(...)`
-- `getJSONB()`
-
-This keeps demo operations aligned with real consumer integration patterns.
-
-## Data and state design
-
-### Seed and feature taxonomy
-
-`src/data/demoContent.ts` provides:
-
-- JSONB scenario payload
-- extension-to-category maps used by feature panels
-
-### UI state in `App`
-
-Primary app state includes:
-
-- theme mode (`light` / `dark`)
-- payload textarea value
-- persistence status messages
-- copy status feedback
-
-Theme is stored in local storage; persistence payload is intentionally user-driven via panel actions.
-
-## Configuration layer
-
-- `vite.config.ts`: React + Cloudflare plugin setup.
-- `tsconfig*.json`: strict TS and project references.
-- `eslint.config.js`: lint setup for React/TS hooks and refresh rules.
-- `wrangler.jsonc`: worker name/date/main for deploy path.
-
-## Contributor notes
-
-- Demo behavior should mirror package public APIs, not private internals.
-- Keep demo components small and focused on showcasing capabilities.
-- Update source-file docs whenever demo files are added/removed.
-
-## Related docs
-
-- Demo source file reference: [source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- Demo maintainer notes: [maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-- Demo user guide: [../../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-
----
-## FILE: reference/developer/demo/maintainer-notes.md
-## URL: https://www.luthor.fyi/docs/reference/developer/demo/maintainer-notes/
----
-
----
-title: "Demo Maintainer Notes"
----
-
-# Demo Maintainer Notes
-
-Maintainer notes for contributors working on `apps/demo`.
-
-## Scope boundaries
-
-- The demo should exercise public package APIs (`@lyfie/luthor`, `@lyfie/luthor-headless`), not private internals.
-- Keep demo behavior representative of real-world integration scenarios.
-
-## Key integration invariants
-
-- `ExtensiveEditorRef` methods are the central bridge for content operations.
-- Demo content constants in `src/data/demoContent.ts` should remain the single source for seeded examples.
-- Theme and persistence status UX should remain explicit and easy to inspect.
-
-## Persistence behavior assumptions
-
-- Theme uses local storage.
-- JSONB/markdown payload handling is user-triggered from the persistence panel.
-- Restore logic should fail safely on malformed JSON and provide status feedback.
-
-## Deployment notes
-
-- Deploy script uses Wrangler after app build.
-- Worker entry remains `src/index.ts`; update docs/config together if this changes.
-
-## Validation checklist
-
-From repo root:
-
-- `pnpm --filter demo lint`
-- `pnpm --filter demo build`
-- if package interfaces changed, also run `pnpm build`
-
-## Documentation upkeep
-
-- Update [source-file-reference.md](/docs/reference/developer/demo/source-file-reference/) when files move or change responsibilities.
-- Keep user guide aligned with scripts and package versions.
-- Keep docs index links synchronized in `documentation/index.md` and `documentation/documentation-hub.md`.
-
----
-## FILE: reference/developer/demo/source-file-reference.md
-## URL: https://www.luthor.fyi/docs/reference/developer/demo/source-file-reference/
----
-
----
-title: "Demo Source File Reference (`apps/demo`)"
----
-
-# Demo Source File Reference (`apps/demo`)
-
-This is the canonical per-file reference for the demo app.
-
-## Inventory
-
-- Total files documented: **28**
-- Scope: app config, source code, static assets, and wrangler deploy metadata under `apps/demo`
-
-## Root-level files
-
-### `apps/demo/.gitignore`
-
-- Purpose: keeps local/build artifacts out of version control.
-- Key entries: `node_modules`, `dist`, log files, local editor settings.
-
-### `apps/demo/eslint.config.js`
-
-- Purpose: lint configuration for the demo app.
-- Behavior: applies JS/TS React lint rules and ignores generated output.
-
-### `apps/demo/index.html`
-
-- Purpose: browser shell for Vite app.
-- Behavior: defines root mount node and loads `src/main.tsx` module.
-
-### `apps/demo/package.json`
-
-- Purpose: app metadata, scripts, dependency declarations.
-- Scripts: `dev`, `build`, `lint`, `preview`, `deploy`.
-
-### `apps/demo/tsconfig.json`
-
-- Purpose: TS solution file with references and path aliases.
-- Behavior: delegates app/node settings to referenced tsconfig files.
-
-### `apps/demo/tsconfig.app.json`
-
-- Purpose: strict TypeScript settings for browser app source.
-- Behavior: no-emit compile checks, bundler-mode module resolution.
-
-### `apps/demo/tsconfig.node.json`
-
-- Purpose: node-side TypeScript config for Vite config typing.
-
-### `apps/demo/vite.config.ts`
-
-- Purpose: Vite configuration.
-- Behavior: wires React plugin and Cloudflare Vite plugin.
-
-### `apps/demo/wrangler.jsonc`
-
-- Purpose: Cloudflare Worker deployment config.
-- Behavior: sets worker name, compatibility date, and entry file (`src/index.ts`).
-
-## Wrangler-generated metadata
-
-### `apps/demo/.wrangler/deploy/config.json`
-
-- Purpose: generated Wrangler deploy metadata.
-- Note: not app logic; references generated deploy config paths.
-
-## Public/static assets
-
-### `apps/demo/public/logo.svg`
-
-- Purpose: static favicon asset.
-
-## Source runtime files
-
-### `apps/demo/src/main.tsx`
-
-- Purpose: React runtime bootstrap.
-- Behavior: mounts `<App />` into DOM root.
-
-### `apps/demo/src/App.tsx`
-
-- Purpose: main orchestration component.
-- Behavior:
-  - composes demo UI sections
-  - wires `ExtensiveEditor` ref actions
-  - handles markdown/JSONB load-save-copy workflows
-  - computes grouped feature coverage from extension list
-  - manages theme and status states
-
-### `apps/demo/src/index.ts`
-
-- Purpose: Cloudflare Worker entry module.
-- Behavior: exports `fetch` handler response for worker runtime.
-
-### `apps/demo/src/data/demoContent.ts`
-
-- Purpose: demo content and feature taxonomy constants.
-- Exports:
-  - seeded markdown content
-  - JSONB scenario object
-  - extension categorization maps and ordering
-
-## Component files
-
-### `apps/demo/src/components/DemoTopBar.tsx`
-
-- Purpose: top control bar.
-- Behavior: theme toggle and demo-content loading trigger.
-
-### `apps/demo/src/components/ShowcaseHero.tsx`
-
-- Purpose: summary hero panel.
-- Behavior: displays capability metrics and category highlights.
-
-### `apps/demo/src/components/FeatureCoveragePanel.tsx`
-
-- Purpose: extension capability visualization.
-- Behavior: renders grouped feature chips and copy-markdown action.
-
-### `apps/demo/src/components/PersistencePanel.tsx`
-
-- Purpose: persistence testing UI.
-- Behavior: payload textarea + save/load/restore/copy action controls.
-
-### `apps/demo/src/components/EditorPlayground.tsx`
-
-- Purpose: visual container for editor surface.
-- Behavior: provides layout wrapper around editor content.
-
-## CSS/style files
-
-### `apps/demo/src/index.css`
-
-- Purpose: baseline global styles.
-- Behavior: body/root defaults and theme-aware globals.
-
-### `apps/demo/src/App.css`
-
-- Purpose: CSS entrypoint for app-level stylesheet imports.
-- Behavior: imports style modules in controlled order.
-
-### `apps/demo/src/styles/app-shell.css`
-
-- Purpose: app shell variables and generic surface/button styles.
-
-### `apps/demo/src/styles/topbar.css`
-
-- Purpose: top bar layout and controls styling.
-
-### `apps/demo/src/styles/hero.css`
-
-- Purpose: showcase hero panel styling.
-
-### `apps/demo/src/styles/features.css`
-
-- Purpose: feature/persistence panel and chip grid styling.
-
-### `apps/demo/src/styles/editor-playground.css`
-
-- Purpose: editor stage and container styling.
-
-## Contributor checklist
-
-When touching `apps/demo` files:
-
-1. Keep this per-file reference updated.
-2. Update demo user docs for changed run or usage flows.
-3. Verify README and documentation index links still resolve.
-4. Run demo lint/build checks.
-
----
-## FILE: reference/developer/headless/architecture.md
-## URL: https://www.luthor.fyi/docs/reference/developer/headless/architecture/
----
-
----
-title: "Headless Architecture (Developer)"
----
-
-# Headless Architecture (Developer)
-
-This document defines how `@lyfie/luthor-headless` is structured, why key design choices exist, and how contributors should extend it safely.
-
-## Goals
-
-- Keep the package headless and lightweight.
-- Keep Lexical integrations in `@lyfie/luthor-headless` (not in presets).
-- Preserve type-safe command/state composition across arbitrary extension sets.
-- Support lossless import/export flows (JSON/JSONB).
-
-## Runtime Layers
-
-1. `src/core/*`
-   - Editor runtime factory (`createEditorSystem`) and context wiring.
-   - Extension factory (`createExtension`) for low-boilerplate extension authoring.
-   - Theme contracts and merge helpers.
-2. `src/extensions/*`
-   - Feature modules (formatting, media, core UX, custom nodes).
-   - Canonical extension type contracts in `src/extensions/types.ts`.
-3. `src/utils/*`
-   - Runtime utility surface for JSON/JSONB-first integrations.
-
-## Why the extension model looks this way
-
-- Extension arrays are declared `as const` so TypeScript can infer literal extension names and produce precise command/state types.
-- `createEditorSystem<Extensions>()` extracts and merges command/state query types from every extension.
-- `BaseExtension` and `createExtension` both exist:
-  - `BaseExtension`: best for complex, stateful, class-style extensions.
-  - `createExtension`: best for straightforward extensions without class boilerplate.
-
-## Lifecycle and composition
-
-- Extensions can provide:
-  - `getNodes()` for Lexical nodes
-  - `getPlugins()` for React plugins
-  - `getCommands()` for mutation APIs
-  - `getStateQueries()` for async active state checks
-  - `onInitialize()` for setup/cleanup
-- `createEditorSystem` composes these contributions and resolves collisions deterministically through extension order and initialization priority.
-
-## Import / export strategy
-
-- JSON remains the source-of-truth round-trip format for exact editor state.
-- JSONB is the recommended persistence target for production databases.
-
-## Contribution rules for this package
-
-- Keep dependencies minimal; optional integrations must degrade gracefully when absent.
-- Place any Lexical-derived feature logic in `packages/headless` and re-export from presets.
-- Keep extension APIs explicit and strongly typed.
-- Favor additive extension configs over hidden global behavior.
-
-## Ownership contract (authoritative)
-
-- `@lyfie/luthor-headless` owns Lexical-derived feature behavior, commands, node logic, parsing, and serialization.
-- `@lyfie/luthor` owns preset composition, UI layout/theming ergonomics, and re-export convenience.
-- If a new feature touches Lexical nodes/selection/editor state semantics, implement it here first.
-
-## How to add a feature safely
-
-Decision tree:
-
-1. Does the feature require Lexical/node/selection behavior?
-   - Yes: implement in `packages/headless/src/extensions/*` (or `src/core/*` only if truly runtime-core).
-   - No: continue.
-2. Is the feature preset UX/composition/theming for plug-and-play users?
-   - Yes: implement in `packages/luthor/src/core/*` or `packages/luthor/src/presets/*`.
-   - No: continue.
-3. Does it need both behavior and UX?
-   - Implement behavior in headless first, then wire UI in luthor.
-
-Required delivery steps:
-
-- Add/extend typed API surface first.
-- Add tests for behavior in headless and UI integration in luthor where applicable.
-- Update package README + user/developer docs in the same change.
-- Run quality gates and rule-contract checks before merge.
-
----
-## FILE: reference/developer/headless/maintainer-notes.md
-## URL: https://www.luthor.fyi/docs/reference/developer/headless/maintainer-notes/
----
-
----
-title: "Headless Maintainer Notes (Developer)"
----
-
-# Headless Maintainer Notes (Developer)
-
-## Performance
-
-- Keep extension command creation pure and avoid unnecessary re-instantiation.
-- Prefer targeted state queries over broad recomputation on every update.
-- For heavy UI overlays (tables, draggable handles, floating toolbars), keep DOM reads/writes minimal and batched.
-- Load optional dependencies lazily where practical (example: language detection paths).
-
-## Troubleshooting checklist
-
-- Verify extension array contents and order.
-- Ensure extension array is declared `as const`.
-- Confirm all peer dependencies are installed and version-compatible.
-- Check that a feature’s node registrations and plugin renderers are both active.
-- Confirm import/export extension inclusion when commands appear missing.
-
-## Dependency policy
-
-- Keep this package lightweight and headless-first.
-- Any non-essential integration should be optional and fail-safe.
-- Lexical-derived feature implementations belong in `packages/headless`; preset package re-exports and composes.
-
-## Rule contracts
-
-- `packages/headless/package.json` must not introduce regular `dependencies` for optional integrations.
-- Any runtime dynamic import of third-party modules must be declared in either:
-  - `optionalDependencies`, or
-  - `peerDependencies` + `peerDependenciesMeta[dep].optional: true`.
-- Run `pnpm --filter @lyfie/luthor-headless check:rule-contracts` before merging.
-- Root enforcement command: `pnpm check:rule-contracts`.
-
-## Testing and validation expectations
-
-For any source change in `packages/headless`:
-
-1. `pnpm --filter @lyfie/luthor-headless lint`
-2. `pnpm --filter @lyfie/luthor-headless build`
-3. `pnpm build` from repo root when change spans package boundaries
-
-## Documentation upkeep
-
-- Update [source-file-reference.md](/docs/reference/developer/headless/source-file-reference/) when source files move or behavior changes.
-- Keep user-facing guides in `documentation/user/headless/*` aligned with exported API reality.
-- Keep mandatory READMEs in sync with docs hub links.
-
----
-## FILE: reference/developer/headless/source-file-reference.md
-## URL: https://www.luthor.fyi/docs/reference/developer/headless/source-file-reference/
----
-
----
-title: "Headless Source File Reference (Developer)"
----
-
-# Headless Source File Reference (Developer)
-
-This is the canonical per-file reference for `packages/headless`.
-
-## Package-Level Files
-
-| File | Purpose |
-|---|---|
-| `packages/headless/package.json` | Package metadata, exports, scripts, peer dependencies (`lexical`, `@lexical/*`, `react`, `react-dom`) and optional dependency (`highlight.js`). |
-| `packages/headless/tsup.config.ts` | Build output configuration for ESM package artifacts and declarations. |
-| `packages/headless/tsconfig.json` | TypeScript settings for package compilation and editor diagnostics. |
-| `packages/headless/eslint.config.js` | Linting rules for package source quality and consistency. |
-| `packages/headless/src/index.ts` | Top-level barrel that re-exports `core`, `extensions`, and `utils`. |
-
-## Core (`src/core`)
-
-| File | What it does |
-|---|---|
-| `src/core/createEditorSystem.tsx` | Creates typed `Provider` and `useEditor`; aggregates extension commands, state queries, nodes, plugins, lifecycle hooks, and import/export APIs. |
-| `src/core/createExtension.ts` | Functional extension factory that builds extension instances without class inheritance boilerplate. |
-| `src/core/index.ts` | Re-exports runtime, theme helpers, and core types. |
-| `src/core/theme.ts` | Defines `LuthorTheme`, default theme object, theme merge helper, and runtime shape guard. |
-| `src/core/types.ts` | Core-side type contracts and compatibility exports for editor config/context typing. |
-
-## Extension Typing and Barrels
-
-| File | What it does |
-|---|---|
-| `src/extensions/types.ts` | Canonical extension generics and extract-utility types for typed command/state composition. |
-| `src/extensions/index.ts` | Master barrel for all extension categories. |
-
-## Base Extensions (`src/extensions/base`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/base/BaseExtension.ts` | Abstract extension base class with configurable defaults and extension lifecycle hooks. |
-| `src/extensions/base/TextFormatExtension.ts` | Shared implementation for text-format toggles and active-state queries (bold/italic/etc.). |
-| `src/extensions/base/index.ts` | Barrel exports for base extension primitives. |
-
-## Core UX Extensions (`src/extensions/core`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/core/CommandPaletteExtension.tsx` | Registers executable command palette items, command registry state, and execution helpers. |
-| `src/extensions/core/ContextMenuExtension.tsx` | Headless context-menu provider/renderer system with portal-based rendering. |
-| `src/extensions/core/DraggableBlockExtension.tsx` | Implements draggable block handles, drop indicators, and block-move commands. |
-| `src/extensions/core/EmojiExtension.tsx` | Emoji insertion and emoji picker/suggestion command/state surface. |
-| `src/extensions/core/EnterKeyBehaviorExtension.ts` | Overrides Enter behavior contextually for code blocks, quotes, and tables. |
-| `src/extensions/core/FloatingToolbarExtension.tsx` | Selection-anchored floating toolbar framework and state model. |
-| `src/extensions/core/HistoryExtension.tsx` | Undo/redo integration via Lexical history plugin and typed commands. |
-| `src/extensions/core/RichTextExtension.tsx` | Baseline rich text plugin wiring, content editable, placeholder, and error boundary behavior. |
-| `src/extensions/core/SlashCommandExtension.tsx` | Slash-trigger command menu registration and execution flow. |
-| `src/extensions/core/TabIndentExtension.tsx` | Tab / Shift+Tab indent-outdent handling for relevant node contexts. |
-| `src/extensions/core/index.ts` | Barrel for all core UX extensions and related types. |
-
-## Custom (`src/extensions/custom`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/custom/CustomNodeExtension.tsx` | Factory for custom DecoratorNode-based extensions with React rendering hooks. |
-| `src/extensions/custom/index.ts` | Barrel for custom extension APIs. |
-
-## Formatting Extensions (`src/extensions/formatting`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/formatting/BlockFormatExtension.tsx` | Heading/paragraph/quote toggles and text alignment commands/state. |
-| `src/extensions/formatting/BoldExtension.tsx` | Bold text format specialization. |
-| `src/extensions/formatting/CodeExtension.tsx` | Block code-node support, highlighting integration, and code block command behaviors. |
-| `src/extensions/formatting/CodeFormatExtension.tsx` | Inline code text-format specialization. |
-| `src/extensions/formatting/CodeIntelligenceExtension.ts` | Language-aware code-block helpers (detection, language controls, markdown shortcuts). |
-| `src/extensions/formatting/FontFamilyExtension.tsx` | Whitelisted font-family options with command/query APIs and CSS loading strategies. |
-| `src/extensions/formatting/FontSizeExtension.tsx` | Whitelisted font-size options with command/query APIs. |
-| `src/extensions/formatting/HorizontalRuleExtension.tsx` | Horizontal-rule insertion and markdown transformer integration. |
-| `src/extensions/formatting/ItalicExtension.tsx` | Italic text format specialization. |
-| `src/extensions/formatting/LineHeightExtension.tsx` | Whitelisted line-height options with command/query APIs. |
-| `src/extensions/formatting/LinkExtension.tsx` | Link insertion/removal, validation, and optional autolink/paste behavior. |
-| `src/extensions/formatting/ListExtension.tsx` | Ordered, unordered, and checklist commands/state with list node integration. |
-| `src/extensions/formatting/StrikethroughExtension.tsx` | Strikethrough text format specialization. |
-| `src/extensions/formatting/SubscriptExtension.tsx` | Subscript text format specialization. |
-| `src/extensions/formatting/SuperscriptExtension.tsx` | Superscript text format specialization. |
-| `src/extensions/formatting/TableExtension.tsx` | Rich table operations (rows/cols/headers/merge) and optional contextual table UI. |
-| `src/extensions/formatting/TextColorExtension.tsx` | Whitelisted text-color options with command/query APIs. |
-| `src/extensions/formatting/TextHighlightExtension.tsx` | Whitelisted text-highlight options with command/query APIs. |
-| `src/extensions/formatting/UnderlineExtension.tsx` | Underline text format specialization and markdown transformer support. |
-| `src/extensions/formatting/index.ts` | Barrel exports for formatting extensions and related configuration types. |
-
-## Media Extensions (`src/extensions/media`)
-
-| File | What it does |
-|---|---|
-| `src/extensions/media/types.ts` | Shared media model types (alignment, payloads, image extension contracts). |
-| `src/extensions/media/ImageTranslator.ts` | Serialization and DOM translation utilities for image nodes. |
-| `src/extensions/media/ImageExtension.tsx` | Image node, insert/update commands, upload integration, markdown transformer, selection UX. |
-| `src/extensions/media/IframeEmbedExtension.tsx` | Generic iframe embed node and command/state APIs with validation and sizing controls. |
-| `src/extensions/media/YouTubeEmbedExtension.tsx` | YouTube-specific embed node, URL parsing, and player option handling. |
-| `src/extensions/media/index.ts` | Barrel for media extension surface. |
-
-## Utilities (`src/utils`)
-
-| File | What it does |
-|---|---|
-| `src/utils/index.ts` | Utility barrel for package-level helper exports. |
-
-## Contributor guidance
-
-- Keep this document updated whenever files are added, removed, renamed, or significantly repurposed.
-- Any new extension file must document: commands, state queries, config shape, and integration dependencies.
-
----
-## FILE: reference/developer/luthor/architecture.md
-## URL: https://www.luthor.fyi/docs/reference/developer/luthor/architecture/
----
-
----
-title: "Luthor (`@lyfie/luthor`) Architecture"
----
-
-# [Luthor](/demo/) (`@lyfie/luthor`) Architecture
-
-This document explains how the plug-and-play package is organized, why it is split the way it is, and how it composes `@lyfie/luthor-headless`.
-
-## Package role in the monorepo
-
-`@lyfie/luthor` is the preset-oriented package:
-
-- It provides out-of-the-box editor UIs and preset composition.
-- It consumes and re-exports the headless runtime from `@lyfie/luthor-headless`.
-- It keeps feature implementation grounded in headless extensions while focusing on UX composition.
-
-## Layered structure
-
-```text
-packages/luthor/src/
-  index.ts                        # package entrypoint
-  core/                           # reusable preset UI + adapters
-  presets/                        # concrete preset assemblies
-```
-
-### 1) Entrypoint layer
-
-- `src/index.ts`
-  - Re-exports `presets/*` and `core/*` public API.
-  - Exports `headless` namespace to provide direct access to `@lyfie/luthor-headless` from one package import.
-
-### 2) Core composition layer (`src/core`)
-
-`src/core` contains preset-reusable modules:
-
-- typed command/state contracts (`types.ts`)
-- toolbar / floating toolbar / command palette / slash and emoji menus
-- command catalog and keyboard shortcut wiring
-- source-mode formatting helpers (HTML/Markdown/JSONB)
-- preset config helper (`createPresetEditorConfig`)
-- adapter that bridges headless floating-toolbar extension with React UI
-
-This layer intentionally avoids hard-coding one preset shell.
-
-### 3) Preset layer (`src/presets`)
-
-`src/presets/extensive/*` provides the flagship preset:
-
-- static preset metadata (`preset.ts`)
-- extension stack composition (`extensions.tsx`)
-- final editor shell component (`ExtensiveEditor.tsx`)
-
-Other preset modules (`simple-text`, `rich-text-box`, `chat-window`, `email-compose`, `md-text`, `notion-like`, `headless-editor`, `notes`) compose reusable core/headless capabilities with focused UX defaults.
-
-`src/presets/index.ts` exposes a registry model for discoverable presets.
-
-## Data and command flow
-
-1. `ExtensiveEditor` creates an editor system provider using `createEditorSystem`.
-2. Headless extensions provide command/state capabilities.
-3. `Toolbar` and `FloatingToolbar` consume the typed command surface (`CoreEditorCommands`).
-4. `generateCommands` builds command metadata for command palette and slash commands.
-5. Keyboard shortcuts are attached via `registerKeyboardShortcuts`.
-6. Visual/source mode switching runs import/export conversion routines.
-
-## Why this architecture
-
-- Keeps Lexical-heavy behavior in `@lyfie/luthor-headless`.
-- Preserves a reusable UI composition layer for future presets.
-- Allows a single package (`@lyfie/luthor`) for plug-and-play adoption.
-- Maintains typed boundaries between extension capability and UI rendering.
-
-## Dependency model
-
-From `packages/luthor/package.json`:
-
-- Runtime deps include `@lyfie/luthor-headless`, Lexical packages (`^0.40.0`), `lexical`, and `lucide-react`.
-- React and React DOM are peers: `^18.0.0 || ^19.0.0`.
-- Package version: `2.2.0`.
-
-## Ownership contract (authoritative)
-
-- `@lyfie/luthor` must not introduce new direct Lexical-derived feature behavior in runtime preset source.
-- Feature behavior belongs in `@lyfie/luthor-headless`; `@lyfie/luthor` composes, styles, and re-exports.
-- If a preset requires new editor semantics, first add a headless API and consume it here.
-
-## How to add a feature safely
-
-Decision tree:
-
-1. Does the change alter Lexical behavior (nodes, commands, selection semantics, parsing)?
-   - Yes: implement in `@lyfie/luthor-headless`.
-   - No: continue.
-2. Is the change about preset UI, layout, default config, or theme ergonomics?
-   - Yes: implement in `@lyfie/luthor`.
-   - No: continue.
-3. Is it cross-cutting?
-   - Implement headless behavior first, then wire luthor preset UX.
-
-Required delivery steps:
-
-- Update typed public APIs first.
-- Add tests (headless behavior + luthor UX integration).
-- Keep docs synchronized in same PR.
-- Pass rule-contract, lint, test, and build gates.
-
-## Related documents
-
-- Per-file reference: [source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- Maintainer notes: [maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-- User guide: [../../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- Preset options: [../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-
----
-## FILE: reference/developer/luthor/maintainer-notes.md
-## URL: https://www.luthor.fyi/docs/reference/developer/luthor/maintainer-notes/
----
-
----
-title: "Luthor Maintainer Notes"
----
-
-# [Luthor](/demo/) Maintainer Notes
-
-Maintainer-focused notes for `@lyfie/luthor` contributors.
-
-## Ownership boundaries
-
-- New Lexical-derived feature implementations should live in `@lyfie/luthor-headless` first.
-- `@lyfie/luthor` should compose and re-export headless capabilities through preset UX.
-- Avoid introducing direct, preset-only Lexical logic unless it is strictly UI composition glue.
-
-## Rule contracts
-
-- Runtime source under `packages/luthor/src/**` must not import `lexical` or `@lexical/*` directly.
-- If a preset feature needs Lexical-level logic, add it to `@lyfie/luthor-headless` and consume it via headless exports.
-- Run `pnpm --filter @lyfie/luthor check:rule-contracts` before merging.
-- Root enforcement command: `pnpm check:rule-contracts`.
-
-## Core invariants
-
-- `core/types.ts` is the contract between extension capability and UI components.
-- `core/commands.ts` is the canonical command metadata source for keyboard, palette, and slash command consistency.
-- `presets/extensive/extensions.tsx` is the single source for extensive preset extension stack defaults.
-- `presets/extensive/ExtensiveEditor.tsx` is the runtime integration shell and should remain compositional.
-
-## Extension composition guidance
-
-When adding capabilities to the extensive preset:
-
-1. Add/extend the headless extension first (if capability is missing).
-2. Wire extension config in `presets/extensive/extensions.tsx`.
-3. Update toolbar controls in `core/toolbar.tsx` only when UX needs new actions.
-4. If command palette/slash exposure is needed, update `core/commands.ts`.
-5. Update docs:
-   - `documentation/developer/luthor/source-file-reference.md`
-   - `documentation/user/luthor/presets-and-configuration.md`
-   - package README files if public API changes.
-
-## Known implementation trade-offs
-
-- Some extension configuration is currently mutated via casts (`as any`) for flexibility.
-- Browser APIs (`document`, `window`, `URL.createObjectURL`) are used in UI modules; SSR consumers require guards.
-- Global keyboard listeners can conflict with host-app shortcuts if not scoped.
-- Source-mode transitions intentionally block on invalid user source input.
-
-## Release checklist for luthor package
-
-- Build and lint pass from workspace root:
-  - `pnpm --filter @lyfie/luthor build`
-  - `pnpm --filter @lyfie/luthor lint`
-- Validate preset docs and README links.
-- Ensure any new exported APIs are listed in:
-  - `packages/luthor/README.md`
-  - `documentation/developer/luthor/source-file-reference.md`
-
-## Related
-
-- Architecture: [architecture.md](/docs/reference/developer/luthor/architecture/)
-- Source file reference: [source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- Extensive preset user guide: [../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
----
-## FILE: reference/developer/luthor/source-file-reference.md
-## URL: https://www.luthor.fyi/docs/reference/developer/luthor/source-file-reference/
----
-
----
-title: "Luthor Source File Reference (`packages/luthor/src`)"
----
-
-# [Luthor](/demo/) Source File Reference (`packages/luthor/src`)
-
-This file documents every code file in `packages/luthor/src`.
-
-## Inventory
-
-- Total files: **21**
-- Scope: all `.ts` and `.tsx` files under `packages/luthor/src`
-
-## Root entrypoints
-
-### `packages/luthor/src/index.ts`
-
-- Purpose: package root entrypoint.
-- Exports:
-  - all exports from `./presets`
-  - all exports from `./core`
-  - namespace export `headless` from `@lyfie/luthor-headless`
-- Notes:
-  - Enables one-package import ergonomics.
-
-## Core layer (`packages/luthor/src/core`)
-
-### `core/index.ts`
-
-- Purpose: barrel for all core modules.
-- Exports:
-  - commands, extension adapters, UI components, types, formatting helpers.
-
-### `core/types.ts`
-
-- Purpose: typed contract layer between UI and editor capabilities.
-- Exports:
-  - mode/format unions, insert configs, command/state interfaces, class-name maps.
-- Notes:
-  - Most command methods are optional to support extension-gated capabilities.
-
-### `core/preset-config.ts`
-
-- Purpose: helper to create consistent preset config values.
-- Exports:
-  - `createPresetEditorConfig`.
-- Key behavior:
-  - Builds class names and placeholder defaults by preset id.
-
-### `core/extensions.tsx`
-
-- Purpose: floating-toolbar extension bridge.
-- Exports:
-  - `setFloatingToolbarContext`
-  - `createFloatingToolbarExtension`
-- Key behavior:
-  - Maintains mutable context used by headless floating-toolbar extension render lifecycle.
-
-### `core/commands.ts`
-
-- Purpose: canonical command catalog and keyboard registration.
-- Exports:
-  - `generateCommands`
-  - `commandsToCommandPaletteItems`
-  - `commandsToSlashCommandItems`
-  - `registerKeyboardShortcuts`
-  - types `KeyboardShortcut`, `CommandConfig`
-- Key behavior:
-  - Creates command metadata with extension-aware availability checks.
-  - Converts command definitions into palette/slash UI item shapes.
-  - Registers global keyboard shortcuts with conflict handling.
-
-### `core/command-palette.tsx`
-
-- Purpose: command palette modal UI.
-- Exports:
-  - `CommandPalette` component.
-- Key behavior:
-  - Query filtering, category grouping, keyboard navigation/selection, escape close.
-
-### `core/slash-command-menu.tsx`
-
-- Purpose: slash-command popup UI.
-- Exports:
-  - `SlashCommandMenu` component.
-- Key behavior:
-  - Anchored popup, query filtering, grouped command list, keyboard navigation.
-
-### `core/emoji-suggestion-menu.tsx`
-
-- Purpose: emoji suggestion popup UI.
-- Exports:
-  - `EmojiSuggestionMenu` component.
-- Key behavior:
-  - Search by label/shortcode/keywords, anchored rendering, keyboard navigation.
-
-### `core/source-format.ts`
-
-- Purpose: source text formatting utilities.
-- Exports:
-  - `formatJSONBSource`
-- Key behavior:
-  - JSON parse/stringify fallback formatting.
-
-### `core/layout.tsx`
-
-- Purpose: source/visual mode layout primitives.
-- Exports:
-  - `ModeTabs`
-  - `SourceView`
-- Key behavior:
-  - Optional mode labels and mode filtering.
-  - Source textarea autosizing.
-
-### `core/ui.tsx`
-
-- Purpose: low-level shared UI primitives for core controls.
-- Exports:
-  - `IconButton`, `Button`, `Select`, `Dropdown`, `Dialog`
-- Key behavior:
-  - Dropdown positioning, outside click handling, dialog escape handling and scroll lock.
-
-### `core/icons.tsx`
-
-- Purpose: icon mapping layer.
-- Exports:
-  - editor-oriented icon aliases backed by `lucide-react`.
-
-### `core/floating-toolbar.tsx`
-
-- Purpose: contextual floating toolbar.
-- Exports:
-  - `FloatingToolbar`
-  - `FloatingToolbarProps`
-- Key behavior:
-  - Renders text/media actions depending on current selection context.
-
-### `core/toolbar.tsx`
-
-- Purpose: main top toolbar UI for preset editor.
-- Exports:
-  - `Toolbar`
-  - `ToolbarProps`
-- Key behavior:
-  - Extension-aware control rendering.
-  - typography/color/image/embed/table controls.
-  - command palette trigger and theme controls.
-
-### `core/code-intelligence-extension.ts`
-
-- Purpose: re-export shim for code intelligence extension.
-- Exports:
-  - `CodeIntelligenceExtension`
-  - `codeIntelligenceExtension`
-  - `CodeIntelligenceCommands`
-- Source:
-  - forwarded from `@lyfie/luthor-headless`.
-
-## Preset layer (`packages/luthor/src/presets`)
-
-### `presets/index.ts`
-
-- Purpose: preset API and registry.
-- Exports:
-  - `EditorPreset` interface
-  - `createPresetEditorConfig`
-  - extensive preset exports
-  - `presetRegistry`
-- Key behavior:
-  - Registers `extensive` as the built-in preset key.
-
-### `presets/extensive/index.ts`
-
-- Purpose: barrel for extensive preset modules.
-- Exports:
-  - `extensivePreset`, `extensiveToolbar`, `extensiveExtensions`, `ExtensiveEditor`, extensive editor types.
-
-### `presets/extensive/preset.ts`
-
-- Purpose: static extensive preset metadata.
-- Exports:
-  - `extensiveToolbar`
-  - `extensivePreset`
-- Key behavior:
-  - Defines toolbar defaults, base config, css path, editor component reference.
-
-### `presets/extensive/extensions.tsx`
-
-- Purpose: extension composition for extensive preset.
-- Exports:
-  - `setFloatingToolbarContext` (re-export)
-  - `extensiveImageExtension`
-  - `extensiveExtensions`
-  - `ExtensiveExtensions` type
-- Key behavior:
-  - Composes most built-in headless extensions.
-  - Applies configuration for embeds, image handling, typography/color options, and custom node behavior.
-
-### `presets/extensive/ExtensiveEditor.tsx`
-
-- Purpose: fully assembled preset editor component.
-- Exports:
-  - `ExtensiveEditor`
-  - `ExtensiveEditorMode`, `ExtensiveEditorRef`, `ExtensiveEditorProps`
-- Key behavior:
-  - Creates editor system provider and command wiring.
-  - Integrates toolbar, floating toolbar, slash menu, emoji menu, and command palette.
-  - Supports visual/JSONB mode switching with conversion and validation.
-  - Exposes imperative ref methods.
-
-## Cross-file relationships
-
-- Command model source of truth: `core/commands.ts`
-- UI contracts: `core/types.ts`
-- Floating toolbar extension bridge: `core/extensions.tsx`
-- Preset assembly:
-  - extension stack: `presets/extensive/extensions.tsx`
-  - metadata: `presets/extensive/preset.ts`
-  - runtime shell: `presets/extensive/ExtensiveEditor.tsx`
-
-## Contributor checklist for source changes
-
-When modifying any file in `packages/luthor/src`:
-
-1. Update this file’s section if exports/responsibilities change.
-2. Update user docs if public behavior changed.
-3. Update `packages/luthor/README.md` for API surface changes.
-4. Run package lint/build checks.
-
----
-## FILE: reference/documentation-hub.md
-## URL: https://www.luthor.fyi/docs/reference/documentation-hub/
----
-
----
-title: "Documentation Hub"
----
-
-# Documentation Hub
-
-This folder is the single source of truth for project documentation.
-
-## Start Here
-
-- Main documentation index: [index.md](/docs/reference/)
-- Monorepo README: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- Full Markdown catalog: [markdown-catalog.md](/docs/reference/markdown-catalog/)
-
-## User Documentation
-
-- Demo getting started: [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-- Demo usage and persistence: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- [Luthor](/demo/) getting started: [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- [Luthor](/demo/) presets and configuration: [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor guide: [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-- Headless getting started: [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
-- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
-- Headless import/export: [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
-- JSONB usage and persistence quick start: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-
-## Developer Documentation
-
-- Demo architecture: [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- Demo source file reference: [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- Demo maintainer notes: [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-- [Luthor](/demo/) architecture: [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- [Luthor](/demo/) source file reference: [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- [Luthor](/demo/) maintainer notes: [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-- Headless architecture: [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
-- Headless source file reference: [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
-- Headless maintainer notes: [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
-- Contributor README map: [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
-
-## Package READMEs
-
-- Root: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- `@lyfie/luthor-headless`: [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
-- `@lyfie/luthor`: [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-
-## Additional Package and Workspace Docs
-
-- Demo app: [readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
-- [Luthor](/demo/) package architecture docs: [readmes/packages/luthor-docs/README.md](/docs/reference/readmes/packages/luthor-docs/README/)
-- Preset docs: [readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
-- Tooling docs:
-  - [readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
-  - [readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
-
----
-## FILE: reference/index.md
-## URL: https://www.luthor.fyi/docs/reference/
----
-
----
-title: "Luthor Documentation Index"
----
-
-# [Luthor](/demo/) Documentation Index
-
-This is the canonical documentation root for the monorepo.
-
-## User Documentation
-
-- Demo getting started: [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-- Demo usage and persistence: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- [Luthor](/demo/) getting started: [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- [Luthor](/demo/) presets and configuration: [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor guide: [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-- Headless getting started: [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
-- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
-- Headless import/export: [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
-- Tutorial: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-
-## Developer Documentation
-
-- Demo architecture: [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- Demo source file reference: [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- Demo maintainer notes: [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-- [Luthor](/demo/) architecture: [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- [Luthor](/demo/) file-by-file reference: [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- [Luthor](/demo/) maintainer notes: [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-- Headless architecture: [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
-- Headless file-by-file reference: [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
-- Headless maintainer notes: [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
-- README mapping: [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
-
-## Package READMEs (mandatory)
-
-- Monorepo README: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- Headless README: [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
-- [Luthor](/demo/) presets README: [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-
----
-## FILE: reference/markdown-catalog.md
-## URL: https://www.luthor.fyi/docs/reference/markdown-catalog/
----
-
----
-title: "Markdown Catalog"
----
-
-# Markdown Catalog
-
-Project-authored markdown catalog.
-
-## Mandatory READMEs
-
-- [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
-- [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-
-## Documentation Root
-
-- [index.md](/docs/reference/)
-- [documentation-hub.md](/docs/reference/documentation-hub/)
-- [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
-- [PROJECT-DELIVERABLES.md](/docs/reference/PROJECT-DELIVERABLES/)
-
-## Headless User Documentation
-
-- [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
-- [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
-- [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
-
-## Demo User Documentation
-
-- [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-- [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-
-## [Luthor](/demo/) User Documentation
-
-- [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
-## Headless Developer Documentation
-
-- [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
-- [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
-- [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
-
-## Demo Developer Documentation
-
-- [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-
-## [Luthor](/demo/) Developer Documentation
-
-- [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-
-## Existing Reference and Design Documentation
-
-- [implementation-notes/custom-markdown-convertor-summary.md](https://github.com/lyfie-app/luthor/blob/main/documentation/implementation-notes/custom-markdown-convertor-summary.md)
-- [tutorials/enhanced-markdown-quick-start.md](/docs/reference/tutorials/enhanced-markdown-quick-start/)
-- [readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
-- [readmes/packages/custom-markdown-convertor-readme.md](/docs/reference/readmes/packages/custom-markdown-convertor-readme/)
-- [readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
-- [readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
-- [readmes/packages/luthor-docs/README.md](/docs/reference/readmes/packages/luthor-docs/README/)
-- [readmes/packages/luthor-docs/architecture-map.md](/docs/reference/readmes/packages/luthor-docs/architecture-map/)
-- [readmes/packages/luthor-docs/customization-guide.md](/docs/reference/readmes/packages/luthor-docs/customization-guide/)
-- [readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
-- [readmes/presets/README.md](/docs/reference/readmes/presets/README/)
-
----
-## FILE: reference/PROJECT-DELIVERABLES.md
-## URL: https://www.luthor.fyi/docs/reference/PROJECT-DELIVERABLES/
----
-
----
-title: "Project Deliverables Summary"
----
-
-# Project Deliverables Summary
-
-## Current editor delivery status
-
-The active editor workflow is now Visual + JSONB.
-
-### Delivered
-
-- JSONB-first persistence and restoration in demo and extensive preset flows.
-- Visual/JSONB mode switching with validation safeguards.
-- Headless core import/export contracts simplified to JSON-only APIs.
-- Removal of HTML/Markdown mode-facing APIs and stale extension wiring.
-- Documentation alignment across user and developer guides.
-
-### Canonical persistence strategy
-
-```json
-{
-  "schemaVersion": 1,
-  "content": {
-    "jsonb": "{ ...lexical state... }"
-  }
-}
-```
-
-### Notes
-
-Historical enhanced-markdown and HTML conversion guidance is archived and no longer the recommended implementation path.
-
----
-## FILE: reference/readmes/apps/demo-readme.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/apps/demo-readme/
----
-
----
-title: "Demo App Documentation Redirect"
----
-
-# Demo App Documentation Redirect
-
-This page is retained for link compatibility.
-
-Canonical demo documentation now lives here:
-
-- User getting started: [../../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
-- User usage and persistence: [../../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- Developer architecture: [../../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- Developer source-file reference: [../../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-- Developer maintainer notes: [../../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-
-Related package docs:
-
-- Monorepo README: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- `@lyfie/luthor` README: [../../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-- `@lyfie/luthor-headless` README: [../../../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
-
----
-## FILE: reference/readmes/packages/custom-markdown-convertor-readme.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/custom-markdown-convertor-readme/
----
-
----
-title: "Legacy Converter Note"
----
-
-# Legacy Converter Note
-
-This document previously described the enhanced markdown converter workflow.
-
-## Current status
-
-- HTML/Markdown mode-facing editor APIs are removed from active workflows.
-- The recommended persistence path is now JSON/JSONB only.
-
-## Use instead
-
-- [../../../user/headless/import-export.md](/docs/reference/user/headless/import-export/)
-- [../../../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
-## Migration checklist
-
-1. Replace `getMarkdown()` / `injectMarkdown()` usage with `getJSONB()` / `injectJSONB()`.
-2. Persist canonical payloads in JSONB.
-3. Validate imported payload shape before restore.
-
----
-## FILE: reference/readmes/packages/eslint-config-readme.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/eslint-config-readme/
----
-
----
-title: "@repo/eslint-config"
----
-
-# @repo/eslint-config
-
-Shared ESLint configuration presets used by apps and packages in this monorepo.
-
-## Included Presets
-
-- `base.js`: base rules for JS/TS projects
-- `next.js`: Next.js-specific lint setup
-- `react-internal.js`: React rules for internal package/app code
-
-## Usage
-
-In a package `eslint.config.js`, import and apply one of the shared presets.
-
-## Related Docs
-
-- Monorepo overview: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- Documentation hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
-
----
-## FILE: reference/readmes/packages/luthor-docs/architecture-map.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/architecture-map/
----
-
----
-title: "Core + Preset System Map"
----
-
-# Core + Preset System Map
-
-This page is retained for compatibility. The canonical, up-to-date architecture docs are:
-
-- [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-
-## Quick summary
-
-- `packages/luthor/src/core/*` contains reusable preset UI and command adapters.
-- `packages/luthor/src/presets/extensive/*` composes the extensive preset and runtime editor shell.
-- `packages/luthor/src/index.ts` exports preset APIs, core utilities, and `headless` namespace passthrough.
-
-For file-by-file responsibilities across all 21 source files, use the canonical source reference above.
-
----
-## FILE: reference/readmes/packages/luthor-docs/customization-guide.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/customization-guide/
----
-
----
-title: "Customization Guide"
----
-
-# Customization Guide
-
-This page is retained for compatibility. Canonical docs:
-
-- User configuration guide: [../../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor guide: [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-- Developer architecture: [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- Developer source map: [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-
-This guide still includes practical customization patterns.
-
-## 1) Layout Manipulation
-
-### Horizontally center toolbar buttons
-
-`Toolbar` accepts a `classNames` object, so you can provide your own class hooks and center sections with CSS.
-
-```tsx
-import { Toolbar } from "@lyfie/luthor";
-
-<Toolbar
-  commands={commands}
-  hasExtension={hasExtension}
-  activeStates={activeStates}
-  isDark={isDark}
-  toggleTheme={toggleTheme}
-  onCommandPaletteOpen={() => commands.showCommandPalette()}
-  classNames={{
-    toolbar: "my-toolbar",
-    section: "my-toolbar-section",
-  }}
-/>
-```
-
-```css
-.my-toolbar {
-  justify-content: center;
-}
-
-.my-toolbar-section {
-  justify-content: center;
-}
-```
-
-### Override mode tab labels
-
-`ModeTabs` supports label overrides:
-
-```tsx
-import { ModeTabs } from "@lyfie/luthor";
-
-<ModeTabs
-  mode={mode}
-  onModeChange={setMode}
-  labels={{
-    visual: "Editor",
-    html: "Source (HTML)",
-    markdown: "Source (MD)",
-  }}
-/>
-```
-
-## 2) Theming (colors + styles)
-
-The default extensive/core style layer uses CSS variables. You can override them via wrapper selectors.
-
-```css
-.my-editor[data-editor-theme="light"] {
-  --luthor-bg: #ffffff;
-  --luthor-fg: #111827;
-  --luthor-border: #d1d5db;
-  --luthor-accent: #111827;
-}
-
-.my-editor[data-editor-theme="dark"] {
-  --luthor-bg: #0a0a0a;
-  --luthor-fg: #f5f5f5;
-  --luthor-border: #2a2a2a;
-  --luthor-accent: #f5f5f5;
-}
-```
-
-Use your custom class on the editor wrapper:
-
-```tsx
-<ExtensiveEditor className="my-editor" />
-```
-
-## 3) Composition: build your own preset from core
-
-You can reuse core modules and wire a custom editor shell:
-
-- `Toolbar` for top actions.
-- `FloatingToolbar` via `createFloatingToolbarExtension` + `setFloatingToolbarContext`.
-- `CommandPalette` plus `commandsToCommandPaletteItems` and `registerKeyboardShortcuts`.
-- `ModeTabs` + `SourceView` for visual/source layout switching.
-- `createPresetEditorConfig` for consistent classNames/placeholder wiring in custom preset definitions.
-
-### Example composition flow
-
-1. Create an extension list (choose any subset).
-2. Create editor system provider from headless.
-3. Use `Toolbar` + `CommandPalette` in your editor shell.
-4. Feed command palette items from `commandsToCommandPaletteItems(commands)`.
-5. Register keyboard shortcuts with `registerKeyboardShortcuts(commands)`.
-6. Share theme/active state with floating toolbar bridge using `setFloatingToolbarContext(...)`.
-
-This gives preset authors full control over feature mix while reusing a stable, typed core implementation.
-
-## 4) Font Select (whitelist + loading strategy)
-
-`fontFamilyExtension` supports a controlled font whitelist and optional CSS loading.
-
-```tsx
-import { fontFamilyExtension } from "@lyfie/luthor-headless";
-
-const configuredFontExtension = fontFamilyExtension.configure({
-  options: [
-    { value: "default", label: "Default", fontFamily: "inherit" },
-    {
-      value: "inter",
-      label: "Inter",
-      fontFamily: "'Inter', 'Segoe UI', Arial, sans-serif",
-      cssImportUrl:
-        "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
-    },
-  ],
-  cssLoadStrategy: "on-demand", // "none" | "preload-all"
-});
-```
-
-- `options` is the source of truth for selectable fonts.
-- `cssLoadStrategy: "on-demand"` injects `cssImportUrl` only when a font is used.
-- `cssLoadStrategy: "preload-all"` eagerly loads all configured font CSS at startup.
-
----
-## FILE: reference/readmes/packages/luthor-docs/README.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/README/
----
-
----
-title: "Luthor Package Documentation Redirect"
----
-
-# [Luthor](/demo/) Package Documentation Redirect
-
-This folder remains as a compatibility entrypoint for older links.
-
-Canonical `@lyfie/luthor` docs now live here:
-
-- Developer architecture: [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
-- Developer source map: [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
-- Maintainer notes: [../../../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-- User getting started: [../../../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
-- User presets/configuration: [../../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor guide: [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
-Legacy pages in this folder are intentionally kept and linked to canonical sources to avoid broken navigation.
-
----
-## FILE: reference/readmes/packages/typescript-config-readme.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/packages/typescript-config-readme/
----
-
----
-title: "@repo/typescript-config"
----
-
-# @repo/typescript-config
-
-Shared TypeScript config presets used across the monorepo.
-
-## Available Configs
-
-- `base.json`: strict baseline for TypeScript projects
-- `nextjs.json`: Next.js-focused config
-- `react-library.json`: library-oriented React config
-
-## Usage
-
-In a package `tsconfig.json`:
-
-```json
-{
-	"extends": "@repo/typescript-config/base.json"
-}
-```
-
-## Related Docs
-
-- Monorepo overview: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- Documentation hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
-
----
-## FILE: reference/readmes/presets/extensive-preset-readme.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/presets/extensive-preset-readme/
----
-
----
-title: "Extensive preset"
----
-
-# Extensive preset
-
-All-features preset for advanced authoring and power-user workflows.
-
-## Exports
-
-- `extensivePreset` from `@lyfie/luthor`
-- `extensiveExtensions` from `@lyfie/luthor`
-- `ExtensiveEditor` from `@lyfie/luthor`
-- Types: `ExtensiveEditorRef`, `ExtensiveEditorProps`, `ExtensiveEditorMode`
-
-## Preset metadata
-
-- `id`: `extensive`
-- `label`: `Extensive`
-- `description`: `All features enabled for power users.`
-- `css`: `extensive/styles.css`
-- `default placeholder`: `Write anything...`
-- `components.Editor`: `ExtensiveEditor`
-
-## Default toolbar
-
-`undo`, `redo`, `heading`, `fontFamily`, `bold`, `italic`, `underline`, `strikethrough`, `link`, `image`, `table`, `horizontalRule`, `blockquote`, `code`, `codeBlock`, `bulletedList`, `numberedList`, `checkList`, `commandPalette`, `floatingToolbar`, `contextMenu`, `draggableBlock`, `customNode`, `sourceMode`, `themeToggle`
-
-## Horizontal rule shortcut
-
-Horizontal rules are available out of the box in the extensive preset.
-
-- Toolbar action: `horizontalRule`
-- Command palette action: `Insert Horizontal Rule`
-- Markdown shortcuts while typing (then press space/enter): `---`, `___`
-
-## Slash command menu
-
-Notion-style slash commands are enabled in visual mode.
-
-- Type `/` to open the block menu at the caret
-- Keep typing to filter commands
-- Press `Enter`/`Tab` to run, arrow keys to navigate, `Esc` to close
-
-## Usage
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-import "@lyfie/luthor/styles.css";
-
-export function ExtensivePage() {
-  return <ExtensiveEditor placeholder="Write anything..." />;
-}
-```
-
-## Related docs
-
-- Package README: [../../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
-- Monorepo README: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
-- Docs hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
-- Canonical user guide: [../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-- Canonical configuration guide: [../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-
----
-## FILE: reference/readmes/presets/README.md
-## URL: https://www.luthor.fyi/docs/reference/readmes/presets/README/
----
-
----
-title: "Presets Documentation"
----
-
-# Presets Documentation
-
-The active preset surface in `@lyfie/luthor` is currently centered on the Extensive Editor:
-
-- [extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
-
-## Why only one preset right now
-
-The current phase focuses on making the extensive baseline rock-solid and complete before splitting into multiple style-specific presets.
-
-## Future preset expansion guidelines
-
-When adding a new preset in future iterations:
-
-1. Reuse shared modules from `packages/luthor/src/core`.
-2. Compose from `extensiveExtensions` selectively, or build an explicit extension list from headless exports.
-3. Keep preset-specific behavior in `packages/luthor/src/presets/<preset-name>`.
-4. Export through `packages/luthor/src/presets/index.ts` and update `presetRegistry`.
-5. Add or update docs in this folder and link them from:
-   - `documentation/documentation-hub.md`
-   - `documentation/developer_notes/readme-map.md`
-   - `documentation/markdown-catalog.md`
-
-This keeps the package clean today while preserving a predictable path for future preset families.
-
----
-## FILE: reference/tutorials/enhanced-markdown-quick-start.md
-## URL: https://www.luthor.fyi/docs/reference/tutorials/enhanced-markdown-quick-start/
----
-
----
-title: "JSONB Persistence Quick Start (Replaces Legacy Enhanced Markdown Tutorial)"
----
-
-# JSONB Persistence Quick Start (Replaces Legacy Enhanced Markdown Tutorial)
-
-This path now uses Visual/JSONB-only workflows.
-
-## Current recommendation
-
-- Use `editor.getJSONB()` to serialize state.
-- Use `editor.injectJSONB(payload)` to restore state.
-- Treat JSONB as canonical persistence format.
-
-## Minimal example
-
-```tsx
-const handleSave = () => {
-  const payload = editorRef.current?.getJSONB();
-  if (!payload) return;
-  localStorage.setItem("editor-jsonb", payload);
-};
-
-const handleRestore = () => {
-  const payload = localStorage.getItem("editor-jsonb");
-  if (!payload) return;
-  editorRef.current?.injectJSONB(payload);
-};
-```
-
-## Why this changed
-
-Legacy HTML/Markdown mode and enhanced-markdown converter guidance has been retired from active workflows.
-Use JSONB for deterministic round-trips and production persistence.
-
-## Related docs
-
-- Import/export: [../user/headless/import-export.md](/docs/reference/user/headless/import-export/)
-- Demo usage: [../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- [Luthor](/demo/) extensive editor: [../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-
----
-## FILE: reference/user/demo/getting-started.md
-## URL: https://www.luthor.fyi/docs/reference/user/demo/getting-started/
----
-
----
-title: "Demo App Getting Started (`apps/demo`)"
----
-
-# Demo App Getting Started (`apps/demo`)
-
-This guide is for users and contributors who want to run the demo app locally and validate editor features.
-
-## What the demo provides
-
-The demo showcases:
-
-- `@lyfie/luthor` extensive preset integration
-- feature coverage visualization of installed extensions
-- visual/JSONB persistence round-trip controls
-- theme switching and copy/export helper actions
-
-## Versions and dependencies
-
-From `apps/demo/package.json`:
-
-- app version: `0.0.0` (private workspace app)
-- React: `^19.2.0`
-- React DOM: `^19.2.0`
-- workspace packages: `@lyfie/luthor`, `@lyfie/luthor-headless`
-- Vite: `^7.3.1`
-- TypeScript: `~5.9.3`
-- Wrangler: `^4.66.0`
-
-## Run locally
-
-From repository root:
-
-```bash
-pnpm --filter demo dev
-```
-
-Or from `apps/demo`:
-
-```bash
-pnpm dev
-```
-
-## Build and preview
-
-```bash
-pnpm --filter demo build
-pnpm --filter demo preview
-```
-
-## Lint
-
-```bash
-pnpm --filter demo lint
-```
-
-## Deploy (Cloudflare Worker)
-
-```bash
-pnpm --filter demo deploy
-```
-
-This runs build then `wrangler deploy`. Ensure Cloudflare auth and Wrangler environment are configured.
-
-## Feature walkthrough
-
-1. Load seeded JSONB content from top bar action.
-2. Explore feature coverage groups rendered from extension metadata.
-3. Save JSONB payload from persistence panel.
-4. Modify/copy payload and restore content to test round-trip behavior.
-
-## Related docs
-
-- Demo user behavior details: [usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
-- Demo developer architecture: [../../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
-- Demo source map: [../../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
-
----
-## FILE: reference/user/demo/toolbar-customization-examples.md
-## URL: https://www.luthor.fyi/docs/reference/user/demo/toolbar-customization-examples/
----
-
----
-title: "Toolbar Layout Customization Examples for Demo App"
----
-
-# Toolbar Layout Customization Examples for Demo App
-
-This document shows how to customize the toolbar layout in the demo app (apps/demo).
-
-## Default Behavior
-
-Without any customization, the `ExtensiveEditor` uses the `TRADITIONAL_TOOLBAR_LAYOUT` automatically:
-
-```tsx
-// apps/demo/src/pages/HomePage.tsx or App.tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-
-function MyEditorPage() {
-  return (
-    <ExtensiveEditor
-      placeholder="Start writing..."
-      // No toolbarLayout prop needed - uses TRADITIONAL_TOOLBAR_LAYOUT by default
-    />
-  );
-}
-```
-
-## Explicit Layout Selection
-
-You can explicitly specify which predefined layout to use:
-
-```tsx
-import { ExtensiveEditor, TRADITIONAL_TOOLBAR_LAYOUT, DEFAULT_TOOLBAR_LAYOUT } from "@lyfie/luthor";
-
-function MyEditorPage() {
-  return (
-    <ExtensiveEditor
-      placeholder="Start writing..."
-      toolbarLayout={TRADITIONAL_TOOLBAR_LAYOUT} // Traditional word processor style (default)
-      // OR
-      // toolbarLayout={DEFAULT_TOOLBAR_LAYOUT} // Legacy/original layout
-    />
-  );
-}
-```
-
-## Custom Layout Example 1: Minimal Writer Layout
-
-For a distraction-free writing experience:
-
-```tsx
-import { ExtensiveEditor, type ToolbarLayout } from "@lyfie/luthor";
-
-const writerLayout: ToolbarLayout = {
-  sections: [
-    // Essential formatting only
-    { items: ["bold", "italic", "link"] },
-    // Headings and structure
-    { items: ["blockFormat", "quote"] },
-    // Lists
-    { items: ["unorderedList", "orderedList"] },
-    // Utilities
-    { items: ["undo", "redo", "commandPalette"] },
-  ],
-};
-
-function WriterEditor() {
-  return (
-    <ExtensiveEditor
-      placeholder="Begin your story..."
-      toolbarLayout={writerLayout}
-    />
-  );
-}
-```
-
-## Custom Layout Example 2: Developer-Friendly Layout
-
-Emphasizing code and technical writing features:
-
-```tsx
-import { ExtensiveEditor, type ToolbarLayout } from "@lyfie/luthor";
-
-const developerLayout: ToolbarLayout = {
-  sections: [
-    // Text formatting
-    { items: ["bold", "italic", "strikethrough", "code"] },
-    // Block types
-    { items: ["blockFormat", "quote", "codeBlock"] },
-    // Lists and structure
-    { items: ["unorderedList", "orderedList", "checkList", "indentList", "outdentList"] },
-    // Insert elements
-    { items: ["link", "image", "table", "horizontalRule"] },
-    // Utilities
-    { items: ["undo", "redo", "commandPalette", "themeToggle"] },
-  ],
-};
-
-function DeveloperEditor() {
-  return (
-    <ExtensiveEditor
-      placeholder="Document your code..."
-      toolbarLayout={developerLayout}
-      initialTheme="dark" // Developers love dark mode
-    />
-  );
-}
-```
-
-## Custom Layout Example 3: Rich Content Creator Layout
-
-For bloggers and content creators who need all the formatting tools:
-
-```tsx
-import { ExtensiveEditor, type ToolbarLayout } from "@lyfie/luthor";
-
-const contentCreatorLayout: ToolbarLayout = {
-  sections: [
-    // Typography controls
-    { items: ["fontFamily", "fontSize", "lineHeight"] },
-    // Formatting with colors
-    { items: ["bold", "italic", "underline", "strikethrough", "textColor", "textHighlight"] },
-    // Advanced formatting
-    { items: ["subscript", "superscript", "code", "link"] },
-    // Block formatting and alignment
-    { items: ["blockFormat", "quote", "alignLeft", "alignCenter", "alignRight", "alignJustify"] },
-    // Lists
-    { items: ["unorderedList", "orderedList", "checkList", "indentList", "outdentList"] },
-    // Rich media
-    { items: ["image", "table", "emoji"] },
-    // Embeds and dividers
-    { items: ["embed", "horizontalRule"] },
-    // Code blocks
-    { items: ["codeBlock"] },
-    // History and utilities
-    { items: ["undo", "redo"] },
-    { items: ["commandPalette", "themeToggle"] },
-  ],
-};
-
-function ContentCreatorEditor() {
-  return (
-    <ExtensiveEditor
-      placeholder="Create amazing content..."
-      toolbarLayout={contentCreatorLayout}
-    />
-  );
-}
-```
-
-## Custom Layout Example 4: JSONB-First Compact Layout
-
-Minimal toolbar for teams that persist JSONB and prefer compact editing controls:
-
-```tsx
-import { ExtensiveEditor, type ToolbarLayout } from "@lyfie/luthor";
-
-const compactJsonbLayout: ToolbarLayout = {
-  sections: [
-    // Keep only essential editing controls
-    { items: ["bold", "italic", "code", "link"] },
-    { items: ["unorderedList", "orderedList"] },
-    { items: ["commandPalette", "themeToggle"] },
-  ],
-};
-
-function CompactJsonbEditor() {
-  return (
-    <ExtensiveEditor
-      placeholder="Start writing with compact controls..."
-      toolbarLayout={compactJsonbLayout}
-      initialMode="visual"
-      availableModes={["visual", "jsonb"]}
-    />
-  );
-}
-```
-
-## Dynamic Layout Based on Context
-
-You can even change the toolbar layout based on user preferences or application state:
-
-```tsx
-import { ExtensiveEditor, TRADITIONAL_TOOLBAR_LAYOUT, type ToolbarLayout } from "@lyfie/luthor";
-import { useState } from "react";
-
-const simpleLayout: ToolbarLayout = {
-  sections: [
-    { items: ["bold", "italic", "link"] },
-    { items: ["unorderedList", "orderedList"] },
-    { items: ["undo", "redo"] },
-  ],
-};
-
-function AdaptiveEditor() {
-  const [advancedMode, setAdvancedMode] = useState(false);
-
-  return (
-    <div>
-      <div style={{ marginBottom: "1rem" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={advancedMode}
-            onChange={(e) => setAdvancedMode(e.target.checked)}
-          />
-          Advanced toolbar
-        </label>
-      </div>
-      
-      <ExtensiveEditor
-        placeholder="Start writing..."
-        toolbarLayout={advancedMode ? TRADITIONAL_TOOLBAR_LAYOUT : simpleLayout}
-      />
-    </div>
-  );
-}
-```
-
-## Testing Your Custom Layout
-
-1. Install dependencies: `pnpm install`
-2. Build the luthor package: `pnpm --filter @lyfie/luthor build`
-3. Start the demo app: `pnpm --filter demo dev`
-4. Open your browser to see the changes
-
-## All Available Toolbar Items
-
-Reference for creating custom layouts:
-
-- **Typography**: `fontFamily`, `fontSize`, `lineHeight`, `textColor`, `textHighlight`
-- **Basic Formatting**: `bold`, `italic`, `underline`, `strikethrough`
-- **Enhanced Formatting**: `subscript`, `superscript`, `code`, `link`
-- **Block Format**: `blockFormat`, `quote`, `alignLeft`, `alignCenter`, `alignRight`, `alignJustify`, `codeBlock`
-- **Lists**: `unorderedList`, `orderedList`, `checkList`, `indentList`, `outdentList`
-- **Insert**: `horizontalRule`, `table`, `image`, `emoji`, `embed`
-- **History**: `undo`, `redo`
-- **Utilities**: `commandPalette`, `themeToggle`
-
-Items automatically hide if their corresponding extension is not available.
-
----
-## FILE: reference/user/demo/usage-and-persistence.md
-## URL: https://www.luthor.fyi/docs/reference/user/demo/usage-and-persistence/
----
-
----
-title: "Demo Usage and Persistence Guide"
----
-
-# Demo Usage and Persistence Guide
-
-This page explains the interactive flows available in `apps/demo`.
-
-## Content loading
-
-- The top bar provides a "Load Demo Content" action.
-- This injects prepared JSONB content from `src/data/demoContent.ts` into the editor.
-
-## Feature coverage panel
-
-- The app groups extension names into functional categories.
-- Categories and ordering are defined in `src/data/demoContent.ts`.
-- Use this panel to verify whether expected capabilities are present in the active extension bundle.
-
-## Persistence panel workflow
-
-The panel supports three common flows:
-
-1. **Save payload**
-   - captures current editor state (JSONB-oriented payload)
-   - writes payload into textarea for inspection/copy
-2. **Restore payload**
-   - parses textarea JSON and injects back into editor
-   - reports errors if JSON is malformed
-3. **Copy payload**
-   - copies payload text to clipboard for bug reports or test fixtures
-
-## Data fidelity expectations
-
-- JSONB payload is the fidelity-first path.
-- Restore behavior uses JSONB document content as the canonical source.
-
-## Theme behavior
-
-- Theme toggle switches between light and dark display modes.
-- Theme preference is stored in local storage and restored on reload.
-
-## Troubleshooting tips
-
-- If restore fails, validate payload JSON format before retrying.
-- Clipboard actions may require secure context/permissions.
-- If seeded content does not appear, verify editor mount is ready and load action was triggered.
-
-## Related docs
-
-- Demo getting started: [getting-started.md](/docs/reference/user/demo/getting-started/)
-- Demo maintainer notes: [../../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
-
----
-## FILE: reference/user/headless/extensions-and-configuration.md
-## URL: https://www.luthor.fyi/docs/reference/user/headless/extensions-and-configuration/
----
-
----
-title: "Extensions and Configuration (User)"
----
-
-# Extensions and Configuration (User)
-
-This guide lists the built-in extension groups and common options.
-
-## Extension groups
-
-- Core UX: `richTextExtension`, `historyExtension`, `slashCommandExtension`, `floatingToolbarExtension`, `contextMenuExtension`, `draggableBlockExtension`, `emojiExtension`, `tabIndentExtension`, `enterKeyBehaviorExtension`
-- Formatting: `boldExtension`, `italicExtension`, `underlineExtension`, `strikethroughExtension`, `subscriptExtension`, `superscriptExtension`, `codeFormatExtension`, `codeExtension`, `codeIntelligenceExtension`, `blockFormatExtension`, `listExtension`, `linkExtension`, `tableExtension`, `horizontalRuleExtension`, `fontFamilyExtension`, `fontSizeExtension`, `lineHeightExtension`, `textColorExtension`, `textHighlightExtension`
-- Media: `imageExtension`, `iframeEmbedExtension`, `youTubeEmbedExtension`
-- Custom: `createCustomNodeExtension(...)`
-
-## Common configuration patterns
-
-### 1) Extension configure pattern
-
-```tsx
-const configuredImage = imageExtension.configure({
-  defaultAlignment: "center",
-  resizable: true,
-  uploadHandler: async (file) => {
-    // upload and return URL or payload expected by extension
-    return URL.createObjectURL(file);
-  },
-});
-```
-
-### 2) Link validation and defaults
-
-```tsx
-const configuredLink = linkExtension.configure({
-  validateUrl: (url) => {
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === "https:" || parsed.protocol === "http:";
-    } catch {
-      return false;
-    }
-  },
-  defaultAttributes: {
-    target: "_blank",
-    rel: "noopener noreferrer",
-  },
-});
-```
-
-### 3) Controlled typography options
-
-```tsx
-const configuredFontFamily = fontFamilyExtension.configure({
-  options: [
-    { value: "default", label: "Default", fontFamily: "inherit" },
-    { value: "inter", label: "Inter", fontFamily: "'Inter', sans-serif" },
-  ],
-  cssLoadStrategy: "on-demand",
-});
-```
-
-Line-height option note:
-
-- `lineHeightExtension` accepts `default` and numeric ratios `>= 1.0`.
-- `default` maps to `defaultLineHeight` (default `"1.5"` when not configured).
-- Applying line height updates the entire selected block (not only the selected word span).
-
-## Theme configuration
-
-Pass theme through provider config:
-
-```tsx
-<Provider
-  extensions={extensions}
-  config={{
-    theme: {
-      editor: "editor-shell",
-      contentEditable: "editor-content",
-      paragraph: "editor-p",
-      heading: { h1: "editor-h1", h2: "editor-h2" },
-      text: { bold: "font-bold", italic: "italic" },
-    },
-  }}
->
-  <RichText placeholder="Start writing" />
-</Provider>
-```
-
-## Type-safety tips
-
-- Always declare extensions with `as const`.
-- Use `createEditorSystem<typeof extensions>()` to get typed `commands` and `activeStates`.
-- Configure extensions once (outside render) and reuse instances.
-
----
-## FILE: reference/user/headless/getting-started.md
-## URL: https://www.luthor.fyi/docs/reference/user/headless/getting-started/
----
-
----
-title: "@lyfie/luthor-headless: Getting Started (User)"
----
-
-# @lyfie/luthor-headless: Getting Started (User)
-
-## What this package is
-
-`@lyfie/luthor-headless` is a type-safe, extension-driven rich text editor system built on Lexical and React. It gives you complete control over toolbar/UI while still exposing a structured command + state API.
-
-## Versions and runtime requirements
-
-- `@lyfie/luthor-headless`: `2.2.0`
-- Node.js (workspace development): `>=20`
-- React peer range: `^18.0.0 || ^19.0.0`
-- Lexical peer range: `>=0.40.0` for `lexical` and required `@lexical/*` packages
-- Optional package for code-language intelligence: `highlight.js >=11.0.0`
-
-## Install
-
-```bash
-pnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/link @lexical/list @lexical/markdown @lexical/react @lexical/rich-text @lexical/selection @lexical/table @lexical/utils react react-dom
-```
-
-Optional:
-
-```bash
-pnpm add highlight.js
-pnpm add @emoji-mart/data
-```
-
-Optional integration matrix:
-
-- `highlight.js`: enables richer code token theming when your app loads a highlight stylesheet.
-- `@emoji-mart/data`: enables larger emoji catalog auto-detection by `EmojiExtension`.
-- If either package is missing, `@lyfie/luthor-headless` remains functional and falls back to built-in behavior.
-
-## Minimal setup
+## 2) Render a minimal headless editor
 
 ```tsx
 import {
   createEditorSystem,
+  RichText,
   richTextExtension,
   boldExtension,
   italicExtension,
-  RichText,
-} from "@lyfie/luthor-headless";
+} from '@lyfie/luthor-headless';
 
 const extensions = [richTextExtension, boldExtension, italicExtension] as const;
 const { Provider, useEditor } = createEditorSystem<typeof extensions>();
@@ -2629,212 +188,220 @@ function Toolbar() {
   );
 }
 
-export function Editor() {
+export function App() {
   return (
-    <Provider extensions={extensions} config={{ namespace: "MyEditor" }}>
+    <Provider extensions={extensions}>
       <Toolbar />
-      <RichText placeholder="Write something..." />
+      <RichText placeholder="Write here..." />
     </Provider>
   );
 }
 ```
 
-## Next docs
+## 3) Validate installation
 
-- Extension catalog and configuration: [extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
-- Import/export and metadata format: [import-export.md](/docs/reference/user/headless/import-export/)
-- Troubleshooting and performance notes: [../../developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
+If this works, installation is valid:
 
----
-## FILE: reference/user/headless/import-export.md
-## URL: https://www.luthor.fyi/docs/reference/user/headless/import-export/
----
+- Text area mounts
+- Buttons execute bold/italic commands
+- No missing peer dependency errors for Lexical packages
 
----
-title: "Import and Export (User)"
----
+## Quick validation checklist
 
-# Import and Export (User)
+- All required `lexical` and `@lexical/*` peers are installed
+- `createEditorSystem` provider wraps your editor UI
+- Commands and active states are accessible from `useEditor()`
 
-`@lyfie/luthor-headless` now uses a JSON/JSONB-first import/export model.
+## Next
 
-## Recommended storage strategy
-
-Store canonical editor state as JSON (or JSONB in PostgreSQL):
-
-- Canonical: Lexical JSON for exact fidelity
-- Persistence: JSONB payloads for reversible edits and reliable restores
-
-## Runtime API shape
-
-The editor runtime context exposes:
-
-- `export.toJSON()`
-- `import.fromJSON(value)`
-
-These APIs are lossless for supported nodes and extension state.
-
-## Practical guidance
-
-- Treat JSON/JSONB as the only source of truth.
-- Validate untrusted JSON before calling `fromJSON`.
-- Keep schema version metadata in your persistence envelope if your app evolves custom nodes over time.
-
-## Example persistence envelope
-
-```json
-{
-	"schemaVersion": 1,
-	"preset": "extensive",
-	"savedAt": "2026-02-20T00:00:00.000Z",
-	"content": {
-		"jsonb": "{ ...lexical state... }"
-	}
-}
-```
+- [Headless Features](/docs/luthor-headless/features/)
 
 ---
-## FILE: reference/user/luthor/extensive-editor.md
-## URL: https://www.luthor.fyi/docs/reference/user/luthor/extensive-editor/
+## FILE: getting-started/luthor.md
+## URL: https://www.luthor.fyi/docs/getting-started/luthor/
 ---
 
 ---
-title: "Extensive Editor Guide"
+title: Get Started @lyfie/luthor
+description: Minimal setup and validation for the preset package.
 ---
 
-# Extensive Editor Guide
+# Get Started @lyfie/luthor
 
-`ExtensiveEditor` is the plug-and-play editor component exported by `@lyfie/luthor`.
+Use this when you want a ready-to-use editor quickly.
 
-## Import
-
-```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-import "@lyfie/luthor/styles.css";
-```
-
-## Minimal example
-
-```tsx
-export function EditorPage() {
-  return <ExtensiveEditor placeholder="Write anything..." />;
-}
-```
-
-## Ref-based integration
-
-`ExtensiveEditor` exposes an imperative ref API (see `ExtensiveEditorRef`) for integration scenarios where host apps need commandable control.
-
-Typical use cases:
-
-- read/write editor content from parent controls
-- trigger JSONB conversion or export workflows
-- inspect current mode and change mode programmatically
-
-## UX modules included
-
-- top `Toolbar`
-- contextual `FloatingToolbar`
-- `CommandPalette`
-- `SlashCommandMenu`
-- `EmojiSuggestionMenu`
-- `ModeTabs` and `SourceView`
-
-## Conversion and content fidelity
-
-The editor supports visual and source representations:
-
-- canonical editor state
-- JSONB
-
-Mode switching uses conversion utilities and error handling to avoid silently committing malformed source input.
-
-## Theming
-
-Use `initialTheme` and your host CSS overrides for light/dark and branding adaptation.
-
-## Toolbar Customization
-
-The `ExtensiveEditor` uses the `TRADITIONAL_TOOLBAR_LAYOUT` by default, which groups toolbar items in a familiar pattern similar to traditional word processors. You can customize this by passing a custom `toolbarLayout` prop:
-
-```tsx
-import { ExtensiveEditor, TRADITIONAL_TOOLBAR_LAYOUT } from "@lyfie/luthor";
-
-// Use the default traditional layout (explicit)
-<ExtensiveEditor toolbarLayout={TRADITIONAL_TOOLBAR_LAYOUT} />
-
-// Or create your own custom layout
-const myLayout = {
-  sections: [
-    { items: ["bold", "italic", "underline"] },
-    { items: ["link", "image", "table"] },
-    { items: ["undo", "redo"] },
-  ],
-};
-
-<ExtensiveEditor toolbarLayout={myLayout} />
-```
-
-You can also hide the primary toolbar by setting `isToolbarEnabled={false}`. This only affects toolbar rendering; keyboard shortcuts, slash commands, and command palette wiring remain active.
-
-For detailed information on creating custom toolbar layouts, see [toolbar-customization.md](/docs/reference/user/luthor/toolbar-customization/).
-
-## Related docs
-
-- Getting started: [getting-started.md](/docs/reference/user/luthor/getting-started/)
-- Presets and configuration: [presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Developer maintainer notes: [../../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
-
----
-## FILE: reference/user/luthor/getting-started.md
-## URL: https://www.luthor.fyi/docs/reference/user/luthor/getting-started/
----
-
----
-title: "`@lyfie/luthor` Getting Started"
----
-
-# `@lyfie/luthor` Getting Started
-
-`@lyfie/luthor` is the plug-and-play package in this monorepo. It ships presets, pre-composed UI, and re-exports headless APIs.
-
-## Package and compatibility
-
-- Package: `@lyfie/luthor`
-- Current version: `2.2.0`
-- React peer dependencies: `^18.0.0 || ^19.0.0`
-- Lexical runtime dependencies: bundled by this package (`^0.40.0` family)
-
-## Install
+## 1) Install
 
 ```bash
-pnpm add @lyfie/luthor react react-dom
+npm install @lyfie/luthor react react-dom
 ```
 
-## Basic usage
+## 2) Render a basic editor
 
 ```tsx
-import { ExtensiveEditor } from "@lyfie/luthor";
-import "@lyfie/luthor/styles.css";
+import { ExtensiveEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
 
 export function App() {
   return <ExtensiveEditor placeholder="Start writing..." />;
 }
 ```
 
-## What you get by default (Extensive preset)
+## 3) Validate installation
 
-- rich text formatting and block controls
-- command palette and slash commands
-- floating toolbar and contextual actions
-- image, iframe, and YouTube embedding support
-- tables, lists, code/code-block, typography and color tools
-- visual/source mode switching (`visual`, `jsonb`)
+If this renders correctly, installation is valid:
 
-## Additional presets
+- You can type in the editor
+- Toolbar appears
+- No module resolution errors in dev server
 
-`@lyfie/luthor` also exports:
+## Quick validation checklist
 
+- `@lyfie/luthor/styles.css` is impasorted
+- React app builds without peer dependency warnings
+- Editor mounts without runtime errors
+
+## Next
+
+- [Luthor Presets](/docs/luthor/presets/)
+
+---
+## FILE: index.md
+## URL: https://www.luthor.fyi/docs/
+---
+
+---
+title: Luthor Documentation
+description: Focused documentation for getting started, luthor-headless features, and luthor presets.
+---
+
+# Luthor Documentation
+
+This documentation is intentionally focused and grouped into three sections.
+
+## Groups
+
+- [Getting Started](/docs/getting-started/)
+- [Luthor Headless - @lyfie/luthor-headless](/docs/luthor-headless/features/)
+- [Luthor - @lyfie/luthor](/docs/luthor/presets/)
+
+## Recommended Path
+
+1. Read [Introduction](/docs/getting-started/)
+2. Run [Installation](/docs/getting-started/installation/)
+3. Follow one quick start:
+   - [Get Started @lyfie/luthor](/docs/getting-started/luthor/)
+   - [Get Started @lyfie/luthor-headless](/docs/getting-started/luthor-headless/)
+
+---
+## FILE: luthor-headless/features.md
+## URL: https://www.luthor.fyi/docs/luthor-headless/features/
+---
+
+---
+title: Features
+description: Complete out-of-the-box capabilities and extension inventory for @lyfie/luthor-headless.
+---
+
+# Features - @lyfie/luthor-headless
+
+This page summarizes what you get out of the box from the headless package.
+
+## Core runtime
+
+- `createEditorSystem`
+- `useEditor`
+- `RichText` renderer
+- typed command/state wiring based on installed extensions
+
+## Text formatting extensions
+
+- `boldExtension`
+- `italicExtension`
+- `underlineExtension`
+- `strikethroughExtension`
+- `subscriptExtension`
+- `superscriptExtension`
+- `codeFormatExtension` (inline code)
+- `linkExtension`
+- `horizontalRuleExtension`
+- `fontFamilyExtension`
+- `fontSizeExtension`
+- `lineHeightExtension`
+- `textColorExtension`
+- `textHighlightExtension`
+- `blockFormatExtension`
+- `listExtension`
+- `tableExtension`
+
+## Code and structure extensions
+
+- `codeExtension`
+- `codeIntelligenceExtension`
+- `historyExtension`
+- `tabIndentExtension`
+- `enterKeyBehaviorExtension`
+
+## Media extensions
+
+- `imageExtension`
+- `iframeEmbedExtension`
+- `youTubeEmbedExtension`
+
+## UI and interaction extensions
+
+- `commandPaletteExtension`
+- `slashCommandExtension`
+- `emojiExtension`
+- `floatingToolbarExtension`
+- `contextMenuExtension`
+- `draggableBlockExtension`
+
+## Custom extension support
+
+- `createCustomNodeExtension`
+- base extension contracts and extension categories
+
+## Utilities and types
+
+- theme utilities (`defaultLuthorTheme`, `mergeThemes`, token helpers)
+- markdown bridge utilities (`markdownToJSONB`, `jsonbToMarkdown`)
+- rich set of exported extension config/types
+
+## Optional ecosystem integrations
+
+- `highlight.js` for richer code token theming
+- `@emoji-mart/data` for larger emoji catalog integration
+
+## Notes
+
+`@lyfie/luthor` includes `@lyfie/luthor-headless` and builds preset editors on top of these capabilities.
+
+---
+## FILE: luthor/presets.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/
+---
+
+---
+title: Presets
+description: Preset catalog for @lyfie/luthor, including links to per-preset docs.
+---
+
+# Presets - @lyfie/luthor
+
+`@lyfie/luthor` is a preset package built on top of `@lyfie/luthor-headless`.
+
+## Important
+
+`@lyfie/luthor-headless` is included with `@lyfie/luthor` and available via:
+
+```ts
+import { headless } from '@lyfie/luthor';
+```
+
+## Presets included
+
+- `ExtensiveEditor`
 - `SimpleTextEditor`
 - `RichTextBoxEditor`
 - `ChatWindowEditor`
@@ -2844,386 +411,435 @@ export function App() {
 - `HeadlessEditorPreset`
 - `NotesEditor`
 
-## Headless access from the same package
+## Per-preset docs
 
-```ts
-import { headless } from "@lyfie/luthor";
-
-const { createEditorSystem, richTextExtension } = headless;
-```
-
-Use this when you want gradual migration from preset usage to custom extension composition.
-
-## Next steps
-
-- Preset options and configuration: [presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
-- Extensive editor props and capabilities: [extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
-- Developer architecture (if contributing): [../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- [ExtensiveEditor](/docs/luthor/presets/extensive-editor/)
+- [SimpleTextEditor](/docs/luthor/presets/simple-text-editor/)
+- [RichTextBoxEditor](/docs/luthor/presets/rich-text-box-editor/)
+- [ChatWindowEditor](/docs/luthor/presets/chat-window-editor/)
+- [EmailComposeEditor](/docs/luthor/presets/email-compose-editor/)
+- [MDTextEditor](/docs/luthor/presets/md-text-editor/)
+- [NotionLikeEditor](/docs/luthor/presets/notion-like-editor/)
+- [HeadlessEditorPreset](/docs/luthor/presets/headless-editor-preset/)
+- [NotesEditor](/docs/luthor/presets/notes-editor/)
 
 ---
-## FILE: reference/user/luthor/presets-and-configuration.md
-## URL: https://www.luthor.fyi/docs/reference/user/luthor/presets-and-configuration/
+## FILE: luthor/presets/chat-window-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/chat-window-editor/
 ---
 
 ---
-title: "`@lyfie/luthor` Presets and Configuration"
+title: ChatWindowEditor
+description: Usage and props for the ChatWindowEditor preset.
 ---
 
-# `@lyfie/luthor` Presets and Configuration
+# ChatWindowEditor
 
-This document describes what can be configured as a package user when using built-in presets.
+Chat composer style preset with send/action controls.
 
-## Built-in preset registry
-
-The package exports a preset registry and the extensive preset:
-
-- `presetRegistry`
-- `extensivePreset`
-- `ExtensiveEditor`
-- `extensiveExtensions`
-
-## Preset metadata model
-
-`EditorPreset` supports these fields:
-
-- `id`, `label`, `description`
-- `toolbar`: ordered toolbar action ids
-- `extensions`: extension set used by the preset
-- `config`: editor config (namespace, placeholder, classNames)
-- `theme`: preset theme object
-- `components`: editor shell components
-- `css`: style entry path
-
-## Extensive preset defaults
-
-The extensive preset is the full-feature default and includes:
-
-- comprehensive toolbar actions
-- command palette + slash command system
-- media and embeds (image, iframe, YouTube)
-- source mode switching and JSONB conversion helpers
-
-## `ExtensiveEditor` commonly used props
-
-- `placeholder`
-- `initialTheme`
-- `defaultContent`
-- `showDefaultContent`
-- `initialMode`
-- `availableModes`
-- `className`
-- `variantClassName`
-- `onReady`
-- `minimumDefaultLineHeight` (line-height lower-bound for baseline/default behavior, default `1.5`, minimum `1.0`)
-- `defaultSettings` (typed visual defaults for font/link/list/quote/table/hr/placeholder/codeblock/toolbar)
-
-## Source-mode behavior
-
-Supported modes:
-
-- `visual`
-- `jsonb`
-
-When moving from source to visual mode, source content is validated and imported. Invalid source content blocks mode transition to prevent data loss.
-
-## Styling
-
-Include package styles:
-
-```ts
-import "@lyfie/luthor/styles.css";
-```
-
-You can customize via wrapper classes and CSS variable overrides in your application stylesheet.
-
-### `defaultSettings` and precedence
-
-`defaultSettings` is a style-only prop that maps grouped visual tokens to CSS variables:
-
-- `font.color`, `font.boldColor`
-- `link.color`
-- `list.markerColor`, `list.checkboxColor`
-- `quote.backgroundColor`, `quote.color`, `quote.indicatorColor`
-- `table.borderColor`, `table.headerBackgroundColor`
-- `hr.color`
-- `placeholder.color`
-- `codeblock.backgroundColor`
-- `toolbar.backgroundColor`
-
-Precedence (highest to lowest):
-
-- `toolbarStyleVars` (toolbar root only) and `quoteStyleVars` (quote vars)
-- `editorThemeOverrides`
-- `defaultSettings`
-- stylesheet-level CSS variable values
-
-## Advanced extension-level options
-
-The extensive preset internally configures options such as:
-
-- font family option catalogs
-- line-height option ratios (`default` + numeric values `>= 1.0`, with `default` controlled by `minimumDefaultLineHeight`)
-- text/background color option catalogs
-- image upload and alignment behavior
-- embed defaults and URL handling
-- JSONB persistence-friendly content workflows
-
-For contributor-level details, see [../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/).
-
----
-## FILE: reference/user/luthor/toolbar-customization.md
-## URL: https://www.luthor.fyi/docs/reference/user/luthor/toolbar-customization/
----
-
----
-title: "Toolbar Layout Customization"
----
-
-# Toolbar Layout Customization
-
-The `@lyfie/luthor` package provides a flexible toolbar layout system that allows you to customize the grouping and ordering of toolbar buttons to match your preferred editing interface.
-
-## Default Layouts
-
-[Luthor](/demo/) ships with two predefined toolbar layouts:
-
-### Traditional Layout (Default)
-
-The `TRADITIONAL_TOOLBAR_LAYOUT` groups toolbar items in a familiar pattern similar to word processors like Microsoft Word or Google Docs:
-
-1. **Typography Controls** - Font family, font size, line height
-2. **Text Formatting** - Bold, italic, underline, strikethrough, text color, text highlight
-3. **Enhanced Formatting** - Subscript, superscript, inline code, link
-4. **Paragraph & Alignment** - Block format (headings/paragraph), quote, text alignment (left, center, right, justify)
-5. **Lists** - Bullet list, numbered list, checklist, indent, outdent
-6. **Insert Elements** - Table, image, emoji, embeds, horizontal rule
-7. **Code Blocks** - Code block toggle
-8. **History** - Undo, redo
-9. **Utilities** - Command palette, theme toggle
-
-### Legacy Layout
-
-The `DEFAULT_TOOLBAR_LAYOUT` maintains the original grouping pattern for backward compatibility.
-
-## Using a Layout
-
-### With ExtensiveEditor
-
-Pass the `toolbarLayout` prop to customize the toolbar:
+## Usage
 
 ```tsx
-import { ExtensiveEditor, TRADITIONAL_TOOLBAR_LAYOUT } from "@lyfie/luthor";
+import { ChatWindowEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
 
-function MyEditor() {
+export function App() {
   return (
-    <ExtensiveEditor
-      placeholder="Start writing..."
-      toolbarLayout={TRADITIONAL_TOOLBAR_LAYOUT}
+    <ChatWindowEditor
+      onSend={({ jsonb }) => console.log(jsonb)}
+      submitOnEnter
+      allowShiftEnter
     />
   );
 }
 ```
 
-The `ExtensiveEditor` uses `TRADITIONAL_TOOLBAR_LAYOUT` by default, so you only need to specify it if you want to override with a custom layout.
+## Props
 
-### With Core Toolbar Component
+`ChatWindowEditorProps`:
 
-If you're building a custom preset, you can pass the layout directly to the `Toolbar` component:
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`, `isToolbarEnabled`
+- Adds:
+  - `onSend?: (payload: { jsonb: string }) => void`
+  - `submitOnEnter?: boolean`
+  - `allowShiftEnter?: boolean`
+  - `showVoiceButton?: boolean`
+  - `showImageButton?: boolean`
+  - `showSendButton?: boolean`
+
+## Behavior
+
+- Toolbar is disabled by preset defaults
+- Visual mode only
+- Enter-to-send can be configured
+
+---
+## FILE: luthor/presets/email-compose-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/email-compose-editor/
+---
+
+---
+title: EmailComposeEditor
+description: Usage and props for the EmailComposeEditor preset.
+---
+
+# EmailComposeEditor
+
+Email composer preset with To/Cc/Bcc/Subject shell.
+
+## Usage
 
 ```tsx
-import { Toolbar, TRADITIONAL_TOOLBAR_LAYOUT } from "@lyfie/luthor/core";
+import { EmailComposeEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
 
-function MyCustomEditor() {
-  return (
-    <Toolbar
-      commands={commands}
-      hasExtension={hasExtension}
-      activeStates={activeStates}
-      isDark={isDark}
-      toggleTheme={toggleTheme}
-      onCommandPaletteOpen={handleCommandPaletteOpen}
-      layout={TRADITIONAL_TOOLBAR_LAYOUT}
-    />
-  );
+export function App() {
+  return <EmailComposeEditor showCc showBcc />;
 }
 ```
 
-## Creating a Custom Layout
+## Props
 
-You can create your own toolbar layout by defining a `ToolbarLayout` object:
+`EmailComposeEditorProps`:
 
-```tsx
-import type { ToolbarLayout } from "@lyfie/luthor";
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`
+- Adds:
+  - `showTo?: boolean`
+  - `showCc?: boolean`
+  - `showBcc?: boolean`
+  - `showSubject?: boolean`
 
-const myCustomLayout: ToolbarLayout = {
-  sections: [
-    {
-      // Group basic formatting together
-      items: ["bold", "italic", "underline", "strikethrough"],
-    },
-    {
-      // Typography controls
-      items: ["fontFamily", "fontSize", "textColor"],
-    },
-    {
-      // Block-level formatting
-      items: ["blockFormat", "alignLeft", "alignCenter", "alignRight"],
-    },
-    {
-      // Lists
-      items: ["unorderedList", "orderedList", "indentList", "outdentList"],
-    },
-    {
-      // Insert tools
-      items: ["link", "image", "table", "horizontalRule"],
-    },
-    {
-      // Utilities
-      items: ["undo", "redo", "commandPalette", "themeToggle"],
-    },
-  ],
-};
-```
+## Behavior
 
-Then use it in your editor:
+Preset applies email-friendly feature defaults and renders compose header fields.
+
+---
+## FILE: luthor/presets/extensive-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/extensive-editor/
+---
+
+---
+title: ExtensiveEditor
+description: Usage and full props list for the ExtensiveEditor preset.
+---
+
+# ExtensiveEditor
+
+`ExtensiveEditor` is the full-feature preset editor.
+
+## Usage
 
 ```tsx
-<ExtensiveEditor toolbarLayout={myCustomLayout} />
+import { ExtensiveEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <ExtensiveEditor placeholder="Write anything..." />;
+}
 ```
 
-## Available Toolbar Items
+## Props
 
-Here's the complete list of toolbar items you can include in your custom layout:
+`ExtensiveEditorProps` includes:
 
-### Typography
-- `fontFamily` - Font family selector
-- `fontSize` - Font size selector
-- `lineHeight` - Line height selector
-- `textColor` - Text color picker
-- `textHighlight` - Text background highlight color picker
+- `className?`
+- `onReady?`
+- `initialTheme?`
+- `theme?`
+- `defaultContent?`
+- `showDefaultContent?`
+- `placeholder?`
+- `initialMode?`
+- `availableModes?`
+- `variantClassName?`
+- `toolbarLayout?`
+- `toolbarVisibility?`
+- `toolbarPosition?`
+- `toolbarAlignment?`
+- `toolbarClassName?`
+- `toolbarStyleVars?`
+- `quoteClassName?`
+- `quoteStyleVars?`
+- `defaultSettings?`
+- `editorThemeOverrides?`
+- `isToolbarEnabled?`
+- `fontFamilyOptions?`
+- `fontSizeOptions?`
+- `lineHeightOptions?`
+- `minimumDefaultLineHeight?`
+- `scaleByRatio?`
+- `headingOptions?`
+- `paragraphLabel?`
+- `syncHeadingOptionsWithCommands?`
+- `slashCommandVisibility?`
+- `shortcutConfig?`
+- `commandPaletteShortcutOnly?`
+- `isDraggableBoxEnabled?`
+- `featureFlags?`
+- `syntaxHighlighting?`
+- `codeHighlightProvider?`
+- `loadCodeHighlightProvider?`
+- `maxAutoDetectCodeLength?`
+- `isCopyAllowed?`
+- `languageOptions?`
 
-### Basic Formatting
-- `bold` - Bold text
-- `italic` - Italic text
-- `underline` - Underline text
-- `strikethrough` - Strikethrough text
+## Ref API
 
-### Enhanced Formatting
-- `subscript` - Subscript text
-- `superscript` - Superscript text
-- `code` - Inline code
-- `link` - Insert/remove link
+`ExtensiveEditorRef`:
 
-### Block Format
-- `blockFormat` - Block type selector (paragraph, headings)
-- `quote` - Blockquote toggle
-- `alignLeft` - Align text left
-- `alignCenter` - Align text center
-- `alignRight` - Align text right
-- `alignJustify` - Justify text
-- `codeBlock` - Code block toggle
-
-### Lists
-- `unorderedList` - Bullet list
-- `orderedList` - Numbered list
-- `checkList` - Checklist
-- `indentList` - Indent list item
-- `outdentList` - Outdent list item
-
-### Insert Elements
-- `horizontalRule` - Insert horizontal rule
-- `table` - Insert table
-- `image` - Insert image (with URL/file upload options)
-- `emoji` - Insert emoji
-- `embed` - Insert embed (iframe/YouTube)
-
-### History
-- `undo` - Undo last action
-- `redo` - Redo last undone action
-
-### Utilities
-- `commandPalette` - Open command palette
-- `themeToggle` - Toggle light/dark theme
+- `injectJSONB(content: string)`
+- `getJSONB(): string`
 
 ## Notes
 
-- Items are automatically hidden if their corresponding extension is not loaded
-- Empty sections (sections with no visible items) are not rendered
-- The toolbar respects extension availability, so missing extensions won't show buttons
-- Each section is visually separated with appropriate spacing
+This is the base preset that other presets reuse via `ExtensiveEditorProps`.
 
-## Example: Minimal Layout
+---
+## FILE: luthor/presets/headless-editor-preset.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/headless-editor-preset/
+---
 
-Here's a minimal layout for a simple editor:
+---
+title: HeadlessEditorPreset
+description: Usage and props for the HeadlessEditorPreset preset.
+---
+
+# HeadlessEditorPreset
+
+Small reference preset demonstrating direct headless composition.
+
+## Usage
 
 ```tsx
-const minimalLayout: ToolbarLayout = {
-  sections: [
-    {
-      items: ["bold", "italic", "link"],
-    },
-    {
-      items: ["unorderedList", "orderedList"],
-    },
-    {
-      items: ["undo", "redo"],
-    },
-  ],
-};
+import { HeadlessEditorPreset } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <HeadlessEditorPreset placeholder="Start writing..." />;
+}
 ```
 
-## Example: Writer-Focused Layout
+## Props
 
-A layout optimized for long-form writing:
+`HeadlessEditorPresetProps`:
+
+- `className?: string`
+- `placeholder?: string`
+
+## Behavior
+
+Uses a minimal extension set (`richText`, `history`, `bold`, `italic`, `underline`, `list`) and a lightweight toolbar.
+
+---
+## FILE: luthor/presets/md-text-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/md-text-editor/
+---
+
+---
+title: MDTextEditor
+description: Usage and props for the MDTextEditor preset.
+---
+
+# MDTextEditor
+
+Preset that switches between Visual and Markdown editing.
+
+## Usage
 
 ```tsx
-const writerLayout: ToolbarLayout = {
-  sections: [
-    {
-      items: ["fontSize", "fontFamily"],
-    },
-    {
-      items: ["bold", "italic", "underline"],
-    },
-    {
-      items: ["blockFormat", "quote"],
-    },
-    {
-      items: ["alignLeft", "alignCenter", "alignJustify"],
-    },
-    {
-      items: ["link", "image", "horizontalRule"],
-    },
-    {
-      items: ["undo", "redo", "commandPalette"],
-    },
-  ],
-};
+import { MDTextEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <MDTextEditor initialMode="visual" />;
+}
 ```
 
----
-## FILE: ui-components.md
-## URL: https://www.luthor.fyi/docs/ui-components/
----
+## Props
+
+`MDTextEditorProps`:
+
+- Inherits `ExtensiveEditorProps`
+- Excludes: `availableModes`, `initialMode`
+- Adds:
+  - `initialMode?: 'visual' | 'markdown'`
+
+## Behavior
+
+- Uses markdown/jsonb bridge for mode conversion
+- Applies feature defaults suitable for markdown workflows
 
 ---
-title: UI Components
-description: UI-first docs for Extensive Editor and toolbar customization.
+## FILE: luthor/presets/notes-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/notes-editor/
 ---
 
-# UI Components
+---
+title: NotesEditor
+description: Usage and props for the NotesEditor preset.
+---
 
-The `@lyfie/luthor` package includes `ExtensiveEditor` and configurable toolbar behavior for UI-first integrations.
+# NotesEditor
 
-## Start Here
+Notes-style preset with title and action controls.
 
-- [Extensive Editor guide](/docs/reference/user/luthor/extensive-editor/)
-- [Toolbar customization](/docs/reference/user/luthor/toolbar-customization/)
-- [Demo toolbar customization examples](/docs/reference/user/demo/toolbar-customization-examples/)
+## Usage
 
-## Common Tasks
+```tsx
+import { NotesEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
 
-- Change toolbar grouping and ordering
-- Hide or replace specific controls
-- Tune visual style with theme and style overrides
+export function App() {
+  return (
+    <NotesEditor
+      showTitle
+      title="Sprint Notes"
+      onTitleChange={(value) => console.log(value)}
+      onPin={() => console.log('pin')}
+      onArchive={() => console.log('archive')}
+    />
+  );
+}
+```
+
+## Props
+
+`NotesEditorProps`:
+
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`
+- Adds:
+  - `showTitle?: boolean`
+  - `title?: string`
+  - `onTitleChange?: (value: string) => void`
+  - `showActions?: boolean`
+  - `onPin?: () => void`
+  - `onArchive?: () => void`
+  - `onColorChange?: (color: string) => void`
+  - `colorOptions?: readonly string[]`
+
+## Behavior
+
+Toolbar is disabled by preset default and feature set is tuned for lightweight note taking.
+
+---
+## FILE: luthor/presets/notion-like-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/notion-like-editor/
+---
+
+---
+title: NotionLikeEditor
+description: Usage and props for the NotionLikeEditor preset.
+---
+
+# NotionLikeEditor
+
+Slash-first preset with draggable-focused defaults.
+
+## Usage
+
+```tsx
+import { NotionLikeEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <NotionLikeEditor isDraggableEnabled slashVisibility={{ allowlist: ['block.paragraph'] }} />;
+}
+```
+
+## Props
+
+`NotionLikeEditorProps`:
+
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`, `isToolbarEnabled`
+- Adds:
+  - `slashVisibility?: SlashCommandVisibility`
+  - `isDraggableEnabled?: boolean`
+  - `featureFlags?: FeatureFlagOverrides`
+  - `isToolbarEnabled?: boolean`
+
+## Behavior
+
+Defaults enable slash commands + draggable blocks + command palette with toolbar hidden by default.
+
+---
+## FILE: luthor/presets/rich-text-box-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/rich-text-box-editor/
+---
+
+---
+title: RichTextBoxEditor
+description: Usage and props for the RichTextBoxEditor preset.
+---
+
+# RichTextBoxEditor
+
+Compact rich-text preset for focused editing.
+
+## Usage
+
+```tsx
+import { RichTextBoxEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <RichTextBoxEditor compactToolbar />;
+}
+```
+
+## Props
+
+`RichTextBoxEditorProps`:
+
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`
+- Adds:
+  - `featureFlags?: FeatureFlagOverrides`
+  - `compactToolbar?: boolean`
+
+## Behavior
+
+Default feature flags enable core text formatting and disable heavier media/embed features unless re-enabled.
+
+---
+## FILE: luthor/presets/simple-text-editor.md
+## URL: https://www.luthor.fyi/docs/luthor/presets/simple-text-editor/
+---
+
+---
+title: SimpleTextEditor
+description: Usage and props for the SimpleTextEditor preset.
+---
+
+# SimpleTextEditor
+
+Minimal/plain-text style preset built on top of `ExtensiveEditor`.
+
+## Usage
+
+```tsx
+import { SimpleTextEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+
+export function App() {
+  return <SimpleTextEditor placeholder="Start writing..." />;
+}
+```
+
+## Props
+
+`SimpleTextEditorProps`:
+
+- Inherits `ExtensiveEditorProps`
+- Excludes: `featureFlags`, `availableModes`, `initialMode`, `toolbarVisibility`
+- Adds:
+  - `hideToolbarByDefault?: boolean` (default `true`)
+
+## Behavior
+
+- Forces visual-only mode
+- Disables most rich features by preset defaults
 

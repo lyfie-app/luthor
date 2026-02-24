@@ -6,6 +6,23 @@ import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { GITHUB_URL, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL, SOCIAL_CARD_PATH } from '@/config/site';
 
+const THEME_STORAGE_KEY = 'luthor-site-theme';
+const THEME_INIT_SCRIPT = `
+(() => {
+  try {
+    const stored = window.localStorage.getItem('${THEME_STORAGE_KEY}');
+    const theme = stored === 'dark' || stored === 'light'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch {
+    document.documentElement.dataset.theme = 'light';
+    document.documentElement.style.colorScheme = 'light';
+  }
+})();
+`;
+
 const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-body',
@@ -76,7 +93,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className={`${manrope.variable} ${sora.variable}`}>
         <SiteHeader />
         <main>{children}</main>

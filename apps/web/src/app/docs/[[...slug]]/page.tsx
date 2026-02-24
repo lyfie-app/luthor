@@ -6,6 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { GITHUB_CONTENT_BASE_URL, SITE_NAME } from '@/config/site';
 import { DocsCodeBlock } from '@/features/docs/docs-code-block';
+import { DocsSearch } from '@/features/docs/docs-search';
 import { getAllDocs, getAllDocSlugs, getDocBySlug } from '@/features/docs/docs.service';
 
 type Params = { slug?: string[] };
@@ -18,6 +19,11 @@ const NAV_GROUP_ORDER: { id: NavGroupId; label: string }[] = [
   { id: 'luthor', label: 'Luthor - @lyfie/luthor' },
   { id: 'other', label: 'Other' },
 ];
+
+type BreadcrumbItem = {
+  label: string;
+  href?: string;
+};
 
 function resolveHref(href: string): string {
   if (!href) return '#';
@@ -62,6 +68,37 @@ function toDisplayDate(iso: string): string {
   const parsed = new Date(iso);
   if (Number.isNaN(parsed.valueOf())) return iso;
   return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(parsed);
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .replace(/[-_]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function buildBreadcrumbs(slug: string[]): BreadcrumbItem[] {
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Home', href: '/' },
+    { label: 'Docs', href: '/docs/' },
+  ];
+
+  if (slug.length === 0) return breadcrumbs;
+
+  let path = '/docs';
+  for (let index = 0; index < slug.length; index += 1) {
+    const segment = slug[index];
+    if (!segment) continue;
+    path += `/${segment}`;
+    const isLast = index === slug.length - 1;
+    breadcrumbs.push({
+      label: toTitleCase(segment),
+      href: isLast ? undefined : `${path}/`,
+    });
+  }
+
+  return breadcrumbs;
 }
 
 function extractCodeBlock(children: ReactNode): { code: string; language?: string } | null {
@@ -130,6 +167,13 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
   const previousDoc = currentIndex > 0 ? orderedDocs[currentIndex - 1] : null;
   const nextDoc = currentIndex >= 0 && currentIndex < orderedDocs.length - 1 ? orderedDocs[currentIndex + 1] : null;
   const sourceUrl = `${GITHUB_CONTENT_BASE_URL}/${doc.sourcePath}`;
+  const searchDocs = allDocs.map((entry) => ({
+    urlPath: entry.urlPath,
+    title: entry.title,
+    description: entry.description,
+    content: entry.content,
+  }));
+  const breadcrumbs = buildBreadcrumbs(slug);
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -154,81 +198,102 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
 
   return (
     <section className="section docs-section">
-      <div className="container docs-layout">
-        <aside className="docs-sidebar" aria-label="Documentation navigation">
-          <h2>Documentation</h2>
-          <p className="docs-sidebar-summary">{allDocs.length} public pages</p>
-          {navGroups.map((group) => (
-            <div className="docs-sidebar-group" key={group.id}>
-              <h3>{group.label}</h3>
-              <ul>
-                {group.entries.map((entry) => {
-                  const isCurrent = entry.urlPath === doc.urlPath;
-                  return (
-                    <li key={entry.urlPath}>
-                      <Link href={entry.urlPath} aria-current={isCurrent ? 'page' : undefined} className={isCurrent ? 'active' : ''}>
-                        {entry.title}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </aside>
-        <article className="docs-article">
-          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-          <h1>{doc.title}</h1>
-          <p className="docs-meta">
-            Last updated {toDisplayDate(doc.updatedAt)}. Source:{' '}
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
-              {doc.sourcePath}
-            </a>
-            .
-          </p>
-          <div className="doc-content">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                a: ({ href, children }) => {
-                  const nextHref = resolveHref(href ?? '#');
-                  const isInternal = nextHref.startsWith('/');
-                  if (!isInternal) {
+      <div className="container">
+        <nav className="docs-breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            {breadcrumbs.map((item, index) => {
+              const isLast = index === breadcrumbs.length - 1;
+              return (
+                <li key={`${item.label}-${index}`}>
+                  {item.href && !isLast ? (
+                    <Link href={item.href}>{item.label}</Link>
+                  ) : (
+                    <span aria-current={isLast ? 'page' : undefined}>{item.label}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        </nav>
+        <div className="docs-layout">
+          <aside className="docs-sidebar" aria-label="Documentation navigation">
+            <h2>Documentation</h2>
+            <p className="docs-sidebar-summary">{allDocs.length} public pages</p>
+            {navGroups.map((group) => (
+              <div className="docs-sidebar-group" key={group.id}>
+                <h3>{group.label}</h3>
+                <ul>
+                  {group.entries.map((entry) => {
+                    const isCurrent = entry.urlPath === doc.urlPath;
                     return (
-                      <a href={nextHref} target="_blank" rel="noopener noreferrer">
-                        {children}
-                      </a>
+                      <li key={entry.urlPath}>
+                        <Link href={entry.urlPath} aria-current={isCurrent ? 'page' : undefined} className={isCurrent ? 'active' : ''}>
+                          {entry.title}
+                        </Link>
+                      </li>
                     );
-                  }
-                  return <Link href={nextHref}>{children}</Link>;
-                },
-                pre: ({ children }) => {
-                  const extracted = extractCodeBlock(children);
-                  if (!extracted) return <pre>{children}</pre>;
-                  return <DocsCodeBlock code={extracted.code} language={extracted.language} />;
-                },
-              }}
-            >
-              {doc.content}
-            </ReactMarkdown>
+                  })}
+                </ul>
+              </div>
+            ))}
+          </aside>
+          <div className="docs-main">
+          <DocsSearch docs={searchDocs} />
+          <article className="docs-article">
+            <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+            <h1>{doc.title}</h1>
+            <p className="docs-meta">
+              Last updated {toDisplayDate(doc.updatedAt)}. Source:{' '}
+              <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+                {doc.sourcePath}
+              </a>
+              .
+            </p>
+            <div className="doc-content">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ href, children }) => {
+                    const nextHref = resolveHref(href ?? '#');
+                    const isInternal = nextHref.startsWith('/');
+                    if (!isInternal) {
+                      return (
+                        <a href={nextHref} target="_blank" rel="noopener noreferrer">
+                          {children}
+                        </a>
+                      );
+                    }
+                    return <Link href={nextHref}>{children}</Link>;
+                  },
+                  pre: ({ children }) => {
+                    const extracted = extractCodeBlock(children);
+                    if (!extracted) return <pre>{children}</pre>;
+                    return <DocsCodeBlock code={extracted.code} language={extracted.language} />;
+                  },
+                }}
+              >
+                {doc.content}
+              </ReactMarkdown>
+            </div>
+            <nav className="docs-pager" aria-label="Documentation pagination">
+              <div>
+                {previousDoc ? (
+                  <Link href={previousDoc.urlPath} rel="prev">
+                    Previous: {previousDoc.title}
+                  </Link>
+                ) : null}
+              </div>
+              <div>
+                {nextDoc ? (
+                  <Link href={nextDoc.urlPath} rel="next">
+                    Next: {nextDoc.title}
+                  </Link>
+                ) : null}
+              </div>
+            </nav>
+          </article>
           </div>
-          <nav className="docs-pager" aria-label="Documentation pagination">
-            <div>
-              {previousDoc ? (
-                <Link href={previousDoc.urlPath} rel="prev">
-                  Previous: {previousDoc.title}
-                </Link>
-              ) : null}
-            </div>
-            <div>
-              {nextDoc ? (
-                <Link href={nextDoc.urlPath} rel="next">
-                  Next: {nextDoc.title}
-                </Link>
-              ) : null}
-            </div>
-          </nav>
-        </article>
+        </div>
       </div>
     </section>
   );

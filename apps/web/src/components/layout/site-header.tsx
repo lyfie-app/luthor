@@ -1,6 +1,7 @@
 'use client';
 
 import { BookOpen, GithubLogo, MoonStars, Sun } from '@phosphor-icons/react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { GITHUB_URL, REACT_PLAYGROUND_URL } from '@/config/site';
@@ -19,10 +20,16 @@ function readInitialTheme(): Theme {
 export function SiteHeader() {
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
-    const nextTheme = readInitialTheme();
+    const appliedTheme = document.documentElement.dataset.theme;
+    const nextTheme =
+      appliedTheme === 'dark' || appliedTheme === 'light'
+        ? appliedTheme
+        : readInitialTheme();
     setTheme(nextTheme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
     document.documentElement.dataset.theme = nextTheme;
     document.documentElement.style.colorScheme = nextTheme;
     setMounted(true);
@@ -39,8 +46,20 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <div className="container nav-shell">
-        <Link className="brand" href="/">
-          Luthor
+        <Link className="brand" href="/" aria-label="Luthor">
+          {logoFailed ? (
+            <span className="brand-fallback">Luthor</span>
+          ) : (
+            <Image
+              className="brand-logo"
+              src="/luthor-logo-horizontal.png"
+              alt="Luthor"
+              width={7200}
+              height={1394}
+              priority
+              onError={() => setLogoFailed(true)}
+            />
+          )}
         </Link>
         <nav className="site-nav" aria-label="Primary">
           <Link href="/docs/">

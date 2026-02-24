@@ -50,10 +50,10 @@ export const docsIndex = [
     ],
     "title": "Get Started @lyfie/luthor",
     "description": "Minimal setup and validation for the preset package.",
-    "content": "\n# Get Started @lyfie/luthor\n\nUse this when you want a ready-to-use editor quickly.\n\n## 1) Install\n\n```bash\nnpm install @lyfie/luthor react react-dom\n```\n\n## 2) Render a basic editor\n\n```tsx\nimport { ExtensiveEditor } from '@lyfie/luthor';\nimport '@lyfie/luthor/styles.css';\n\nexport function App() {\n  return <ExtensiveEditor placeholder=\"Start writing...\" />;\n}\n```\n\n## 3) Validate installation\n\nIf this renders correctly, installation is valid:\n\n- You can type in the editor\n- Toolbar appears\n- No module resolution errors in dev server\n\n## Quick validation checklist\n\n- `@lyfie/luthor/styles.css` is imported\n- React app builds without peer dependency warnings\n- Editor mounts without runtime errors\n\n## Next\n\n- [Luthor Presets](/docs/luthor/presets/)\n\n",
+    "content": "\n# Get Started @lyfie/luthor\n\nUse this when you want a ready-to-use editor quickly.\n\n## 1) Install\n\n```bash\nnpm install @lyfie/luthor react react-dom\n```\n\n## 2) Render a basic editor\n\n```tsx\nimport { ExtensiveEditor } from '@lyfie/luthor';\nimport '@lyfie/luthor/styles.css';\n\nexport function App() {\n  return <ExtensiveEditor placeholder=\"Start writing...\" />;\n}\n```\n\n## 3) Validate installation\n\nIf this renders correctly, installation is valid:\n\n- You can type in the editor\n- Toolbar appears\n- No module resolution errors in dev server\n\n## Quick validation checklist\n\n- `@lyfie/luthor/styles.css` is impasorted\n- React app builds without peer dependency warnings\n- Editor mounts without runtime errors\n\n## Next\n\n- [Luthor Presets](/docs/luthor/presets/)\n\n",
     "urlPath": "/docs/getting-started/luthor/",
     "sourcePath": "apps/web/src/content/docs/getting-started/luthor.md",
-    "updatedAt": "2026-02-24T09:42:33.384Z"
+    "updatedAt": "2026-02-24T10:58:41.681Z"
   },
   {
     "slug": [
