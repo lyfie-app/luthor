@@ -21,6 +21,7 @@ import {
 } from '@/config/site';
 import { ExtensiveEditorShell } from '@/features/editor/extensive-editor-shell';
 import { HomeJsonLd } from '@/features/home/home-json-ld';
+import { LocalLastSync } from '@/features/home/local-last-sync';
 import { WhyLuthorFeatures } from '@/features/home/why-luthor-features';
 import { WhyLuthorReasons } from '@/features/home/why-luthor-reasons';
 import { formatCompact } from '@/utils/format';
@@ -90,12 +91,16 @@ const heroUseCases = [
 ] as const;
 
 async function safeFetchJson<T>(url: string): Promise<T | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4500);
+
   try {
     const response = await fetch(url, {
-      cache: 'no-store',
+      next: { revalidate: 900 },
       headers: {
         accept: 'application/json',
       },
+      signal: controller.signal,
     });
 
     if (!response.ok) {
@@ -105,6 +110,8 @@ async function safeFetchJson<T>(url: string): Promise<T | null> {
     return (await response.json()) as T;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -169,7 +176,7 @@ async function getLiveStats() {
     latestVersion,
     latestCommitDate: formatDate(latestCommitDate),
     releaseCount: formatCompact(releaseCount),
-    fetchedDate: hasLiveData ? new Date().toLocaleString('en-US') : 'N/A',
+    fetchedAtIso: hasLiveData ? new Date().toISOString() : null,
   };
 }
 
@@ -328,7 +335,7 @@ export default async function HomePage() {
             </a>
           </div>
           <p className="mono-small">
-            Data sources: npm downloads API, npm registry API, GitHub API. Last sync: {stats.fetchedDate}
+            Data sources: npm downloads API, npm registry API, GitHub API. Last sync: <LocalLastSync isoTimestamp={stats.fetchedAtIso} />
           </p>
         </div>
       </section>

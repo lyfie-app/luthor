@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Manrope, Sora } from 'next/font/google';
 import '@lyfie/luthor/styles.css';
 import './globals.css';
+import { NavigationProgress } from '@/components/layout/navigation-progress';
+import { RouteScrollManager } from '@/components/layout/route-scroll-manager';
 import { SiteFooter } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import { GITHUB_URL, SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL, SOCIAL_CARD_PATH } from '@/config/site';
@@ -99,6 +101,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className={`${manrope.variable} ${sora.variable}`}>
         <SiteHeader />
+        <NavigationProgress />
+        <RouteScrollManager />
         <main>{children}</main>
         <SiteFooter />
       </body>

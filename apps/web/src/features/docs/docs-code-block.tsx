@@ -152,21 +152,71 @@ function toPmVariants(code: string): Record<PackageManager, string> | null {
   };
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function highlightPmCode(code: string): string {
+  const verbSet = new Set(['install', 'add', 'remove', 'uninstall', 'update', 'up', 'run', 'dlx', 'exec', 'create']);
+  const managerSet = new Set(['npm', 'yarn', 'pnpm', 'npx']);
+
+  return code
+    .split('\n')
+    .map((line) => {
+      const parts = line.split(/(\s+)/);
+      let tokenIndex = 0;
+
+      return parts
+        .map((part) => {
+          if (!part || /^\s+$/.test(part)) return part;
+          const safe = escapeHtml(part);
+          const currentIndex = tokenIndex;
+          tokenIndex += 1;
+
+          if (currentIndex === 0 && managerSet.has(part)) {
+            return `<span class="docs-pm-manager">${safe}</span>`;
+          }
+          if (currentIndex === 1 && verbSet.has(part)) {
+            return `<span class="docs-pm-verb">${safe}</span>`;
+          }
+          if (part.startsWith('-')) {
+            return `<span class="docs-pm-flag">${safe}</span>`;
+          }
+          if (part.startsWith('@') || part.includes('/')) {
+            return `<span class="docs-pm-package">${safe}</span>`;
+          }
+          return safe;
+        })
+        .join('');
+    })
+    .join('\n');
+}
+
 export function DocsCodeBlock({ code, language }: DocsCodeBlockProps) {
   const [activePm, setActivePm] = useState<PackageManager>('npm');
   const [copyLabel, setCopyLabel] = useState('Copy');
   const pmVariants = useMemo(() => toPmVariants(code), [code]);
   const displayCode = pmVariants ? pmVariants[activePm] : code;
+  const effectiveLanguage = pmVariants ? 'bash' : language;
   const highlighted = useMemo(() => {
+    if (pmVariants) {
+      return { html: highlightPmCode(displayCode), className: 'hljs docs-pm-code language-bash' };
+    }
+
     registerHighlightLanguages();
-    if (language && hljs.getLanguage(language)) {
-      const result = hljs.highlight(displayCode, { language, ignoreIllegals: true });
-      return { html: result.value, className: `hljs language-${result.language ?? language}` };
+    if (effectiveLanguage && hljs.getLanguage(effectiveLanguage)) {
+      const result = hljs.highlight(displayCode, { language: effectiveLanguage, ignoreIllegals: true });
+      return { html: result.value, className: `hljs language-${result.language ?? effectiveLanguage}` };
     }
     const result = hljs.highlightAuto(displayCode);
     const className = result.language ? `hljs language-${result.language}` : 'hljs';
     return { html: result.value, className };
-  }, [displayCode, language]);
+  }, [displayCode, effectiveLanguage, pmVariants]);
 
   async function copyCode() {
     try {
