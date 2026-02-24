@@ -8,7 +8,7 @@ type SearchDoc = {
   urlPath: string;
   title: string;
   description: string;
-  content: string;
+  searchableText: string;
 };
 
 type SearchResult = {
@@ -25,19 +25,8 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function stripMarkdown(value: string): string {
-  return value
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`[^`]*`/g, ' ')
-    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
-    .replace(/\[[^\]]*]\([^)]*\)/g, ' ')
-    .replace(/[#>*_~|-]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
 function createSnippet(content: string, query: string): string {
-  const clean = stripMarkdown(content);
+  const clean = content;
   const pattern = new RegExp(escapeRegex(query), 'i');
   const match = pattern.exec(clean);
   if (!match) return clean.slice(0, 180);
@@ -52,7 +41,7 @@ function scoreDoc(doc: SearchDoc, query: string): number {
   const q = query.toLowerCase();
   const title = doc.title.toLowerCase();
   const description = doc.description.toLowerCase();
-  const content = doc.content.toLowerCase();
+  const content = doc.searchableText.toLowerCase();
 
   let score = 0;
   if (title === q) score += 150;
@@ -85,7 +74,7 @@ export function DocsSearch({ docs }: DocsSearchProps) {
           ? {
               doc,
               score,
-              snippet: createSnippet(doc.content, normalizedQuery),
+              snippet: createSnippet(doc.searchableText, normalizedQuery),
             }
           : null;
       })

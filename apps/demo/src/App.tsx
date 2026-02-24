@@ -53,67 +53,12 @@ function App() {
         return <NotesEditor showDefaultContent={false} />;
       default:
         return (
-          <ExtensiveEditor
-            initialTheme={theme}
-            syntaxHighlighting="auto"
-            toolbarPosition="top"
-            toolbarAlignment="center"
-            toolbarVisibility={{ fontFamily: true }}
-            toolbarClassName="docs-toolbar"
-            quoteClassName="docs-quote"
-            quoteStyleVars={{
-              "--luthor-quote-bg": "#fff7ed",
-              "--luthor-quote-fg": "#7c2d12",
-              "--luthor-quote-border": "#ea580c",
-            }}
-            fontFamilyOptions={fontFamilyOptions}
-            fontSizeOptions={[
-              { value: "default", label: "Default", fontSize: "inherit" },
-              { value: "13", label: "13px", fontSize: "13px" },
-              { value: "17", label: "17px", fontSize: "17px" },
-              { value: "21", label: "21px", fontSize: "21px" },
-            ]}
-            minimumDefaultLineHeight={1}
-            lineHeightOptions={[
-              { value: "default", label: "Default", lineHeight: "normal" },
-              { value: "1", label: "1.0", lineHeight: "1" },
-              { value: "1.15", label: "1.15", lineHeight: "1.15" },
-              { value: "1.5", label: "1.5", lineHeight: "1.5" },
-              { value: "1.75", label: "1.75", lineHeight: "1.75" },
-              { value: "2", label: "2.0", lineHeight: "2" },
-            ]}
-            paragraphLabel="Normal"
-            headingOptions={["h1", "h2", "h3"]}
-            scaleByRatio={false}
-            slashCommandVisibility={[
-              { "block.quote": true },
-              { "block.paragraph": true },
-              { "block.heading1": true },
-            ]}
-            isCopyAllowed={true}
+          <ExtensiveEditor            
             placeholder={{
               visual: "Write your story...",
               jsonb: "Paste JSONB document...",
             }}
-            isDraggableBoxEnabled={true}
-            defaultSettings={{
-              link: { color: "#1d4ed8" },
-              list: { markerColor: "#1f2937", checkboxColor: "#2563eb" },
-              table: { borderColor: "#cbd5e1", headerBackgroundColor: "#f1f5f9" },
-              hr: { color: "#cbd5e1" },
-              placeholder: { color: "#94a3b8" },
-              toolbar: { backgroundColor: "#f8fafc" },
-            }}
-            commandPaletteShortcutOnly={false}
-            shortcutConfig={{
-              disabledCommandIds: ["format.italic", "format.bold"],
-              bindings: {
-                "format.bold": { key: "m", ctrlKey: true },
-                "palette.show": [
-                  { key: "k", ctrlKey: true, shiftKey: true },
-                ],
-              },
-            }}
+            toolbarAlignment="center"
           />
         );
     }

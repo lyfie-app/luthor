@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { ArrowLeft, ArrowRight, BookOpenText, House, Package, RocketLaunch, SquaresFour } from '@phosphor-icons/react/dist/ssr';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ReactNode, isValidElement } from 'react';
@@ -18,6 +19,13 @@ const NAV_GROUP_ORDER: { id: NavGroupId; label: string }[] = [
   { id: 'luthor', label: '@lyfie/luthor' },
   { id: 'other', label: 'Other' },
 ];
+
+const NAV_GROUP_ICONS: Record<NavGroupId, ReactNode> = {
+  getting_started: <RocketLaunch size={14} weight="duotone" aria-hidden="true" />,
+  luthor_headless: <SquaresFour size={14} weight="duotone" aria-hidden="true" />,
+  luthor: <Package size={14} weight="duotone" aria-hidden="true" />,
+  other: <BookOpenText size={14} weight="duotone" aria-hidden="true" />,
+};
 
 const GROUP_ENTRY_ORDER: Partial<Record<NavGroupId, string[]>> = {
   getting_started: [
@@ -52,6 +60,7 @@ const GROUP_ENTRY_ORDER: Partial<Record<NavGroupId, string[]>> = {
 type BreadcrumbItem = {
   label: string;
   href?: string;
+  icon?: ReactNode;
 };
 
 const BREADCRUMB_DEFAULT_ROUTES: Record<string, string> = {
@@ -123,8 +132,8 @@ function toTitleCase(value: string): string {
 
 function buildBreadcrumbs(slug: string[]): BreadcrumbItem[] {
   const breadcrumbs: BreadcrumbItem[] = [
-    { label: 'Home', href: '/' },
-    { label: 'Docs', href: '/docs/' },
+    { label: 'Home', href: '/', icon: <House size={14} weight="duotone" aria-hidden="true" /> },
+    { label: 'Docs', href: '/docs/', icon: <BookOpenText size={14} weight="duotone" aria-hidden="true" /> },
   ];
 
   if (slug.length === 0) return breadcrumbs;
@@ -158,6 +167,18 @@ function extractCodeBlock(children: ReactNode): { code: string; language?: strin
     code: code.replace(/\n$/, ''),
     language,
   };
+}
+
+function buildSearchableText(markdown: string): string {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/\[[^\]]*]\([^)]*\)/g, ' ')
+    .replace(/[#>*_~|-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 1800);
 }
 
 export async function generateStaticParams() {
@@ -225,7 +246,7 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
     urlPath: entry.urlPath,
     title: entry.title,
     description: entry.description,
-    content: entry.content,
+    searchableText: buildSearchableText(entry.content),
   }));
   const breadcrumbs = buildBreadcrumbs(slug);
 
@@ -260,9 +281,15 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
               return (
                 <li key={`${item.label}-${index}`}>
                   {item.href && !isLast ? (
-                    <Link href={item.href}>{item.label}</Link>
+                    <Link href={item.href}>
+                      {item.icon ?? null}
+                      <span>{item.label}</span>
+                    </Link>
                   ) : (
-                    <span aria-current={isLast ? 'page' : undefined}>{item.label}</span>
+                    <span aria-current={isLast ? 'page' : undefined}>
+                      {item.icon ?? null}
+                      <span>{item.label}</span>
+                    </span>
                   )}
                 </li>
               );
@@ -274,7 +301,10 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
             <h2>Luthor Documentation</h2>
             {navGroups.map((group) => (
               <div className="docs-sidebar-group" key={group.id}>
-                <h3>{group.label}</h3>
+                <h3>
+                  {NAV_GROUP_ICONS[group.id]}
+                  <span>{group.label}</span>
+                </h3>
                 <ul>
                   {group.entries.map((entry) => {
                     const isCurrent = entry.urlPath === doc.urlPath;
@@ -324,14 +354,16 @@ export default async function DocsPage({ params }: { params: Promise<Params> }) 
               <div>
                 {previousDoc ? (
                   <Link href={previousDoc.urlPath} rel="prev">
-                    Previous: {previousDoc.title}
+                    <ArrowLeft size={14} weight="bold" aria-hidden="true" />
+                    <span>Previous: {previousDoc.title}</span>
                   </Link>
                 ) : null}
               </div>
               <div>
                 {nextDoc ? (
                   <Link href={nextDoc.urlPath} rel="next">
-                    Next: {nextDoc.title}
+                    <span>Next: {nextDoc.title}</span>
+                    <ArrowRight size={14} weight="bold" aria-hidden="true" />
                   </Link>
                 ) : null}
               </div>

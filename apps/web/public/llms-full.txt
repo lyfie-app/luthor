@@ -3,7 +3,7 @@
 Concatenated markdown corpus for AI ingestion.
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\apps\web\src\content\docs
-Generated at: 2026-02-24T11:47:17.322Z
+Generated at: 2026-02-24T12:48:42.147Z
 
 ---
 ## FILE: getting-started/index.md
@@ -653,8 +653,8 @@ export function App() {
 
 ## Relevant props
 
-- `RichText.placeholder`: `string` | default: `undefined`
-- `RichText.disabled`: `true | false` | default: `false`
+- `RichText.placeholder`: `undefined (default) | string`
+- `RichText.disabled`: `false (default) | true`
 
 ---
 ## FILE: luthor/presets.md
@@ -723,12 +723,12 @@ export function App() {
 
 `ChatWindowEditorProps` inherits `ExtensiveEditorProps` except `featureFlags` and `isToolbarEnabled`.
 
-- `onSend`: `(payload: { jsonb: string }) => void` | default: `undefined`
-- `submitOnEnter`: `true | false` | default: `true`
-- `allowShiftEnter`: `true | false` | default: `true`
-- `showVoiceButton`: `true | false` | default: `false`
-- `showImageButton`: `true | false` | default: `true`
-- `showSendButton`: `true | false` | default: `true`
+- `onSend`: `undefined (default) | (payload: { jsonb: string }) => void`
+- `submitOnEnter`: `true (default) | false`
+- `allowShiftEnter`: `true (default) | false`
+- `showVoiceButton`: `false (default) | true`
+- `showImageButton`: `true (default) | false`
+- `showSendButton`: `true (default) | false`
 
 ## Behavior
 
@@ -765,10 +765,10 @@ export function App() {
 
 `EmailComposeEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`.
 
-- `showTo`: `true | false` | default: `true`
-- `showCc`: `true | false` | default: `false`
-- `showBcc`: `true | false` | default: `false`
-- `showSubject`: `true | false` | default: `true`
+- `showTo`: `true (default) | false`
+- `showCc`: `false (default) | true`
+- `showBcc`: `false (default) | true`
+- `showSubject`: `true (default) | false`
 
 ## Behavior
 
@@ -801,20 +801,20 @@ export function App() {
 
 ## Core props
 
-- `initialTheme`: `'light' | 'dark'` | default: `'light'`
-- `showDefaultContent`: `true | false` | default: `true`
-- `placeholder`: `string | { visual?: string; jsonb?: string }` | default: `'Write anything...'`
-- `initialMode`: `'visual' | 'jsonb'` | default: `'visual'`
-- `availableModes`: `('visual' | 'jsonb')[]` | default: `['visual', 'jsonb']`
-- `toolbarPosition`: `'top' | 'bottom'` | default: `'top'`
-- `toolbarAlignment`: `'left' | 'center' | 'right'` | default: `'left'`
-- `isToolbarEnabled`: `true | false` | default: `true`
-- `minimumDefaultLineHeight`: `string | number` | default: `1.5`
-- `scaleByRatio`: `true | false` | default: `false`
-- `syncHeadingOptionsWithCommands`: `true | false` | default: `true`
-- `commandPaletteShortcutOnly`: `true | false` | default: `false`
-- `isCopyAllowed`: `true | false` | default: `true`
-- `syntaxHighlighting`: `'auto' | 'disabled'` | default: uses extension default
+- `initialTheme`: `'light' (default) | 'dark'`
+- `showDefaultContent`: `true (default) | false`
+- `placeholder`: `'Write anything...' (default) | string | { visual?: string; jsonb?: string }`
+- `initialMode`: `'visual' (default) | 'jsonb'`
+- `availableModes`: `['visual', 'jsonb'] (default) | ('visual' | 'jsonb')[]`
+- `toolbarPosition`: `'top' (default) | 'bottom'`
+- `toolbarAlignment`: `'left' (default) | 'center' | 'right'`
+- `isToolbarEnabled`: `true (default) | false`
+- `minimumDefaultLineHeight`: `1.5 (default) | string | number`
+- `scaleByRatio`: `false (default) | true`
+- `syncHeadingOptionsWithCommands`: `true (default) | false`
+- `commandPaletteShortcutOnly`: `false (default) | true`
+- `isCopyAllowed`: `true (default) | false`
+- `syntaxHighlighting`: `'auto' | 'disabled'` | extension default behavior if omitted
 
 ## Ref API
 
@@ -852,8 +852,8 @@ export function App() {
 
 ## Props
 
-- `className`: `string` | default: `undefined`
-- `placeholder`: `string` | default: `'Start writing...'`
+- `className`: `undefined (default) | string`
+- `placeholder`: `'Start writing...' (default) | string`
 
 ## Behavior
 
@@ -888,7 +888,7 @@ export function App() {
 
 `MDTextEditorProps` inherits `ExtensiveEditorProps` except `availableModes` and `initialMode`.
 
-- `initialMode`: `'visual' | 'markdown'` | default: `'visual'`
+- `initialMode`: `'visual' (default) | 'markdown'`
 
 ## Behavior
 
@@ -932,14 +932,14 @@ export function App() {
 
 `NotesEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`.
 
-- `showTitle`: `true | false` | default: `true`
-- `title`: `string` | default: `''`
-- `onTitleChange`: `(value: string) => void` | default: `undefined`
-- `showActions`: `true | false` | default: `true`
-- `onPin`: `() => void` | default: `undefined`
-- `onArchive`: `() => void` | default: `undefined`
-- `onColorChange`: `(color: string) => void` | default: `undefined`
-- `colorOptions`: `readonly string[]` | default: `['#fef3c7', '#dbeafe', '#dcfce7']`
+- `showTitle`: `true (default) | false`
+- `title`: `'' (default) | string`
+- `onTitleChange`: `undefined (default) | (value: string) => void`
+- `showActions`: `true (default) | false`
+- `onPin`: `undefined (default) | () => void`
+- `onArchive`: `undefined (default) | () => void`
+- `onColorChange`: `undefined (default) | (color: string) => void`
+- `colorOptions`: `['#fef3c7', '#dbeafe', '#dcfce7'] (default) | readonly string[]`
 
 ## Behavior
 
@@ -974,10 +974,10 @@ export function App() {
 
 `NotionLikeEditorProps` inherits `ExtensiveEditorProps` except `featureFlags` and `isToolbarEnabled`, then re-adds both.
 
-- `slashVisibility`: `SlashCommandVisibility` | default: `undefined`
-- `isDraggableEnabled`: `true | false` | default: `true`
-- `featureFlags`: `FeatureFlagOverrides` | default: `undefined`
-- `isToolbarEnabled`: `true | false` | default: `false`
+- `slashVisibility`: `undefined (default) | SlashCommandVisibility`
+- `isDraggableEnabled`: `true (default) | false`
+- `featureFlags`: `undefined (default) | FeatureFlagOverrides`
+- `isToolbarEnabled`: `false (default) | true`
 
 ## Behavior
 
@@ -1012,8 +1012,8 @@ export function App() {
 
 `RichTextBoxEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`.
 
-- `featureFlags`: `FeatureFlagOverrides` | default: `undefined`
-- `compactToolbar`: `true | false` | default: `false`
+- `featureFlags`: `undefined (default) | FeatureFlagOverrides`
+- `compactToolbar`: `false (default) | true`
 
 ## Behavior
 
@@ -1048,7 +1048,7 @@ export function App() {
 
 `SimpleTextEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`, `availableModes`, `initialMode`, and `toolbarVisibility`.
 
-- `hideToolbarByDefault`: `true | false` | default: `true`
+- `hideToolbarByDefault`: `true (default) | false`
 
 ## Behavior
 

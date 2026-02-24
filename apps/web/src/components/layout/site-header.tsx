@@ -1,8 +1,9 @@
 'use client';
 
-import { BookOpen, GithubLogo, MoonStars, Sun } from '@phosphor-icons/react';
+import { BookOpen, GithubLogo, MoonStars, PlayCircle, Sun } from '@phosphor-icons/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { GITHUB_URL, REACT_PLAYGROUND_URL } from '@/config/site';
 
@@ -18,6 +19,8 @@ function readInitialTheme(): Theme {
 }
 
 export function SiteHeader() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
@@ -35,6 +38,11 @@ export function SiteHeader() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    router.prefetch('/docs/getting-started/');
+    router.prefetch('/demo/');
+  }, [router]);
+
   function toggleTheme() {
     const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark';
     setTheme(nextTheme);
@@ -42,6 +50,9 @@ export function SiteHeader() {
     document.documentElement.dataset.theme = nextTheme;
     document.documentElement.style.colorScheme = nextTheme;
   }
+
+  const isDocsActive = pathname.startsWith('/docs');
+  const isDemoActive = pathname.startsWith('/demo');
 
   return (
     <header className="site-header">
@@ -62,14 +73,18 @@ export function SiteHeader() {
           )}
         </Link>
         <nav className="site-nav" aria-label="Primary">
-          <Link href="/docs/">
+          <Link href="/docs/" aria-current={isDocsActive ? 'page' : undefined} className={isDocsActive ? 'active' : undefined}>
             <BookOpen size={16} weight="duotone" aria-hidden="true" />
             <span>Documentation</span>
           </Link>
-          <Link href="/demo/">
+          <Link href="/demo/" aria-current={isDemoActive ? 'page' : undefined} className={isDemoActive ? 'active' : undefined}>
+            <PlayCircle size={16} weight="duotone" aria-hidden="true" />
             <span>Demo</span>
           </Link>
-          <Link href={REACT_PLAYGROUND_URL} target="_blank" rel="noopener noreferrer">Playground</Link>
+          <Link href={REACT_PLAYGROUND_URL} target="_blank" rel="noopener noreferrer">
+            <PlayCircle size={16} weight="duotone" aria-hidden="true" />
+            <span>Playground</span>
+          </Link>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
             <GithubLogo size={16} weight="duotone" aria-hidden="true" />
             <span>GitHub</span>
