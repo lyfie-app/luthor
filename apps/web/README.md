@@ -6,19 +6,17 @@ Next.js App Router website for Luthor marketing, demo, and documentation.
 
 1. SEO-focused landing page at `/` with:
    - Structured data (`SoftwareApplication`, `SoftwareSourceCode`, `WebSite`, `Organization`, `FAQPage`)
-   - Build-time package credibility metrics
+   - Live package credibility metrics from npm + GitHub APIs
    - Crawlable semantic content and canonical metadata
 2. Live demo page at `/demo/` using the extensive editor preset.
 3. Markdown documentation pages under `/docs/**` rendered from:
-   - `src/content/docs/*.md`
-   - `src/content/docs/reference/**/*.md`
+   - `src/content/docs/**/*.md`
 4. Generated sitemap at `/sitemap.xml`.
 5. LLM discovery artifacts in `public/llms.txt` and `public/llms-full.txt`.
 
 ## Scripts
 
-- `npm run sync:docs`: mirror root docs into `src/content/docs/reference/`.
-- `npm run sync:metadata`: refresh package metrics in `src/data/package-metadata.json`.
+- `npm run sync:docs`: index docs from `src/content/docs/` and regenerate `src/data/docs-index.generated.ts`.
 - `npm run sync:llms`: regenerate `public/llms.txt` and `public/llms-full.txt`.
 - `npm run dev`: sync content, then run Next dev server.
 - `npm run build`: sync content, then run Next production build.

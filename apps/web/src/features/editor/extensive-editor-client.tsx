@@ -2,6 +2,12 @@
 
 import { ExtensiveEditor } from '@lyfie/luthor';
 
-export function ExtensiveEditorClient() {
-  return <ExtensiveEditor />;
+type Theme = 'light' | 'dark';
+
+type ExtensiveEditorClientProps = {
+  siteTheme?: Theme;
+};
+
+export function ExtensiveEditorClient({ siteTheme }: ExtensiveEditorClientProps) {
+  return <ExtensiveEditor initialTheme={siteTheme} />;
 }

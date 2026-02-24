@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { INSTALL_COMMAND } from '@/config/site';
 
-const INSTALL_COMMAND = 'npm install @lyfie/luthor react react-dom';
 
 export function CopyInstallButton() {
   const [label, setLabel] = useState('Copy Install Command');

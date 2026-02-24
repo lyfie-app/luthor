@@ -2,8 +2,7 @@ import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const WEB_ROOT = process.cwd();
-const REPO_ROOT = path.resolve(WEB_ROOT, '..', '..');
-const SOURCE_DOCS_DIR = path.join(REPO_ROOT, 'documentation');
+const SOURCE_DOCS_DIR = path.join(WEB_ROOT, 'src', 'content', 'docs');
 const PUBLIC_DIR = path.join(WEB_ROOT, 'public');
 const LLMS_FILE = path.join(PUBLIC_DIR, 'llms.txt');
 const LLMS_FULL_FILE = path.join(PUBLIC_DIR, 'llms-full.txt');
@@ -31,11 +30,18 @@ async function* walkFiles(dir) {
 function docsUrlFromRelativePath(relativePath) {
   const normalized = relativePath.replace(/\\/g, '/');
   const withoutExt = normalized.replace(/\.(md|mdx)$/i, '');
-  return `${SITE_URL}/docs/reference/${withoutExt.replace(/\\/g, '/')}/`;
+  if (withoutExt === 'index') return `${SITE_URL}/docs/`;
+  if (withoutExt.endsWith('/index')) return `${SITE_URL}/docs/${withoutExt.slice(0, -'/index'.length)}/`;
+  return `${SITE_URL}/docs/${withoutExt.replace(/\\/g, '/')}/`;
+}
+
+function stripReferencePrefix(relativePath) {
+  const normalized = relativePath.replace(/\\/g, '/');
+  return normalized.startsWith('reference/') ? normalized.slice('reference/'.length) : normalized;
 }
 
 function sectionLabel(relativePath) {
-  const normalized = relativePath.replace(/\\/g, '/');
+  const normalized = stripReferencePrefix(relativePath);
   if (normalized.startsWith('user/')) return 'User Docs';
   if (normalized.startsWith('developer/')) return 'Developer Docs';
   if (normalized.startsWith('readmes/')) return 'Readmes';
@@ -69,7 +75,7 @@ async function buildLlmsArtifacts() {
     `- Demo: ${SITE_URL}/demo/`,
     `- Docs home: ${SITE_URL}/docs/`,
     `- Full corpus: ${SITE_URL}/llms-full.txt`,
-    `- Sitemap: ${SITE_URL}/sitemap-index.xml`,
+    `- Sitemap: ${SITE_URL}/sitemap.xml`,
     '',
     '## Documentation Table of Contents',
     '',

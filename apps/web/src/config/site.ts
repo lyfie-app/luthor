@@ -22,29 +22,49 @@ export const SITE_KEYWORDS = [
 
 export const SOCIAL_CARD_PATH = '/social-card.svg';
 
+export const PRIMARY_PACKAGE_NAME = '@lyfie/luthor';
+export const HEADLESS_PACKAGE_NAME = '@lyfie/luthor-headless';
 export const GITHUB_URL = 'https://github.com/lyfie-app/luthor';
-
 export const NPM_URL = 'https://www.npmjs.com/package/@lyfie/luthor';
+export const SPONSORS_URL = 'https://github.com/sponsors/lyfie-app';
+export const REACT_PLAYGROUND_URL = 'https://stackblitz.com/edit/luthor-playground';
+export const INSTALL_COMMAND = 'npm install @lyfie/luthor react react-dom';
+export const GITHUB_CONTENT_BASE_URL = `${GITHUB_URL}/blob/main`;
 
 export const SEO_FAQS = [
   {
-    question: 'What is Luthor?',
+    question: 'Which package should I start with?',
     answer:
-      'Luthor is a React rich text editor built on Lexical with TypeScript-first APIs. It ships as a ready-to-use preset and as headless building blocks.',
+      `Start with ${PRIMARY_PACKAGE_NAME} for the fastest setup. Use ${HEADLESS_PACKAGE_NAME} when you need full custom UI control.`,
   },
   {
-    question: 'Is Luthor free and open source?',
+    question: 'Can I ship this in a commercial app?',
     answer:
-      'Yes. Luthor is MIT licensed, free to use in personal and commercial projects, and developed in a public GitHub repository.',
+      'Yes. It is MIT licensed and free for commercial use.',
   },
   {
-    question: 'Can I customize the editor deeply?',
+    question: 'How fast can I get an editor on screen?',
     answer:
-      'Yes. You can use the headless package to customize extensions, toolbar behavior, formatting features, and persistence flows.',
+      `Usually in minutes. Install ${PRIMARY_PACKAGE_NAME}, import styles, and render ExtensiveEditor.`,
   },
   {
-    question: 'Is Luthor SEO friendly for documentation-heavy sites?',
+    question: `Do I need Lexical setup for ${PRIMARY_PACKAGE_NAME}?`,
     answer:
-      'Yes. The website uses server-rendered, semantic Next.js pages with crawlable markdown docs, sitemap support, and structured data.',
+      'No extra setup is needed for the preset package. Headless is where you manage Lexical-level composition.',
+  },
+  {
+    question: 'Can I switch from preset to headless later?',
+    answer:
+      `Yes. Start with ${PRIMARY_PACKAGE_NAME} and move to ${HEADLESS_PACKAGE_NAME} as your product needs deeper customization.`,
+  },
+  {
+    question: 'What data format should I persist?',
+    answer:
+      'Use JSONB for reliable round trips and database-friendly storage.',
+  },
+  {
+    question: 'Is TypeScript support first-class?',
+    answer:
+      'Yes. The API surface is TypeScript-first for safer integrations and extension work.',
   },
 ] as const;

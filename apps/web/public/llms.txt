@@ -6,52 +6,57 @@ This file helps AI agents discover Luthor docs quickly.
 - Demo: https://www.luthor.fyi/demo/
 - Docs home: https://www.luthor.fyi/docs/
 - Full corpus: https://www.luthor.fyi/llms-full.txt
-- Sitemap: https://www.luthor.fyi/sitemap-index.xml
+- Sitemap: https://www.luthor.fyi/sitemap.xml
 
 ## Documentation Table of Contents
 
 ### General
-- [demo-app/website-development-phased-plan.md](https://www.luthor.fyi/docs/reference/demo-app/website-development-phased-plan/)
-- [developer_notes/readme-map.md](https://www.luthor.fyi/docs/reference/developer_notes/readme-map/)
-- [documentation-hub.md](https://www.luthor.fyi/docs/reference/documentation-hub/)
-- [index.md](https://www.luthor.fyi/docs/reference/index/)
-- [markdown-catalog.md](https://www.luthor.fyi/docs/reference/markdown-catalog/)
-- [PROJECT-DELIVERABLES.md](https://www.luthor.fyi/docs/reference/PROJECT-DELIVERABLES/)
+- [getting-started.md](https://www.luthor.fyi/docs/getting-started/)
+- [headless-usage.md](https://www.luthor.fyi/docs/headless-usage/)
+- [index.md](https://www.luthor.fyi/docs/)
+- [presets.md](https://www.luthor.fyi/docs/presets/)
+- [reference/demo-app/website-development-phased-plan.md](https://www.luthor.fyi/docs/reference/demo-app/website-development-phased-plan/)
+- [reference/developer_notes/readme-map.md](https://www.luthor.fyi/docs/reference/developer_notes/readme-map/)
+- [reference/documentation-hub.md](https://www.luthor.fyi/docs/reference/documentation-hub/)
+- [reference/index.md](https://www.luthor.fyi/docs/reference/)
+- [reference/markdown-catalog.md](https://www.luthor.fyi/docs/reference/markdown-catalog/)
+- [reference/PROJECT-DELIVERABLES.md](https://www.luthor.fyi/docs/reference/PROJECT-DELIVERABLES/)
+- [ui-components.md](https://www.luthor.fyi/docs/ui-components/)
 
 ### Developer Docs
-- [developer/demo/architecture.md](https://www.luthor.fyi/docs/reference/developer/demo/architecture/)
-- [developer/demo/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/demo/maintainer-notes/)
-- [developer/demo/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/demo/source-file-reference/)
-- [developer/headless/architecture.md](https://www.luthor.fyi/docs/reference/developer/headless/architecture/)
-- [developer/headless/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/headless/maintainer-notes/)
-- [developer/headless/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/headless/source-file-reference/)
-- [developer/luthor/architecture.md](https://www.luthor.fyi/docs/reference/developer/luthor/architecture/)
-- [developer/luthor/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/luthor/maintainer-notes/)
-- [developer/luthor/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/luthor/source-file-reference/)
+- [reference/developer/demo/architecture.md](https://www.luthor.fyi/docs/reference/developer/demo/architecture/)
+- [reference/developer/demo/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/demo/maintainer-notes/)
+- [reference/developer/demo/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/demo/source-file-reference/)
+- [reference/developer/headless/architecture.md](https://www.luthor.fyi/docs/reference/developer/headless/architecture/)
+- [reference/developer/headless/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/headless/maintainer-notes/)
+- [reference/developer/headless/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/headless/source-file-reference/)
+- [reference/developer/luthor/architecture.md](https://www.luthor.fyi/docs/reference/developer/luthor/architecture/)
+- [reference/developer/luthor/maintainer-notes.md](https://www.luthor.fyi/docs/reference/developer/luthor/maintainer-notes/)
+- [reference/developer/luthor/source-file-reference.md](https://www.luthor.fyi/docs/reference/developer/luthor/source-file-reference/)
 
 ### Readmes
-- [readmes/apps/demo-readme.md](https://www.luthor.fyi/docs/reference/readmes/apps/demo-readme/)
-- [readmes/packages/custom-markdown-convertor-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/custom-markdown-convertor-readme/)
-- [readmes/packages/eslint-config-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/eslint-config-readme/)
-- [readmes/packages/luthor-docs/architecture-map.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/architecture-map/)
-- [readmes/packages/luthor-docs/customization-guide.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/customization-guide/)
-- [readmes/packages/luthor-docs/README.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/README/)
-- [readmes/packages/typescript-config-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/typescript-config-readme/)
-- [readmes/presets/extensive-preset-readme.md](https://www.luthor.fyi/docs/reference/readmes/presets/extensive-preset-readme/)
-- [readmes/presets/README.md](https://www.luthor.fyi/docs/reference/readmes/presets/README/)
+- [reference/readmes/apps/demo-readme.md](https://www.luthor.fyi/docs/reference/readmes/apps/demo-readme/)
+- [reference/readmes/packages/custom-markdown-convertor-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/custom-markdown-convertor-readme/)
+- [reference/readmes/packages/eslint-config-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/eslint-config-readme/)
+- [reference/readmes/packages/luthor-docs/architecture-map.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/architecture-map/)
+- [reference/readmes/packages/luthor-docs/customization-guide.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/customization-guide/)
+- [reference/readmes/packages/luthor-docs/README.md](https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/README/)
+- [reference/readmes/packages/typescript-config-readme.md](https://www.luthor.fyi/docs/reference/readmes/packages/typescript-config-readme/)
+- [reference/readmes/presets/extensive-preset-readme.md](https://www.luthor.fyi/docs/reference/readmes/presets/extensive-preset-readme/)
+- [reference/readmes/presets/README.md](https://www.luthor.fyi/docs/reference/readmes/presets/README/)
 
 ### Tutorials
-- [tutorials/enhanced-markdown-quick-start.md](https://www.luthor.fyi/docs/reference/tutorials/enhanced-markdown-quick-start/)
+- [reference/tutorials/enhanced-markdown-quick-start.md](https://www.luthor.fyi/docs/reference/tutorials/enhanced-markdown-quick-start/)
 
 ### User Docs
-- [user/demo/getting-started.md](https://www.luthor.fyi/docs/reference/user/demo/getting-started/)
-- [user/demo/toolbar-customization-examples.md](https://www.luthor.fyi/docs/reference/user/demo/toolbar-customization-examples/)
-- [user/demo/usage-and-persistence.md](https://www.luthor.fyi/docs/reference/user/demo/usage-and-persistence/)
-- [user/headless/extensions-and-configuration.md](https://www.luthor.fyi/docs/reference/user/headless/extensions-and-configuration/)
-- [user/headless/getting-started.md](https://www.luthor.fyi/docs/reference/user/headless/getting-started/)
-- [user/headless/import-export.md](https://www.luthor.fyi/docs/reference/user/headless/import-export/)
-- [user/luthor/extensive-editor.md](https://www.luthor.fyi/docs/reference/user/luthor/extensive-editor/)
-- [user/luthor/getting-started.md](https://www.luthor.fyi/docs/reference/user/luthor/getting-started/)
-- [user/luthor/presets-and-configuration.md](https://www.luthor.fyi/docs/reference/user/luthor/presets-and-configuration/)
-- [user/luthor/toolbar-customization.md](https://www.luthor.fyi/docs/reference/user/luthor/toolbar-customization/)
+- [reference/user/demo/getting-started.md](https://www.luthor.fyi/docs/reference/user/demo/getting-started/)
+- [reference/user/demo/toolbar-customization-examples.md](https://www.luthor.fyi/docs/reference/user/demo/toolbar-customization-examples/)
+- [reference/user/demo/usage-and-persistence.md](https://www.luthor.fyi/docs/reference/user/demo/usage-and-persistence/)
+- [reference/user/headless/extensions-and-configuration.md](https://www.luthor.fyi/docs/reference/user/headless/extensions-and-configuration/)
+- [reference/user/headless/getting-started.md](https://www.luthor.fyi/docs/reference/user/headless/getting-started/)
+- [reference/user/headless/import-export.md](https://www.luthor.fyi/docs/reference/user/headless/import-export/)
+- [reference/user/luthor/extensive-editor.md](https://www.luthor.fyi/docs/reference/user/luthor/extensive-editor/)
+- [reference/user/luthor/getting-started.md](https://www.luthor.fyi/docs/reference/user/luthor/getting-started/)
+- [reference/user/luthor/presets-and-configuration.md](https://www.luthor.fyi/docs/reference/user/luthor/presets-and-configuration/)
+- [reference/user/luthor/toolbar-customization.md](https://www.luthor.fyi/docs/reference/user/luthor/toolbar-customization/)
 

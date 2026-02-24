@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { PRIMARY_PACKAGE_NAME } from '@/config/site';
 import { ExtensiveEditorShell } from '@/features/editor/extensive-editor-shell';
 
 export const metadata: Metadata = {
@@ -24,7 +25,7 @@ export default function DemoPage() {
               <span />
               <span />
             </div>
-            <code className="install-chip">@lyfie/luthor extensive preset</code>
+            <code className="install-chip">{PRIMARY_PACKAGE_NAME} extensive preset</code>
           </div>
           <div className="editor-pane">
             <ExtensiveEditorShell />

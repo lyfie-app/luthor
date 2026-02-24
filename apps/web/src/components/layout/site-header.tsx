@@ -1,7 +1,9 @@
 'use client';
 
+import { BookOpen, GithubLogo, MoonStars, Sun } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { GITHUB_URL, REACT_PLAYGROUND_URL } from '@/config/site';
 
 const THEME_STORAGE_KEY = 'luthor-site-theme';
 
@@ -41,14 +43,33 @@ export function SiteHeader() {
           Luthor
         </Link>
         <nav className="site-nav" aria-label="Primary">
-          <Link href="/docs/">Documentation</Link>
-          <Link href="/demo/">Demo</Link>
-          <Link href="/llms.txt">LLMs</Link>
-          <a href="https://github.com/lyfie-app/luthor" target="_blank" rel="noopener noreferrer">
-            GitHub
+          <Link href="/docs/">
+            <BookOpen size={16} weight="duotone" aria-hidden="true" />
+            <span>Documentation</span>
+          </Link>
+          <Link href="/demo/">
+            <span>Demo</span>
+          </Link>
+          <Link href={REACT_PLAYGROUND_URL} target="_blank" rel="noopener noreferrer">Playground</Link>
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+            <GithubLogo size={16} weight="duotone" aria-hidden="true" />
+            <span>GitHub</span>
           </a>
-          <button className="theme-toggle" type="button" onClick={toggleTheme} aria-label="Toggle color theme">
-            {mounted ? (theme === 'dark' ? 'Light mode' : 'Dark mode') : 'Theme'}
+          <button
+            className="theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={mounted ? (theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode') : 'Toggle color theme'}
+          >
+            {mounted ? (
+              theme === 'dark' ? (
+                <Sun size={18} weight="duotone" aria-hidden="true" />
+              ) : (
+                <MoonStars size={18} weight="duotone" aria-hidden="true" />
+              )
+            ) : (
+              <MoonStars size={18} weight="duotone" aria-hidden="true" />
+            )}
           </button>
         </nav>
       </div>

@@ -1,59 +1,180 @@
+import {
+  BracketsCurly,
+  CheckCircle,
+  DownloadSimple,
+  GitCommit,
+  GithubLogo,
+  Package,
+  RocketLaunch,
+  ShieldCheck,
+  Sparkle,
+  StackSimple,
+} from '@phosphor-icons/react/dist/ssr';
 import Link from 'next/link';
-import metadata from '@/data/package-metadata.json';
-import { SEO_FAQS } from '@/config/site';
-import { getAllDocs } from '@/features/docs/docs.service';
+import {
+  GITHUB_URL,
+  HEADLESS_PACKAGE_NAME,
+  NPM_URL,
+  PRIMARY_PACKAGE_NAME,
+  SEO_FAQS,
+  SPONSORS_URL,
+} from '@/config/site';
 import { ExtensiveEditorShell } from '@/features/editor/extensive-editor-shell';
-import { CopyInstallButton } from '@/features/home/copy-install-button';
 import { HomeJsonLd } from '@/features/home/home-json-ld';
-import { formatBytes, formatCompact } from '@/utils/format';
+import { WhyLuthorFeatures } from '@/features/home/why-luthor-features';
+import { WhyLuthorReasons } from '@/features/home/why-luthor-reasons';
+import { formatCompact } from '@/utils/format';
 
-const valueProps = [
+type DownloadPointResponse = {
+  downloads?: number;
+};
+
+type RegistryResponse = {
+  'dist-tags'?: {
+    latest?: string;
+  };
+  versions?: Record<string, unknown>;
+  time?: {
+    created?: string;
+  };
+};
+
+type GitHubCommitResponse = {
+  commit?: {
+    committer?: {
+      date?: string;
+    };
+  };
+};
+
+const packagePlans = [
   {
-    title: 'Free And MIT Licensed',
-    description:
-      'Luthor is open source and commercially friendly, so your editor stack stays under your control.',
-    proof: 'No lock-in',
+    tone: 'headless',
+    name: 'Luthor Headless',
+    packageName: HEADLESS_PACKAGE_NAME,
+    tag: 'Full Control',
+    description: 'Composable primitives for teams that want total UI freedom.',
+    features: [
+      'Build your exact editor UX',
+      'Extensive Customization API',
+      'Fine-grained command control',
+      'Bring your own design system',
+      'Perfect for product-specific flows',
+      'Zero dependencies within package for maximum flexibility',
+    ],
   },
   {
-    title: 'Built On Lexical',
-    description:
-      "Runtime behavior is powered by Lexical for responsive typing, stable selection handling, and scalable rich text state.",
-    proof: 'Proven core',
-  },
-  {
-    title: 'TypeScript First APIs',
-    description:
-      'Typed APIs make editor integration safer and easier to maintain in real production React applications.',
-    proof: 'Predictable integration',
-  },
-  {
-    title: 'Headless Or Plug And Play',
-    description:
-      'Use the preset package for instant shipping or move into headless primitives when you need deep product customization.',
-    proof: 'Flexible architecture',
+    tone: 'luthor',
+    name: 'Luthor',
+    packageName: PRIMARY_PACKAGE_NAME,
+    tag: 'Full Control + Ready To Ship',
+    description: 'Prebuilt editor presets with extensive customizability',
+    features: [
+      'One-liner editor configuration',
+      'Single package for all your editor needs',
+      'Polished toolbar and extensions',
+      'Type-safe React integration',
+      'Built for production speed',
+      'Includes Luthor Headless for maximum flexibility',
+    ],
   },
 ];
 
-const stats = {
-  weeklyDownloads: formatCompact(metadata.metrics?.weeklyDownloads),
-  latestVersion: metadata.metrics?.latestVersion ?? 'N/A',
-  minzippedSize: formatBytes(metadata.metrics?.minzippedSizeBytes),
-  githubStars: formatCompact(metadata.metrics?.githubStars),
-};
+const heroUseCases = [
+  { label: 'AI Actions', icon: Sparkle },
+  { label: 'Apps', icon: Package },
+  { label: 'Chat', icon: RocketLaunch },
+  { label: 'Blog', icon: BracketsCurly },
+  { label: 'Email', icon: StackSimple },
+  { label: 'Teams', icon: ShieldCheck },
+] as const;
 
-const fetchedDate = metadata.fetchedAt ? new Date(metadata.fetchedAt).toLocaleString('en-US') : 'N/A';
+async function safeFetchJson<T>(url: string): Promise<T | null> {
+  try {
+    const response = await fetch(url, {
+      cache: 'no-store',
+      headers: {
+        accept: 'application/json',
+      },
+    });
 
-function getDocIntentLabel(urlPath: string): string {
-  if (urlPath.startsWith('/docs/reference/user/')) return 'User Guide';
-  if (urlPath.startsWith('/docs/reference/developer/')) return 'Developer Guide';
-  if (urlPath.startsWith('/docs/reference/tutorials/')) return 'Tutorial';
-  if (urlPath.startsWith('/docs/reference/readmes/')) return 'Reference';
-  return 'Core Docs';
+    if (!response.ok) {
+      return null;
+    }
+
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function toIsoDate(value: string | undefined): string | null {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
+}
+
+function formatDate(value: string | null): string {
+  if (!value) return 'N/A';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return 'N/A';
+  return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+async function getLiveStats() {
+  const [luthorRegistry, headlessRegistry, latestMainCommit] = await Promise.all([
+    safeFetchJson<RegistryResponse>(`https://registry.npmjs.org/${encodeURIComponent(PRIMARY_PACKAGE_NAME)}`),
+    safeFetchJson<RegistryResponse>(`https://registry.npmjs.org/${encodeURIComponent(HEADLESS_PACKAGE_NAME)}`),
+    safeFetchJson<GitHubCommitResponse>('https://api.github.com/repos/lyfie-app/luthor/commits/main'),
+  ]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const luthorCreatedDate = toIsoDate(luthorRegistry?.time?.created);
+  const headlessCreatedDate = toIsoDate(headlessRegistry?.time?.created);
+
+  const [luthorTotalDownloads, headlessTotalDownloads] = await Promise.all([
+    luthorCreatedDate
+      ? safeFetchJson<DownloadPointResponse>(
+          `https://api.npmjs.org/downloads/point/${luthorCreatedDate}:${today}/${encodeURIComponent(PRIMARY_PACKAGE_NAME)}`,
+        )
+      : Promise.resolve(null),
+    headlessCreatedDate
+      ? safeFetchJson<DownloadPointResponse>(
+          `https://api.npmjs.org/downloads/point/${headlessCreatedDate}:${today}/${encodeURIComponent(HEADLESS_PACKAGE_NAME)}`,
+        )
+      : Promise.resolve(null),
+  ]);
+
+  const luthorTotal = typeof luthorTotalDownloads?.downloads === 'number' ? luthorTotalDownloads.downloads : null;
+  const headlessTotal = typeof headlessTotalDownloads?.downloads === 'number' ? headlessTotalDownloads.downloads : null;
+  const totalDownloads =
+    typeof luthorTotal === 'number' || typeof headlessTotal === 'number'
+      ? (luthorTotal ?? 0) + (headlessTotal ?? 0)
+      : null;
+
+  const latestVersion = luthorRegistry?.['dist-tags']?.latest ?? 'N/A';
+  const luthorReleaseCount = luthorRegistry?.versions ? Object.keys(luthorRegistry.versions).length : 0;
+  const headlessReleaseCount = headlessRegistry?.versions ? Object.keys(headlessRegistry.versions).length : 0;
+  const releaseCount =
+    luthorReleaseCount > 0 || headlessReleaseCount > 0 ? luthorReleaseCount + headlessReleaseCount : null;
+  const latestCommitDate = latestMainCommit?.commit?.committer?.date ?? null;
+
+  const hasLiveData = Boolean(
+    luthorRegistry || headlessRegistry || latestMainCommit || luthorTotalDownloads || headlessTotalDownloads,
+  );
+
+  return {
+    totalDownloads: formatCompact(totalDownloads),
+    latestVersion,
+    latestCommitDate: formatDate(latestCommitDate),
+    releaseCount: formatCompact(releaseCount),
+    fetchedDate: hasLiveData ? new Date().toLocaleString('en-US') : 'N/A',
+  };
 }
 
 export default async function HomePage() {
-  const docs = await getAllDocs();
-  const highlightedDocs = docs.slice(0, 10);
+  const stats = await getLiveStats();
 
   return (
     <>
@@ -61,20 +182,30 @@ export default async function HomePage() {
 
       <section className="section hero-stage">
         <div className="container hero-grid">
-          <div>
-            <span className="eyebrow">Open source React + Lexical editor</span>
-            <h1 className="hero-title">Luthor is a modern React rich text editor built for speed, clarity, and control.</h1>
+          <div className="hero-heading-container">
+            <span className="eyebrow">Open Source & MIT Licensed</span>
+            <h1 className="hero-title">Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring</h1>
             <p className="hero-copy">
-              Ship a production-ready rich text editor in minutes with the Extensive preset, then scale into a deeply
-              customizable headless architecture as your product evolves.
+              Type-safe, open-source, typescript friendly and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span>
+              {' '} - designed for developers who want control without chaos. Every feature. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
             </p>
-            <p className="hero-live-note">Read the docs, run the demo, and evaluate the full source code today.</p>
+            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>
+            <div className="hero-uses-container">
+              {heroUseCases.map((useCase) => (
+                <span className="eyebrow-muted" key={useCase.label}>
+                  <useCase.icon size={14} weight="duotone" aria-hidden="true" />
+                  <span>{useCase.label}</span>
+                </span>
+              ))}
+            </div>
             <div className="hero-actions">
               <Link className="btn btn-primary" href="/docs/getting-started/">
-                Read docs
+                <RocketLaunch className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+                <span>Get Started</span>
               </Link>
-              <Link className="btn btn-muted" href="/demo/">
-                Open full demo
+              <Link className="btn btn-muted" href={GITHUB_URL}>
+                <GithubLogo className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+                <span>View on GitHub</span>
               </Link>
             </div>
           </div>
@@ -86,13 +217,9 @@ export default async function HomePage() {
                 <span />
                 <span />
               </div>
-              <div className="install-row">
-                <code className="install-chip">npm install @lyfie/luthor react react-dom</code>
-                <CopyInstallButton />
-              </div>
             </div>
             <div className="editor-pane">
-              <ExtensiveEditorShell />
+              <ExtensiveEditorShell syncWithSiteTheme />
             </div>
           </div>
         </div>
@@ -100,85 +227,108 @@ export default async function HomePage() {
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title">Why developers choose Luthor over bloated editor stacks.</h2>
+          <h2 className="section-title">Luthor vs Luthor Headless</h2>
           <p className="section-copy">
-            Luthor focuses on clean APIs, realistic bundle behavior, and full ownership of the editor experience for product
-            teams.
+            Pick the package that matches how quickly you want to ship and how much UI control you need.
           </p>
-          <div className="value-grid">
-            {valueProps.map((item) => (
-              <article className="value-card" key={item.title}>
-                <p className="value-proof">{item.proof}</p>
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
+          <div className="plan-grid">
+            {packagePlans.map((plan) => (
+              <article className={`plan-card plan-card--${plan.tone}`} key={plan.name}>
+                <div className="plan-header">
+                  <h3 className="plan-title">
+                    {plan.tone === 'luthor' ? (
+                      <Package size={18} weight="duotone" aria-hidden="true" />
+                    ) : (
+                      <BracketsCurly size={18} weight="duotone" aria-hidden="true" />
+                    )}
+                    <span>{plan.name}</span>
+                  </h3>
+                  <span className="plan-eyebrow">{plan.tag}</span>
+                </div>
+                <p className="plan-package">{plan.packageName}</p>
+                <p>{plan.description}</p>
+                <ul className="plan-features">
+                  {plan.features.map((feature) => (
+                    <li key={feature}>
+                      <CheckCircle size={14} weight="fill" aria-hidden="true" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
-          <p className="value-tailline">Free forever. Open forever. Stable today.</p>
         </div>
       </section>
 
       <section className="section">
         <div className="container">
-          <h2 className="section-title">Package momentum and credibility signals.</h2>
+          <h2 className="section-title">Why Luthor?</h2>
           <p className="section-copy">
-            Build-time metadata from npm and GitHub is exposed as crawlable plain text so developers and bots can validate
-            project momentum quickly.
+            Built for teams that need control, reliability, and speed in production editors.
           </p>
-          <div className="stats-badge-row">
-            <article className="metric metric-badge">
-              <p className="metric-label">Weekly downloads</p>
-              <p className="metric-value">{stats.weeklyDownloads}</p>
-            </article>
-            <article className="metric metric-badge">
-              <p className="metric-label">Version</p>
-              <p className="metric-value">{stats.latestVersion}</p>
-            </article>
-            <article className="metric metric-badge">
-              <p className="metric-label">Bundle size</p>
-              <p className="metric-value">{stats.minzippedSize}</p>
-            </article>
-            <article className="metric metric-badge">
-              <p className="metric-label">GitHub stars</p>
-              <p className="metric-value">{stats.githubStars}</p>
-            </article>
-          </div>
-          <div className="link-row">
-            <a className="btn btn-muted" href={metadata.npmUrl} target="_blank" rel="noopener noreferrer">
-              NPM package
-            </a>
-            <a className="btn btn-muted" href={metadata.githubUrl} target="_blank" rel="noopener noreferrer">
-              GitHub repository
-            </a>
-            <a className="btn btn-primary" href={metadata.sponsorsUrl} target="_blank" rel="noopener noreferrer">
-              Support the project
-            </a>
-          </div>
-          <p className="mono-small">
-            Data sources: npm downloads API, npm registry API, Bundlephobia API, GitHub API. Last sync: {fetchedDate}
-          </p>
+          <WhyLuthorReasons />
         </div>
       </section>
 
       <section className="section">
-        <div className="container docs-teaser">
-          <h2 className="section-title">Documentation map for implementation teams and AI agents.</h2>
+        <div className="container">
+          <h2 className="section-title">Features</h2>
           <p className="section-copy">
-            The website serves markdown-first documentation with static URLs for high crawler readability, including user
-            guides, architecture notes, and package-level references.
+            Click any feature to see a deeper breakdown and preview.
           </p>
-          <ul className="doc-link-grid">
-            {highlightedDocs.map((doc) => (
-              <li key={doc.urlPath}>
-                <Link href={doc.urlPath}>
-                  <span>{doc.title}</span>
-                  <small>{getDocIntentLabel(doc.urlPath)}</small>
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <p className="section-copy">
-            Full AI corpus files: <a href="/llms.txt">llms.txt</a> and <a href="/llms-full.txt">llms-full.txt</a>.
+          <WhyLuthorFeatures />
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="container">
+          <div className="stats-badge-row">
+            <article className="metric metric-badge">
+              <p className="metric-label">
+                <DownloadSimple size={14} weight="duotone" aria-hidden="true" />
+                <span>Total downloads</span>
+              </p>
+              <p className="metric-value">{stats.totalDownloads}</p>
+            </article>
+            <article className="metric metric-badge">
+              <p className="metric-label">
+                <Package size={14} weight="duotone" aria-hidden="true" />
+                <span>Version</span>
+              </p>
+              <p className="metric-value">{stats.latestVersion}</p>
+            </article>
+            <article className="metric metric-badge">
+              <p className="metric-label">
+                <GitCommit size={14} weight="duotone" aria-hidden="true" />
+                <span>Latest main commit</span>
+              </p>
+              <p className="metric-value">{stats.latestCommitDate}</p>
+            </article>
+            <article className="metric metric-badge">
+              <p className="metric-label">
+                <StackSimple size={14} weight="duotone" aria-hidden="true" />
+                <span>Published releases</span>
+              </p>
+              <p className="metric-value">{stats.releaseCount}</p>
+            </article>
+          </div>
+          <div className="link-row">
+            <a className="btn btn-muted" href={NPM_URL} target="_blank" rel="noopener noreferrer">
+              <Package className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+              <span>NPM package</span>
+            </a>
+            <a className="btn btn-muted" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+              <GithubLogo className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+              <span>GitHub repository</span>
+            </a>
+            <a className="btn btn-primary" href={SPONSORS_URL} target="_blank" rel="noopener noreferrer">
+              <Sparkle className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+              <span>Support the project</span>
+            </a>
+          </div>
+          <p className="mono-small">
+            Data sources: npm downloads API, npm registry API, GitHub API. Last sync: {stats.fetchedDate}
           </p>
         </div>
       </section>
@@ -188,10 +338,15 @@ export default async function HomePage() {
           <h2 className="section-title">Frequently asked questions.</h2>
           <div className="faq-grid">
             {SEO_FAQS.map((item) => (
-              <article key={item.question} className="faq-card">
-                <h3>{item.question}</h3>
-                <p>{item.answer}</p>
-              </article>
+              <details key={item.question} className="faq-item">
+                <summary className="faq-question">
+                  <span>{item.question}</span>
+                  <span className="faq-icon" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p className="faq-answer">{item.answer}</p>
+              </details>
             ))}
           </div>
         </div>

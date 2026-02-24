@@ -2,12 +2,152 @@
 
 Concatenated markdown corpus for AI ingestion.
 
-Source root: C:\Users\rahul\Documents\GitHub\luthor\documentation
-Generated at: 2026-02-23T15:11:04.374Z
+Source root: C:\Users\rahul\Documents\GitHub\luthor\apps\web\src\content\docs
+Generated at: 2026-02-24T09:11:35.515Z
 
 ---
-## FILE: demo-app/website-development-phased-plan.md
+## FILE: getting-started.md
+## URL: https://www.luthor.fyi/docs/getting-started/
+---
+
+---
+title: Getting Started with @lyfie/luthor
+description: Install and run the plug-and-play editor package.
+---
+
+# Getting Started with `@lyfie/luthor`
+
+Use this package when you want a complete editor quickly, with preset UX already wired.
+
+## 1) Install
+
+```bash
+pnpm add @lyfie/luthor react react-dom
+```
+
+## 2) Import
+
+```tsx
+import { ExtensiveEditor } from '@lyfie/luthor';
+import '@lyfie/luthor/styles.css';
+```
+
+## 3) Render
+
+```tsx
+<ExtensiveEditor />
+```
+
+## Next Steps
+
+- Package user guide: [Luthor getting started reference](/docs/reference/user/luthor/getting-started/)
+- Preset configuration: [Presets and configuration](/docs/reference/user/luthor/presets-and-configuration/)
+- Toolbar layout controls: [Toolbar customization](/docs/reference/user/luthor/toolbar-customization/)
+- Rich feature walkthrough: [Extensive editor guide](/docs/reference/user/luthor/extensive-editor/)
+
+---
+## FILE: headless-usage.md
+## URL: https://www.luthor.fyi/docs/headless-usage/
+---
+
+---
+title: Headless Usage
+description: Build custom editor UI with @lyfie/luthor-headless.
+---
+
+# Headless Usage
+
+Use `@lyfie/luthor-headless` when your product needs custom UI, layout, and interaction patterns.
+
+You keep full rendering control while relying on typed commands and extension contracts.
+
+## Install
+
+```bash
+pnpm add @lyfie/luthor-headless lexical react react-dom
+```
+
+## Continue With
+
+- Integration quick start: [Headless getting started](/docs/reference/user/headless/getting-started/)
+- Extension catalog and options: [Extensions and configuration](/docs/reference/user/headless/extensions-and-configuration/)
+- JSON/JSONB data flow: [Import and export](/docs/reference/user/headless/import-export/)
+- Architecture for contributors: [Headless architecture](/docs/reference/developer/headless/architecture/)
+
+---
+## FILE: index.md
+## URL: https://www.luthor.fyi/docs/
+---
+
+---
+title: Luthor Documentation
+description: Central documentation for @lyfie/luthor and @lyfie/luthor-headless.
+---
+
+# Luthor Docs
+
+Luthor offers two ways to build rich text editors:
+
+- `@lyfie/luthor`: preset-first, ready to ship quickly
+- `@lyfie/luthor-headless`: extension-first, full UI control
+
+## Start Here
+
+- New to Luthor: [Getting started](/docs/getting-started/)
+- Building custom editor UX: [Headless usage](/docs/headless-usage/)
+- Want preset details: [Presets](/docs/presets/)
+- Toolbar and UI behaviors: [UI components](/docs/ui-components/)
+
+## Canonical References
+
+- Full reference index: [Reference docs](/docs/reference/)
+- User docs: [Reference user docs](/docs/reference/user/luthor/getting-started/)
+- Developer docs: [Reference developer docs](/docs/reference/developer/luthor/architecture/)
+- Tutorials: [Reference tutorials](/docs/reference/tutorials/enhanced-markdown-quick-start/)
+
+## Open Documentation Policy
+
+All docs are publicly accessible and crawlable:
+
+- HTML pages under `/docs/**` for search indexing
+- `sitemap.xml` for crawler discovery
+- `llms.txt` and `llms-full.txt` for AI ingestion
+
+Looking for a live editor first? Open the [Luthor demo](/demo/).
+
+---
+## FILE: presets.md
+## URL: https://www.luthor.fyi/docs/presets/
+---
+
+---
+title: Presets
+description: Preset-level usage and configuration documentation.
+---
+
+# Presets
+
+Presets provide production-ready editor experiences with minimal setup.
+
+## Recommended Reading
+
+- Preset overview and roadmap: [Preset README](/docs/reference/readmes/presets/README/)
+- Full extensive preset details: [Extensive preset reference](/docs/reference/readmes/presets/extensive-preset-readme/)
+- Architecture map for docs and package structure: [Luthor docs architecture map](/docs/reference/readmes/packages/luthor-docs/architecture-map/)
+
+## When to Use Presets
+
+- You want strong defaults with minimal configuration
+- You need full toolbar, formatting, and media support quickly
+- You still want opt-in customization through documented props
+
+---
+## FILE: reference/demo-app/website-development-phased-plan.md
 ## URL: https://www.luthor.fyi/docs/reference/demo-app/website-development-phased-plan/
+---
+
+---
+title: "Demo App Website Development Plan"
 ---
 
 # Demo App Website Development Plan
@@ -212,8 +352,12 @@ Use this narrative pattern across hero and sections:
 - [ ] Phase 6+ rollout
 
 ---
-## FILE: developer_notes/readme-map.md
+## FILE: reference/developer_notes/readme-map.md
 ## URL: https://www.luthor.fyi/docs/reference/developer_notes/readme-map/
+---
+
+---
+title: "Developer Notes"
 ---
 
 # Developer Notes
@@ -222,46 +366,50 @@ This index groups every README used by contributors so you can quickly jump to i
 
 ## Canonical npm READMEs
 
-- Monorepo root README (GitHub landing): [../../README.md](../../README.md)
-- `@lyfie/luthor` npm README: [../../packages/luthor/README.md](../../packages/luthor/README.md)
-- `@lyfie/luthor-headless` npm README: [../../packages/headless/README.md](../../packages/headless/README.md)
+- Monorepo root README (GitHub landing): [../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- `@lyfie/luthor` npm README: [../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
+- `@lyfie/luthor-headless` npm README: [../../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
 
-## Luthor Package Deep Docs
+## [Luthor](/demo/) Package Deep Docs
 
-- Architecture: [../developer/luthor/architecture.md](../developer/luthor/architecture.md)
-- Source file reference: [../developer/luthor/source-file-reference.md](../developer/luthor/source-file-reference.md)
-- Maintainer notes: [../developer/luthor/maintainer-notes.md](../developer/luthor/maintainer-notes.md)
-- User getting started: [../user/luthor/getting-started.md](../user/luthor/getting-started.md)
-- User configuration guide: [../user/luthor/presets-and-configuration.md](../user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [../user/luthor/extensive-editor.md](../user/luthor/extensive-editor.md)
+- Architecture: [../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- Source file reference: [../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- Maintainer notes: [../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
+- User getting started: [../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- User configuration guide: [../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor guide: [../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 ## Workspace READMEs
 
-- Demo app README: [../readmes/apps/demo-readme.md](../readmes/apps/demo-readme.md)
-- Demo architecture: [../developer/demo/architecture.md](../developer/demo/architecture.md)
-- Demo source-file reference: [../developer/demo/source-file-reference.md](../developer/demo/source-file-reference.md)
-- Demo maintainer notes: [../developer/demo/maintainer-notes.md](../developer/demo/maintainer-notes.md)
-- Demo getting started: [../user/demo/getting-started.md](../user/demo/getting-started.md)
-- Demo usage guide: [../user/demo/usage-and-persistence.md](../user/demo/usage-and-persistence.md)
-- ESLint config README: [../readmes/packages/eslint-config-readme.md](../readmes/packages/eslint-config-readme.md)
-- TypeScript config README: [../readmes/packages/typescript-config-readme.md](../readmes/packages/typescript-config-readme.md)
+- Demo app README: [../readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
+- Demo architecture: [../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- Demo source-file reference: [../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- Demo maintainer notes: [../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
+- Demo getting started: [../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
+- Demo usage guide: [../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- ESLint config README: [../readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
+- TypeScript config README: [../readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
 
 ## Preset READMEs (`@lyfie/luthor` source)
 
-- Extensive preset: [../readmes/presets/extensive-preset-readme.md](../readmes/presets/extensive-preset-readme.md)
-- Future preset authoring notes: [../readmes/presets/README.md](../readmes/presets/README.md)
+- Extensive preset: [../readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
+- Future preset authoring notes: [../readmes/presets/README.md](/docs/reference/readmes/presets/README/)
 
 ## Additional Markdown Resources
 
-- Documentation root index: [../index.md](../index.md)
-- Headless architecture: [../developer/headless/architecture.md](../developer/headless/architecture.md)
-- Headless source file reference: [../developer/headless/source-file-reference.md](../developer/headless/source-file-reference.md)
-- Headless maintainer notes: [../developer/headless/maintainer-notes.md](../developer/headless/maintainer-notes.md)
-- Full Markdown catalog: [../markdown-catalog.md](../markdown-catalog.md)
+- Documentation root index: [../index.md](/docs/reference/)
+- Headless architecture: [../developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
+- Headless source file reference: [../developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
+- Headless maintainer notes: [../developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
+- Full Markdown catalog: [../markdown-catalog.md](/docs/reference/markdown-catalog/)
 
 ---
-## FILE: developer/demo/architecture.md
+## FILE: reference/developer/demo/architecture.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/demo/architecture/
+---
+
+---
+title: "Demo App Architecture (`apps/demo`)"
 ---
 
 # Demo App Architecture (`apps/demo`)
@@ -345,13 +493,17 @@ Theme is stored in local storage; persistence payload is intentionally user-driv
 
 ## Related docs
 
-- Demo source file reference: [source-file-reference.md](source-file-reference.md)
-- Demo maintainer notes: [maintainer-notes.md](maintainer-notes.md)
-- Demo user guide: [../../user/demo/getting-started.md](../../user/demo/getting-started.md)
+- Demo source file reference: [source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- Demo maintainer notes: [maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
+- Demo user guide: [../../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
 
 ---
-## FILE: developer/demo/maintainer-notes.md
+## FILE: reference/developer/demo/maintainer-notes.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/demo/maintainer-notes/
+---
+
+---
+title: "Demo Maintainer Notes"
 ---
 
 # Demo Maintainer Notes
@@ -390,13 +542,17 @@ From repo root:
 
 ## Documentation upkeep
 
-- Update [source-file-reference.md](source-file-reference.md) when files move or change responsibilities.
+- Update [source-file-reference.md](/docs/reference/developer/demo/source-file-reference/) when files move or change responsibilities.
 - Keep user guide aligned with scripts and package versions.
 - Keep docs index links synchronized in `documentation/index.md` and `documentation/documentation-hub.md`.
 
 ---
-## FILE: developer/demo/source-file-reference.md
+## FILE: reference/developer/demo/source-file-reference.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/demo/source-file-reference/
+---
+
+---
+title: "Demo Source File Reference (`apps/demo`)"
 ---
 
 # Demo Source File Reference (`apps/demo`)
@@ -566,8 +722,12 @@ When touching `apps/demo` files:
 4. Run demo lint/build checks.
 
 ---
-## FILE: developer/headless/architecture.md
+## FILE: reference/developer/headless/architecture.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/headless/architecture/
+---
+
+---
+title: "Headless Architecture (Developer)"
 ---
 
 # Headless Architecture (Developer)
@@ -650,8 +810,12 @@ Required delivery steps:
 - Run quality gates and rule-contract checks before merge.
 
 ---
-## FILE: developer/headless/maintainer-notes.md
+## FILE: reference/developer/headless/maintainer-notes.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/headless/maintainer-notes/
+---
+
+---
+title: "Headless Maintainer Notes (Developer)"
 ---
 
 # Headless Maintainer Notes (Developer)
@@ -696,13 +860,17 @@ For any source change in `packages/headless`:
 
 ## Documentation upkeep
 
-- Update [source-file-reference.md](source-file-reference.md) when source files move or behavior changes.
+- Update [source-file-reference.md](/docs/reference/developer/headless/source-file-reference/) when source files move or behavior changes.
 - Keep user-facing guides in `documentation/user/headless/*` aligned with exported API reality.
 - Keep mandatory READMEs in sync with docs hub links.
 
 ---
-## FILE: developer/headless/source-file-reference.md
+## FILE: reference/developer/headless/source-file-reference.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/headless/source-file-reference/
+---
+
+---
+title: "Headless Source File Reference (Developer)"
 ---
 
 # Headless Source File Reference (Developer)
@@ -815,11 +983,15 @@ This is the canonical per-file reference for `packages/headless`.
 - Any new extension file must document: commands, state queries, config shape, and integration dependencies.
 
 ---
-## FILE: developer/luthor/architecture.md
+## FILE: reference/developer/luthor/architecture.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/luthor/architecture/
 ---
 
-# Luthor (`@lyfie/luthor`) Architecture
+---
+title: "Luthor (`@lyfie/luthor`) Architecture"
+---
+
+# [Luthor](/demo/) (`@lyfie/luthor`) Architecture
 
 This document explains how the plug-and-play package is organized, why it is split the way it is, and how it composes `@lyfie/luthor-headless`.
 
@@ -923,17 +1095,21 @@ Required delivery steps:
 
 ## Related documents
 
-- Per-file reference: [source-file-reference.md](source-file-reference.md)
-- Maintainer notes: [maintainer-notes.md](maintainer-notes.md)
-- User guide: [../../user/luthor/getting-started.md](../../user/luthor/getting-started.md)
-- Preset options: [../../user/luthor/presets-and-configuration.md](../../user/luthor/presets-and-configuration.md)
+- Per-file reference: [source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- Maintainer notes: [maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
+- User guide: [../../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- Preset options: [../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
 
 ---
-## FILE: developer/luthor/maintainer-notes.md
+## FILE: reference/developer/luthor/maintainer-notes.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/luthor/maintainer-notes/
 ---
 
-# Luthor Maintainer Notes
+---
+title: "Luthor Maintainer Notes"
+---
+
+# [Luthor](/demo/) Maintainer Notes
 
 Maintainer-focused notes for `@lyfie/luthor` contributors.
 
@@ -989,16 +1165,20 @@ When adding capabilities to the extensive preset:
 
 ## Related
 
-- Architecture: [architecture.md](architecture.md)
-- Source file reference: [source-file-reference.md](source-file-reference.md)
-- Extensive preset user guide: [../../user/luthor/extensive-editor.md](../../user/luthor/extensive-editor.md)
+- Architecture: [architecture.md](/docs/reference/developer/luthor/architecture/)
+- Source file reference: [source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- Extensive preset user guide: [../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 ---
-## FILE: developer/luthor/source-file-reference.md
+## FILE: reference/developer/luthor/source-file-reference.md
 ## URL: https://www.luthor.fyi/docs/reference/developer/luthor/source-file-reference/
 ---
 
-# Luthor Source File Reference (`packages/luthor/src`)
+---
+title: "Luthor Source File Reference (`packages/luthor/src`)"
+---
+
+# [Luthor](/demo/) Source File Reference (`packages/luthor/src`)
 
 This file documents every code file in `packages/luthor/src`.
 
@@ -1224,8 +1404,12 @@ When modifying any file in `packages/luthor/src`:
 4. Run package lint/build checks.
 
 ---
-## FILE: documentation-hub.md
+## FILE: reference/documentation-hub.md
 ## URL: https://www.luthor.fyi/docs/reference/documentation-hub/
+---
+
+---
+title: "Documentation Hub"
 ---
 
 # Documentation Hub
@@ -1234,93 +1418,101 @@ This folder is the single source of truth for project documentation.
 
 ## Start Here
 
-- Main documentation index: [index.md](index.md)
-- Monorepo README: [../README.md](../README.md)
-- Full Markdown catalog: [markdown-catalog.md](markdown-catalog.md)
+- Main documentation index: [index.md](/docs/reference/)
+- Monorepo README: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- Full Markdown catalog: [markdown-catalog.md](/docs/reference/markdown-catalog/)
 
 ## User Documentation
 
-- Demo getting started: [user/demo/getting-started.md](user/demo/getting-started.md)
-- Demo usage and persistence: [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
-- Luthor getting started: [user/luthor/getting-started.md](user/luthor/getting-started.md)
-- Luthor presets and configuration: [user/luthor/presets-and-configuration.md](user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [user/luthor/extensive-editor.md](user/luthor/extensive-editor.md)
-- Headless getting started: [user/headless/getting-started.md](user/headless/getting-started.md)
-- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](user/headless/extensions-and-configuration.md)
-- Headless import/export: [user/headless/import-export.md](user/headless/import-export.md)
-- JSONB usage and persistence quick start: [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
+- Demo getting started: [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
+- Demo usage and persistence: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- [Luthor](/demo/) getting started: [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- [Luthor](/demo/) presets and configuration: [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor guide: [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
+- Headless getting started: [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
+- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
+- Headless import/export: [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
+- JSONB usage and persistence quick start: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
 
 ## Developer Documentation
 
-- Demo architecture: [developer/demo/architecture.md](developer/demo/architecture.md)
-- Demo source file reference: [developer/demo/source-file-reference.md](developer/demo/source-file-reference.md)
-- Demo maintainer notes: [developer/demo/maintainer-notes.md](developer/demo/maintainer-notes.md)
-- Luthor architecture: [developer/luthor/architecture.md](developer/luthor/architecture.md)
-- Luthor source file reference: [developer/luthor/source-file-reference.md](developer/luthor/source-file-reference.md)
-- Luthor maintainer notes: [developer/luthor/maintainer-notes.md](developer/luthor/maintainer-notes.md)
-- Headless architecture: [developer/headless/architecture.md](developer/headless/architecture.md)
-- Headless source file reference: [developer/headless/source-file-reference.md](developer/headless/source-file-reference.md)
-- Headless maintainer notes: [developer/headless/maintainer-notes.md](developer/headless/maintainer-notes.md)
-- Contributor README map: [developer_notes/readme-map.md](developer_notes/readme-map.md)
+- Demo architecture: [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- Demo source file reference: [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- Demo maintainer notes: [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
+- [Luthor](/demo/) architecture: [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- [Luthor](/demo/) source file reference: [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- [Luthor](/demo/) maintainer notes: [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
+- Headless architecture: [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
+- Headless source file reference: [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
+- Headless maintainer notes: [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
+- Contributor README map: [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
 
 ## Package READMEs
 
-- Root: [../README.md](../README.md)
-- `@lyfie/luthor-headless`: [../packages/headless/README.md](../packages/headless/README.md)
-- `@lyfie/luthor`: [../packages/luthor/README.md](../packages/luthor/README.md)
+- Root: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- `@lyfie/luthor-headless`: [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
+- `@lyfie/luthor`: [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
 
 ## Additional Package and Workspace Docs
 
-- Demo app: [readmes/apps/demo-readme.md](readmes/apps/demo-readme.md)
-- Luthor package architecture docs: [readmes/packages/luthor-docs/README.md](readmes/packages/luthor-docs/README.md)
-- Preset docs: [readmes/presets/extensive-preset-readme.md](readmes/presets/extensive-preset-readme.md)
+- Demo app: [readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
+- [Luthor](/demo/) package architecture docs: [readmes/packages/luthor-docs/README.md](/docs/reference/readmes/packages/luthor-docs/README/)
+- Preset docs: [readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
 - Tooling docs:
-  - [readmes/packages/eslint-config-readme.md](readmes/packages/eslint-config-readme.md)
-  - [readmes/packages/typescript-config-readme.md](readmes/packages/typescript-config-readme.md)
+  - [readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
+  - [readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
 
 ---
-## FILE: index.md
-## URL: https://www.luthor.fyi/docs/reference/index/
+## FILE: reference/index.md
+## URL: https://www.luthor.fyi/docs/reference/
 ---
 
-# Luthor Documentation Index
+---
+title: "Luthor Documentation Index"
+---
+
+# [Luthor](/demo/) Documentation Index
 
 This is the canonical documentation root for the monorepo.
 
 ## User Documentation
 
-- Demo getting started: [user/demo/getting-started.md](user/demo/getting-started.md)
-- Demo usage and persistence: [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
-- Luthor getting started: [user/luthor/getting-started.md](user/luthor/getting-started.md)
-- Luthor presets and configuration: [user/luthor/presets-and-configuration.md](user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [user/luthor/extensive-editor.md](user/luthor/extensive-editor.md)
-- Headless getting started: [user/headless/getting-started.md](user/headless/getting-started.md)
-- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](user/headless/extensions-and-configuration.md)
-- Headless import/export: [user/headless/import-export.md](user/headless/import-export.md)
-- Tutorial: [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
+- Demo getting started: [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
+- Demo usage and persistence: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- [Luthor](/demo/) getting started: [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- [Luthor](/demo/) presets and configuration: [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor guide: [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
+- Headless getting started: [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
+- Headless extensions and configuration: [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
+- Headless import/export: [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
+- Tutorial: [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
 
 ## Developer Documentation
 
-- Demo architecture: [developer/demo/architecture.md](developer/demo/architecture.md)
-- Demo source file reference: [developer/demo/source-file-reference.md](developer/demo/source-file-reference.md)
-- Demo maintainer notes: [developer/demo/maintainer-notes.md](developer/demo/maintainer-notes.md)
-- Luthor architecture: [developer/luthor/architecture.md](developer/luthor/architecture.md)
-- Luthor file-by-file reference: [developer/luthor/source-file-reference.md](developer/luthor/source-file-reference.md)
-- Luthor maintainer notes: [developer/luthor/maintainer-notes.md](developer/luthor/maintainer-notes.md)
-- Headless architecture: [developer/headless/architecture.md](developer/headless/architecture.md)
-- Headless file-by-file reference: [developer/headless/source-file-reference.md](developer/headless/source-file-reference.md)
-- Headless maintainer notes: [developer/headless/maintainer-notes.md](developer/headless/maintainer-notes.md)
-- README mapping: [developer_notes/readme-map.md](developer_notes/readme-map.md)
+- Demo architecture: [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- Demo source file reference: [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- Demo maintainer notes: [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
+- [Luthor](/demo/) architecture: [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- [Luthor](/demo/) file-by-file reference: [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- [Luthor](/demo/) maintainer notes: [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
+- Headless architecture: [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
+- Headless file-by-file reference: [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
+- Headless maintainer notes: [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
+- README mapping: [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
 
 ## Package READMEs (mandatory)
 
-- Monorepo README: [../README.md](../README.md)
-- Headless README: [../packages/headless/README.md](../packages/headless/README.md)
-- Luthor presets README: [../packages/luthor/README.md](../packages/luthor/README.md)
+- Monorepo README: [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- Headless README: [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
+- [Luthor](/demo/) presets README: [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
 
 ---
-## FILE: markdown-catalog.md
+## FILE: reference/markdown-catalog.md
 ## URL: https://www.luthor.fyi/docs/reference/markdown-catalog/
+---
+
+---
+title: "Markdown Catalog"
 ---
 
 # Markdown Catalog
@@ -1329,69 +1521,73 @@ Project-authored markdown catalog.
 
 ## Mandatory READMEs
 
-- [../README.md](../README.md)
-- [../packages/headless/README.md](../packages/headless/README.md)
-- [../packages/luthor/README.md](../packages/luthor/README.md)
+- [../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- [../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
+- [../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
 
 ## Documentation Root
 
-- [index.md](index.md)
-- [documentation-hub.md](documentation-hub.md)
-- [developer_notes/readme-map.md](developer_notes/readme-map.md)
-- [PROJECT-DELIVERABLES.md](PROJECT-DELIVERABLES.md)
+- [index.md](/docs/reference/)
+- [documentation-hub.md](/docs/reference/documentation-hub/)
+- [developer_notes/readme-map.md](/docs/reference/developer_notes/readme-map/)
+- [PROJECT-DELIVERABLES.md](/docs/reference/PROJECT-DELIVERABLES/)
 
 ## Headless User Documentation
 
-- [user/headless/getting-started.md](user/headless/getting-started.md)
-- [user/headless/extensions-and-configuration.md](user/headless/extensions-and-configuration.md)
-- [user/headless/import-export.md](user/headless/import-export.md)
+- [user/headless/getting-started.md](/docs/reference/user/headless/getting-started/)
+- [user/headless/extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
+- [user/headless/import-export.md](/docs/reference/user/headless/import-export/)
 
 ## Demo User Documentation
 
-- [user/demo/getting-started.md](user/demo/getting-started.md)
-- [user/demo/usage-and-persistence.md](user/demo/usage-and-persistence.md)
+- [user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
+- [user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
 
-## Luthor User Documentation
+## [Luthor](/demo/) User Documentation
 
-- [user/luthor/getting-started.md](user/luthor/getting-started.md)
-- [user/luthor/presets-and-configuration.md](user/luthor/presets-and-configuration.md)
-- [user/luthor/extensive-editor.md](user/luthor/extensive-editor.md)
+- [user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- [user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- [user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 ## Headless Developer Documentation
 
-- [developer/headless/architecture.md](developer/headless/architecture.md)
-- [developer/headless/source-file-reference.md](developer/headless/source-file-reference.md)
-- [developer/headless/maintainer-notes.md](developer/headless/maintainer-notes.md)
+- [developer/headless/architecture.md](/docs/reference/developer/headless/architecture/)
+- [developer/headless/source-file-reference.md](/docs/reference/developer/headless/source-file-reference/)
+- [developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
 
 ## Demo Developer Documentation
 
-- [developer/demo/architecture.md](developer/demo/architecture.md)
-- [developer/demo/source-file-reference.md](developer/demo/source-file-reference.md)
-- [developer/demo/maintainer-notes.md](developer/demo/maintainer-notes.md)
+- [developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- [developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- [developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
 
-## Luthor Developer Documentation
+## [Luthor](/demo/) Developer Documentation
 
-- [developer/luthor/architecture.md](developer/luthor/architecture.md)
-- [developer/luthor/source-file-reference.md](developer/luthor/source-file-reference.md)
-- [developer/luthor/maintainer-notes.md](developer/luthor/maintainer-notes.md)
+- [developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- [developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- [developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
 
 ## Existing Reference and Design Documentation
 
-- [implementation-notes/custom-markdown-convertor-summary.md](implementation-notes/custom-markdown-convertor-summary.md)
-- [tutorials/enhanced-markdown-quick-start.md](tutorials/enhanced-markdown-quick-start.md)
-- [readmes/apps/demo-readme.md](readmes/apps/demo-readme.md)
-- [readmes/packages/custom-markdown-convertor-readme.md](readmes/packages/custom-markdown-convertor-readme.md)
-- [readmes/packages/eslint-config-readme.md](readmes/packages/eslint-config-readme.md)
-- [readmes/packages/typescript-config-readme.md](readmes/packages/typescript-config-readme.md)
-- [readmes/packages/luthor-docs/README.md](readmes/packages/luthor-docs/README.md)
-- [readmes/packages/luthor-docs/architecture-map.md](readmes/packages/luthor-docs/architecture-map.md)
-- [readmes/packages/luthor-docs/customization-guide.md](readmes/packages/luthor-docs/customization-guide.md)
-- [readmes/presets/extensive-preset-readme.md](readmes/presets/extensive-preset-readme.md)
-- [readmes/presets/README.md](readmes/presets/README.md)
+- [implementation-notes/custom-markdown-convertor-summary.md](https://github.com/lyfie-app/luthor/blob/main/documentation/implementation-notes/custom-markdown-convertor-summary.md)
+- [tutorials/enhanced-markdown-quick-start.md](/docs/reference/tutorials/enhanced-markdown-quick-start/)
+- [readmes/apps/demo-readme.md](/docs/reference/readmes/apps/demo-readme/)
+- [readmes/packages/custom-markdown-convertor-readme.md](/docs/reference/readmes/packages/custom-markdown-convertor-readme/)
+- [readmes/packages/eslint-config-readme.md](/docs/reference/readmes/packages/eslint-config-readme/)
+- [readmes/packages/typescript-config-readme.md](/docs/reference/readmes/packages/typescript-config-readme/)
+- [readmes/packages/luthor-docs/README.md](/docs/reference/readmes/packages/luthor-docs/README/)
+- [readmes/packages/luthor-docs/architecture-map.md](/docs/reference/readmes/packages/luthor-docs/architecture-map/)
+- [readmes/packages/luthor-docs/customization-guide.md](/docs/reference/readmes/packages/luthor-docs/customization-guide/)
+- [readmes/presets/extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
+- [readmes/presets/README.md](/docs/reference/readmes/presets/README/)
 
 ---
-## FILE: PROJECT-DELIVERABLES.md
+## FILE: reference/PROJECT-DELIVERABLES.md
 ## URL: https://www.luthor.fyi/docs/reference/PROJECT-DELIVERABLES/
+---
+
+---
+title: "Project Deliverables Summary"
 ---
 
 # Project Deliverables Summary
@@ -1424,8 +1620,12 @@ The active editor workflow is now Visual + JSONB.
 Historical enhanced-markdown and HTML conversion guidance is archived and no longer the recommended implementation path.
 
 ---
-## FILE: readmes/apps/demo-readme.md
+## FILE: reference/readmes/apps/demo-readme.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/apps/demo-readme/
+---
+
+---
+title: "Demo App Documentation Redirect"
 ---
 
 # Demo App Documentation Redirect
@@ -1434,21 +1634,25 @@ This page is retained for link compatibility.
 
 Canonical demo documentation now lives here:
 
-- User getting started: [../../user/demo/getting-started.md](../../user/demo/getting-started.md)
-- User usage and persistence: [../../user/demo/usage-and-persistence.md](../../user/demo/usage-and-persistence.md)
-- Developer architecture: [../../developer/demo/architecture.md](../../developer/demo/architecture.md)
-- Developer source-file reference: [../../developer/demo/source-file-reference.md](../../developer/demo/source-file-reference.md)
-- Developer maintainer notes: [../../developer/demo/maintainer-notes.md](../../developer/demo/maintainer-notes.md)
+- User getting started: [../../user/demo/getting-started.md](/docs/reference/user/demo/getting-started/)
+- User usage and persistence: [../../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- Developer architecture: [../../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- Developer source-file reference: [../../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
+- Developer maintainer notes: [../../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
 
 Related package docs:
 
-- Monorepo README: [../../../README.md](../../../README.md)
-- `@lyfie/luthor` README: [../../../packages/luthor/README.md](../../../packages/luthor/README.md)
-- `@lyfie/luthor-headless` README: [../../../packages/headless/README.md](../../../packages/headless/README.md)
+- Monorepo README: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- `@lyfie/luthor` README: [../../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
+- `@lyfie/luthor-headless` README: [../../../packages/headless/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/headless/README.md)
 
 ---
-## FILE: readmes/packages/custom-markdown-convertor-readme.md
+## FILE: reference/readmes/packages/custom-markdown-convertor-readme.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/custom-markdown-convertor-readme/
+---
+
+---
+title: "Legacy Converter Note"
 ---
 
 # Legacy Converter Note
@@ -1462,9 +1666,9 @@ This document previously described the enhanced markdown converter workflow.
 
 ## Use instead
 
-- [../../../user/headless/import-export.md](../../../user/headless/import-export.md)
-- [../../../user/demo/usage-and-persistence.md](../../../user/demo/usage-and-persistence.md)
-- [../../../user/luthor/extensive-editor.md](../../../user/luthor/extensive-editor.md)
+- [../../../user/headless/import-export.md](/docs/reference/user/headless/import-export/)
+- [../../../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 ## Migration checklist
 
@@ -1473,8 +1677,12 @@ This document previously described the enhanced markdown converter workflow.
 3. Validate imported payload shape before restore.
 
 ---
-## FILE: readmes/packages/eslint-config-readme.md
+## FILE: reference/readmes/packages/eslint-config-readme.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/eslint-config-readme/
+---
+
+---
+title: "@repo/eslint-config"
 ---
 
 # @repo/eslint-config
@@ -1493,20 +1701,24 @@ In a package `eslint.config.js`, import and apply one of the shared presets.
 
 ## Related Docs
 
-- Monorepo overview: [../../../README.md](../../../README.md)
-- Documentation hub: [../../documentation-hub.md](../../documentation-hub.md)
+- Monorepo overview: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- Documentation hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
 
 ---
-## FILE: readmes/packages/luthor-docs/architecture-map.md
+## FILE: reference/readmes/packages/luthor-docs/architecture-map.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/architecture-map/
+---
+
+---
+title: "Core + Preset System Map"
 ---
 
 # Core + Preset System Map
 
 This page is retained for compatibility. The canonical, up-to-date architecture docs are:
 
-- [../../../developer/luthor/architecture.md](../../../developer/luthor/architecture.md)
-- [../../../developer/luthor/source-file-reference.md](../../../developer/luthor/source-file-reference.md)
+- [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
 
 ## Quick summary
 
@@ -1517,18 +1729,22 @@ This page is retained for compatibility. The canonical, up-to-date architecture 
 For file-by-file responsibilities across all 21 source files, use the canonical source reference above.
 
 ---
-## FILE: readmes/packages/luthor-docs/customization-guide.md
+## FILE: reference/readmes/packages/luthor-docs/customization-guide.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/customization-guide/
+---
+
+---
+title: "Customization Guide"
 ---
 
 # Customization Guide
 
 This page is retained for compatibility. Canonical docs:
 
-- User configuration guide: [../../../user/luthor/presets-and-configuration.md](../../../user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [../../../user/luthor/extensive-editor.md](../../../user/luthor/extensive-editor.md)
-- Developer architecture: [../../../developer/luthor/architecture.md](../../../developer/luthor/architecture.md)
-- Developer source map: [../../../developer/luthor/source-file-reference.md](../../../developer/luthor/source-file-reference.md)
+- User configuration guide: [../../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor guide: [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
+- Developer architecture: [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- Developer source map: [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
 
 This guide still includes practical customization patterns.
 
@@ -1657,28 +1873,36 @@ const configuredFontExtension = fontFamilyExtension.configure({
 - `cssLoadStrategy: "preload-all"` eagerly loads all configured font CSS at startup.
 
 ---
-## FILE: readmes/packages/luthor-docs/README.md
+## FILE: reference/readmes/packages/luthor-docs/README.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/luthor-docs/README/
 ---
 
-# Luthor Package Documentation Redirect
+---
+title: "Luthor Package Documentation Redirect"
+---
+
+# [Luthor](/demo/) Package Documentation Redirect
 
 This folder remains as a compatibility entrypoint for older links.
 
 Canonical `@lyfie/luthor` docs now live here:
 
-- Developer architecture: [../../../developer/luthor/architecture.md](../../../developer/luthor/architecture.md)
-- Developer source map: [../../../developer/luthor/source-file-reference.md](../../../developer/luthor/source-file-reference.md)
-- Maintainer notes: [../../../developer/luthor/maintainer-notes.md](../../../developer/luthor/maintainer-notes.md)
-- User getting started: [../../../user/luthor/getting-started.md](../../../user/luthor/getting-started.md)
-- User presets/configuration: [../../../user/luthor/presets-and-configuration.md](../../../user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [../../../user/luthor/extensive-editor.md](../../../user/luthor/extensive-editor.md)
+- Developer architecture: [../../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
+- Developer source map: [../../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/)
+- Maintainer notes: [../../../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
+- User getting started: [../../../user/luthor/getting-started.md](/docs/reference/user/luthor/getting-started/)
+- User presets/configuration: [../../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor guide: [../../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 Legacy pages in this folder are intentionally kept and linked to canonical sources to avoid broken navigation.
 
 ---
-## FILE: readmes/packages/typescript-config-readme.md
+## FILE: reference/readmes/packages/typescript-config-readme.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/packages/typescript-config-readme/
+---
+
+---
+title: "@repo/typescript-config"
 ---
 
 # @repo/typescript-config
@@ -1703,12 +1927,16 @@ In a package `tsconfig.json`:
 
 ## Related Docs
 
-- Monorepo overview: [../../../README.md](../../../README.md)
-- Documentation hub: [../../documentation-hub.md](../../documentation-hub.md)
+- Monorepo overview: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- Documentation hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
 
 ---
-## FILE: readmes/presets/extensive-preset-readme.md
+## FILE: reference/readmes/presets/extensive-preset-readme.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/presets/extensive-preset-readme/
+---
+
+---
+title: "Extensive preset"
 ---
 
 # Extensive preset
@@ -1764,22 +1992,26 @@ export function ExtensivePage() {
 
 ## Related docs
 
-- Package README: [../../../packages/luthor/README.md](../../../packages/luthor/README.md)
-- Monorepo README: [../../../README.md](../../../README.md)
-- Docs hub: [../../documentation-hub.md](../../documentation-hub.md)
-- Canonical user guide: [../../user/luthor/extensive-editor.md](../../user/luthor/extensive-editor.md)
-- Canonical configuration guide: [../../user/luthor/presets-and-configuration.md](../../user/luthor/presets-and-configuration.md)
+- Package README: [../../../packages/luthor/README.md](https://github.com/lyfie-app/luthor/blob/main/packages/luthor/README.md)
+- Monorepo README: [../../../README.md](https://github.com/lyfie-app/luthor/blob/main/README.md)
+- Docs hub: [../../documentation-hub.md](/docs/reference/documentation-hub/)
+- Canonical user guide: [../../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
+- Canonical configuration guide: [../../user/luthor/presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
 
 ---
-## FILE: readmes/presets/README.md
+## FILE: reference/readmes/presets/README.md
 ## URL: https://www.luthor.fyi/docs/reference/readmes/presets/README/
+---
+
+---
+title: "Presets Documentation"
 ---
 
 # Presets Documentation
 
 The active preset surface in `@lyfie/luthor` is currently centered on the Extensive Editor:
 
-- [extensive-preset-readme.md](./extensive-preset-readme.md)
+- [extensive-preset-readme.md](/docs/reference/readmes/presets/extensive-preset-readme/)
 
 ## Why only one preset right now
 
@@ -1801,8 +2033,12 @@ When adding a new preset in future iterations:
 This keeps the package clean today while preserving a predictable path for future preset families.
 
 ---
-## FILE: tutorials/enhanced-markdown-quick-start.md
+## FILE: reference/tutorials/enhanced-markdown-quick-start.md
 ## URL: https://www.luthor.fyi/docs/reference/tutorials/enhanced-markdown-quick-start/
+---
+
+---
+title: "JSONB Persistence Quick Start (Replaces Legacy Enhanced Markdown Tutorial)"
 ---
 
 # JSONB Persistence Quick Start (Replaces Legacy Enhanced Markdown Tutorial)
@@ -1838,13 +2074,17 @@ Use JSONB for deterministic round-trips and production persistence.
 
 ## Related docs
 
-- Import/export: [../user/headless/import-export.md](../user/headless/import-export.md)
-- Demo usage: [../user/demo/usage-and-persistence.md](../user/demo/usage-and-persistence.md)
-- Luthor extensive editor: [../user/luthor/extensive-editor.md](../user/luthor/extensive-editor.md)
+- Import/export: [../user/headless/import-export.md](/docs/reference/user/headless/import-export/)
+- Demo usage: [../user/demo/usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- [Luthor](/demo/) extensive editor: [../user/luthor/extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
 
 ---
-## FILE: user/demo/getting-started.md
+## FILE: reference/user/demo/getting-started.md
 ## URL: https://www.luthor.fyi/docs/reference/user/demo/getting-started/
+---
+
+---
+title: "Demo App Getting Started (`apps/demo`)"
 ---
 
 # Demo App Getting Started (`apps/demo`)
@@ -1916,13 +2156,17 @@ This runs build then `wrangler deploy`. Ensure Cloudflare auth and Wrangler envi
 
 ## Related docs
 
-- Demo user behavior details: [usage-and-persistence.md](usage-and-persistence.md)
-- Demo developer architecture: [../../developer/demo/architecture.md](../../developer/demo/architecture.md)
-- Demo source map: [../../developer/demo/source-file-reference.md](../../developer/demo/source-file-reference.md)
+- Demo user behavior details: [usage-and-persistence.md](/docs/reference/user/demo/usage-and-persistence/)
+- Demo developer architecture: [../../developer/demo/architecture.md](/docs/reference/developer/demo/architecture/)
+- Demo source map: [../../developer/demo/source-file-reference.md](/docs/reference/developer/demo/source-file-reference/)
 
 ---
-## FILE: user/demo/toolbar-customization-examples.md
+## FILE: reference/user/demo/toolbar-customization-examples.md
 ## URL: https://www.luthor.fyi/docs/reference/user/demo/toolbar-customization-examples/
+---
+
+---
+title: "Toolbar Layout Customization Examples for Demo App"
 ---
 
 # Toolbar Layout Customization Examples for Demo App
@@ -2162,8 +2406,12 @@ Reference for creating custom layouts:
 Items automatically hide if their corresponding extension is not available.
 
 ---
-## FILE: user/demo/usage-and-persistence.md
+## FILE: reference/user/demo/usage-and-persistence.md
 ## URL: https://www.luthor.fyi/docs/reference/user/demo/usage-and-persistence/
+---
+
+---
+title: "Demo Usage and Persistence Guide"
 ---
 
 # Demo Usage and Persistence Guide
@@ -2212,12 +2460,16 @@ The panel supports three common flows:
 
 ## Related docs
 
-- Demo getting started: [getting-started.md](getting-started.md)
-- Demo maintainer notes: [../../developer/demo/maintainer-notes.md](../../developer/demo/maintainer-notes.md)
+- Demo getting started: [getting-started.md](/docs/reference/user/demo/getting-started/)
+- Demo maintainer notes: [../../developer/demo/maintainer-notes.md](/docs/reference/developer/demo/maintainer-notes/)
 
 ---
-## FILE: user/headless/extensions-and-configuration.md
+## FILE: reference/user/headless/extensions-and-configuration.md
 ## URL: https://www.luthor.fyi/docs/reference/user/headless/extensions-and-configuration/
+---
+
+---
+title: "Extensions and Configuration (User)"
 ---
 
 # Extensions and Configuration (User)
@@ -2311,8 +2563,12 @@ Pass theme through provider config:
 - Configure extensions once (outside render) and reuse instances.
 
 ---
-## FILE: user/headless/getting-started.md
+## FILE: reference/user/headless/getting-started.md
 ## URL: https://www.luthor.fyi/docs/reference/user/headless/getting-started/
+---
+
+---
+title: "@lyfie/luthor-headless: Getting Started (User)"
 ---
 
 # @lyfie/luthor-headless: Getting Started (User)
@@ -2385,13 +2641,17 @@ export function Editor() {
 
 ## Next docs
 
-- Extension catalog and configuration: [extensions-and-configuration.md](extensions-and-configuration.md)
-- Import/export and metadata format: [import-export.md](import-export.md)
-- Troubleshooting and performance notes: [../../developer/headless/maintainer-notes.md](../../developer/headless/maintainer-notes.md)
+- Extension catalog and configuration: [extensions-and-configuration.md](/docs/reference/user/headless/extensions-and-configuration/)
+- Import/export and metadata format: [import-export.md](/docs/reference/user/headless/import-export/)
+- Troubleshooting and performance notes: [../../developer/headless/maintainer-notes.md](/docs/reference/developer/headless/maintainer-notes/)
 
 ---
-## FILE: user/headless/import-export.md
+## FILE: reference/user/headless/import-export.md
 ## URL: https://www.luthor.fyi/docs/reference/user/headless/import-export/
+---
+
+---
+title: "Import and Export (User)"
 ---
 
 # Import and Export (User)
@@ -2434,8 +2694,12 @@ These APIs are lossless for supported nodes and extension state.
 ```
 
 ---
-## FILE: user/luthor/extensive-editor.md
+## FILE: reference/user/luthor/extensive-editor.md
 ## URL: https://www.luthor.fyi/docs/reference/user/luthor/extensive-editor/
+---
+
+---
+title: "Extensive Editor Guide"
 ---
 
 # Extensive Editor Guide
@@ -2513,17 +2777,21 @@ const myLayout = {
 
 You can also hide the primary toolbar by setting `isToolbarEnabled={false}`. This only affects toolbar rendering; keyboard shortcuts, slash commands, and command palette wiring remain active.
 
-For detailed information on creating custom toolbar layouts, see [toolbar-customization.md](toolbar-customization.md).
+For detailed information on creating custom toolbar layouts, see [toolbar-customization.md](/docs/reference/user/luthor/toolbar-customization/).
 
 ## Related docs
 
-- Getting started: [getting-started.md](getting-started.md)
-- Presets and configuration: [presets-and-configuration.md](presets-and-configuration.md)
-- Developer maintainer notes: [../../developer/luthor/maintainer-notes.md](../../developer/luthor/maintainer-notes.md)
+- Getting started: [getting-started.md](/docs/reference/user/luthor/getting-started/)
+- Presets and configuration: [presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Developer maintainer notes: [../../developer/luthor/maintainer-notes.md](/docs/reference/developer/luthor/maintainer-notes/)
 
 ---
-## FILE: user/luthor/getting-started.md
+## FILE: reference/user/luthor/getting-started.md
 ## URL: https://www.luthor.fyi/docs/reference/user/luthor/getting-started/
+---
+
+---
+title: "`@lyfie/luthor` Getting Started"
 ---
 
 # `@lyfie/luthor` Getting Started
@@ -2588,13 +2856,17 @@ Use this when you want gradual migration from preset usage to custom extension c
 
 ## Next steps
 
-- Preset options and configuration: [presets-and-configuration.md](presets-and-configuration.md)
-- Extensive editor props and capabilities: [extensive-editor.md](extensive-editor.md)
-- Developer architecture (if contributing): [../../developer/luthor/architecture.md](../../developer/luthor/architecture.md)
+- Preset options and configuration: [presets-and-configuration.md](/docs/reference/user/luthor/presets-and-configuration/)
+- Extensive editor props and capabilities: [extensive-editor.md](/docs/reference/user/luthor/extensive-editor/)
+- Developer architecture (if contributing): [../../developer/luthor/architecture.md](/docs/reference/developer/luthor/architecture/)
 
 ---
-## FILE: user/luthor/presets-and-configuration.md
+## FILE: reference/user/luthor/presets-and-configuration.md
 ## URL: https://www.luthor.fyi/docs/reference/user/luthor/presets-and-configuration/
+---
+
+---
+title: "`@lyfie/luthor` Presets and Configuration"
 ---
 
 # `@lyfie/luthor` Presets and Configuration
@@ -2696,11 +2968,15 @@ The extensive preset internally configures options such as:
 - embed defaults and URL handling
 - JSONB persistence-friendly content workflows
 
-For contributor-level details, see [../../developer/luthor/source-file-reference.md](../../developer/luthor/source-file-reference.md).
+For contributor-level details, see [../../developer/luthor/source-file-reference.md](/docs/reference/developer/luthor/source-file-reference/).
 
 ---
-## FILE: user/luthor/toolbar-customization.md
+## FILE: reference/user/luthor/toolbar-customization.md
 ## URL: https://www.luthor.fyi/docs/reference/user/luthor/toolbar-customization/
+---
+
+---
+title: "Toolbar Layout Customization"
 ---
 
 # Toolbar Layout Customization
@@ -2709,7 +2985,7 @@ The `@lyfie/luthor` package provides a flexible toolbar layout system that allow
 
 ## Default Layouts
 
-Luthor ships with two predefined toolbar layouts:
+[Luthor](/demo/) ships with two predefined toolbar layouts:
 
 ### Traditional Layout (Default)
 
@@ -2924,4 +3200,30 @@ const writerLayout: ToolbarLayout = {
   ],
 };
 ```
+
+---
+## FILE: ui-components.md
+## URL: https://www.luthor.fyi/docs/ui-components/
+---
+
+---
+title: UI Components
+description: UI-first docs for Extensive Editor and toolbar customization.
+---
+
+# UI Components
+
+The `@lyfie/luthor` package includes `ExtensiveEditor` and configurable toolbar behavior for UI-first integrations.
+
+## Start Here
+
+- [Extensive Editor guide](/docs/reference/user/luthor/extensive-editor/)
+- [Toolbar customization](/docs/reference/user/luthor/toolbar-customization/)
+- [Demo toolbar customization examples](/docs/reference/user/demo/toolbar-customization-examples/)
+
+## Common Tasks
+
+- Change toolbar grouping and ordering
+- Hide or replace specific controls
+- Tune visual style with theme and style overrides
 

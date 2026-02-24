@@ -1,4 +1,5 @@
 import { GITHUB_URL, NPM_URL, SEO_FAQS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/config/site';
+const softwareVersion = '2.x';
 
 export function HomeJsonLd() {
   const schema = [
@@ -19,7 +20,7 @@ export function HomeJsonLd() {
       },
       license: 'https://opensource.org/license/mit',
       isAccessibleForFree: true,
-      softwareVersion: '2.x',
+      softwareVersion,
       downloadUrl: NPM_URL,
     },
     {

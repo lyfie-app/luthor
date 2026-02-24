@@ -1,3 +1,5 @@
+import { GITHUB_URL } from '@/config/site';
+
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -10,7 +12,7 @@ export function SiteFooter() {
           <a className="btn btn-muted" href="/llms-full.txt">
             Full AI Corpus
           </a>
-          <a className="btn btn-primary" href="https://github.com/lyfie-app/luthor" target="_blank" rel="noopener noreferrer">
+          <a className="btn btn-primary" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
             Contribute on GitHub
           </a>
         </div>
