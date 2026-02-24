@@ -1,6 +1,98 @@
 import { EditorThemeClasses } from "lexical";
 import React from "react";
 
+export const LUTHOR_EDITOR_THEME_TOKENS = [
+  "--luthor-bg",
+  "--luthor-fg",
+  "--luthor-border",
+  "--luthor-border-hover",
+  "--luthor-border-active",
+  "--luthor-accent",
+  "--luthor-accent-hover",
+  "--luthor-shadow",
+  "--luthor-muted",
+  "--luthor-muted-fg",
+  "--luthor-theme-transition",
+  "--luthor-drag-gutter-width",
+  "--luthor-line-height-ratio",
+  "--luthor-toolbar-bg",
+  "--luthor-toolbar-section-border",
+  "--luthor-toolbar-button-fg",
+  "--luthor-toolbar-button-hover-bg",
+  "--luthor-toolbar-button-hover-border",
+  "--luthor-toolbar-button-hover-shadow",
+  "--luthor-toolbar-button-press-shadow",
+  "--luthor-toolbar-button-active-bg",
+  "--luthor-toolbar-button-active-border",
+  "--luthor-toolbar-button-active-fg",
+  "--luthor-toolbar-button-active-shadow",
+  "--luthor-toolbar-button-overlay",
+  "--luthor-toolbar-button-active-overlay",
+  "--luthor-toolbar-color-indicator-border",
+  "--luthor-toolbar-highlight-bg",
+  "--luthor-quote-bg",
+  "--luthor-quote-fg",
+  "--luthor-quote-border",
+  "--luthor-text-bold-color",
+  "--luthor-link-color",
+  "--luthor-list-marker-color",
+  "--luthor-list-checkbox-color",
+  "--luthor-table-border-color",
+  "--luthor-table-header-bg",
+  "--luthor-hr-color",
+  "--luthor-placeholder-color",
+  "--luthor-codeblock-bg",
+  "--luthor-syntax-comment",
+  "--luthor-syntax-keyword",
+  "--luthor-syntax-string",
+  "--luthor-syntax-number",
+  "--luthor-syntax-function",
+  "--luthor-syntax-variable",
+  "--luthor-floating-bg",
+  "--luthor-floating-fg",
+  "--luthor-floating-border",
+  "--luthor-floating-shadow",
+  "--luthor-floating-muted",
+  "--luthor-floating-border-hover",
+  "--luthor-floating-border-active",
+  "--luthor-floating-accent",
+  "--luthor-floating-accent-fg",
+  "--luthor-preset-bg",
+  "--luthor-preset-fg",
+  "--luthor-preset-border",
+  "--luthor-preset-muted",
+  "--luthor-preset-muted-fg",
+  "--luthor-preset-accent",
+  "--luthor-preset-radius",
+  "--luthor-preset-shadow",
+  "--luthor-preset-content-padding",
+  "--luthor-preset-content-min-height",
+] as const;
+
+export type LuthorEditorThemeToken = (typeof LUTHOR_EDITOR_THEME_TOKENS)[number];
+
+export type LuthorEditorThemeOverrides = Partial<Record<LuthorEditorThemeToken, string>>;
+
+function isNonEmptyThemeValue(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+export function createEditorThemeStyleVars(overrides?: LuthorEditorThemeOverrides): React.CSSProperties | undefined {
+  if (!overrides) {
+    return undefined;
+  }
+
+  const style: Record<string, string> = {};
+  for (const token of LUTHOR_EDITOR_THEME_TOKENS) {
+    const value = overrides[token];
+    if (isNonEmptyThemeValue(value)) {
+      style[token] = value;
+    }
+  }
+
+  return Object.keys(style).length > 0 ? (style as React.CSSProperties) : undefined;
+}
+
 /**
  * Enhanced theme type that extends Lexical's EditorThemeClasses
  * with better TypeScript support and additional properties
@@ -123,38 +215,38 @@ export const defaultLuthorTheme: LuthorTheme = {
   tableRow: "luthor-table-row",
   tableCell: "luthor-table-cell",
   tableCellHeader: "luthor-table-cell-header",
-  code: "luthor-code-block",
+  code: "luthor-code-block hljs",
   codeHighlight: {
-    atrule: "luthor-code-atrule",
-    attr: "luthor-code-attr",
-    boolean: "luthor-code-boolean",
-    builtin: "luthor-code-builtin",
-    cdata: "luthor-code-cdata",
-    char: "luthor-code-char",
-    class: "luthor-code-class",
-    "class-name": "luthor-code-class-name",
-    comment: "luthor-code-comment",
-    constant: "luthor-code-constant",
-    deleted: "luthor-code-deleted",
-    doctype: "luthor-code-doctype",
-    entity: "luthor-code-entity",
-    function: "luthor-code-function",
-    important: "luthor-code-important",
-    inserted: "luthor-code-inserted",
-    keyword: "luthor-code-keyword",
-    namespace: "luthor-code-namespace",
-    number: "luthor-code-number",
-    operator: "luthor-code-operator",
-    prolog: "luthor-code-prolog",
-    property: "luthor-code-property",
-    punctuation: "luthor-code-punctuation",
-    regex: "luthor-code-regex",
-    selector: "luthor-code-selector",
-    string: "luthor-code-string",
-    symbol: "luthor-code-symbol",
-    tag: "luthor-code-tag",
-    url: "luthor-code-url",
-    variable: "luthor-code-variable",
+    atrule: "hljs-meta luthor-code-atrule",
+    attr: "hljs-attribute luthor-code-attr",
+    boolean: "hljs-literal luthor-code-boolean",
+    builtin: "hljs-built_in luthor-code-builtin",
+    cdata: "hljs-comment luthor-code-cdata",
+    char: "hljs-string luthor-code-char",
+    class: "hljs-type luthor-code-class",
+    "class-name": "hljs-title luthor-code-class-name",
+    comment: "hljs-comment luthor-code-comment",
+    constant: "hljs-variable luthor-code-constant",
+    deleted: "hljs-deletion luthor-code-deleted",
+    doctype: "hljs-meta luthor-code-doctype",
+    entity: "hljs-symbol luthor-code-entity",
+    function: "hljs-title luthor-code-function",
+    important: "hljs-emphasis luthor-code-important",
+    inserted: "hljs-addition luthor-code-inserted",
+    keyword: "hljs-keyword luthor-code-keyword",
+    namespace: "hljs-title luthor-code-namespace",
+    number: "hljs-number luthor-code-number",
+    operator: "hljs-operator luthor-code-operator",
+    prolog: "hljs-meta luthor-code-prolog",
+    property: "hljs-property luthor-code-property",
+    punctuation: "hljs-punctuation luthor-code-punctuation",
+    regex: "hljs-regexp luthor-code-regex",
+    selector: "hljs-selector-tag luthor-code-selector",
+    string: "hljs-string luthor-code-string",
+    symbol: "hljs-symbol luthor-code-symbol",
+    tag: "hljs-tag luthor-code-tag",
+    url: "hljs-link luthor-code-url",
+    variable: "hljs-variable luthor-code-variable",
   },
 
   // Custom Luthor properties

@@ -17,21 +17,61 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./styles.css": "./dist/index.css",
     "./presets/extensive": {
       "types": "./dist/presets/extensive/index.d.ts",
       "import": "./dist/presets/extensive/index.js",
-      "require": "./dist/presets/extensive/index.js",
       "default": "./dist/presets/extensive/index.js"
+    },
+    "./presets/simple-text": {
+      "types": "./dist/presets/simple-text/index.d.ts",
+      "import": "./dist/presets/simple-text/index.js",
+      "default": "./dist/presets/simple-text/index.js"
+    },
+    "./presets/rich-text-box": {
+      "types": "./dist/presets/rich-text-box/index.d.ts",
+      "import": "./dist/presets/rich-text-box/index.js",
+      "default": "./dist/presets/rich-text-box/index.js"
+    },
+    "./presets/chat-window": {
+      "types": "./dist/presets/chat-window/index.d.ts",
+      "import": "./dist/presets/chat-window/index.js",
+      "default": "./dist/presets/chat-window/index.js"
+    },
+    "./presets/email-compose": {
+      "types": "./dist/presets/email-compose/index.d.ts",
+      "import": "./dist/presets/email-compose/index.js",
+      "default": "./dist/presets/email-compose/index.js"
+    },
+    "./presets/md-text": {
+      "types": "./dist/presets/md-text/index.d.ts",
+      "import": "./dist/presets/md-text/index.js",
+      "default": "./dist/presets/md-text/index.js"
+    },
+    "./presets/notion-like": {
+      "types": "./dist/presets/notion-like/index.d.ts",
+      "import": "./dist/presets/notion-like/index.js",
+      "default": "./dist/presets/notion-like/index.js"
+    },
+    "./presets/headless-editor": {
+      "types": "./dist/presets/headless-editor/index.d.ts",
+      "import": "./dist/presets/headless-editor/index.js",
+      "default": "./dist/presets/headless-editor/index.js"
+    },
+    "./presets/notes": {
+      "types": "./dist/presets/notes/index.d.ts",
+      "import": "./dist/presets/notes/index.js",
+      "default": "./dist/presets/notes/index.js"
     }
   },
   "scripts": {
     "build": "tsup",
     "lint": "eslint . --max-warnings 0",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "check:rule-contracts": "node ../../tools/check-rule-contracts.mjs --scope=luthor"
   },
   "keywords": [
     "editor",
@@ -72,9 +112,13 @@
     "@types/node": "^20.19.33",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "eslint": "^9.32.0",
+    "jsdom": "^26.1.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

@@ -1,10 +1,11 @@
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import matter from 'gray-matter';
 
 const WEB_ROOT = process.cwd();
 const REPO_ROOT = path.resolve(WEB_ROOT, '..', '..');
-const SOURCE_DOCS_DIR = path.join(REPO_ROOT, 'documentation');
-const TARGET_DOCS_DIR = path.join(WEB_ROOT, 'src', 'content', 'docs', 'docs', 'reference');
+const SOURCE_DOCS_DIR = path.join(WEB_ROOT, 'src', 'content', 'docs');
+const GENERATED_DOCS_INDEX_FILE = path.join(WEB_ROOT, 'src', 'data', 'docs-index.generated.ts');
 const GITHUB_BLOB_BASE = 'https://github.com/lyfie-app/luthor/blob/main';
 
 function isMarkdownFile(filename) {
@@ -23,21 +24,6 @@ function buildTitle(markdown, filePath) {
 
   const filename = path.basename(filePath).replace(/\.(md|mdx)$/i, '');
   return toTitleCase(filename);
-}
-
-function ensureTitleFrontmatter(markdown, fallbackTitle) {
-  if (markdown.startsWith('---\n')) {
-    const closingIndex = markdown.indexOf('\n---\n', 4);
-    if (closingIndex !== -1) {
-      const frontmatter = markdown.slice(4, closingIndex);
-      if (/\btitle\s*:/m.test(frontmatter)) return markdown;
-
-      const nextFrontmatter = `${frontmatter}\ntitle: ${JSON.stringify(fallbackTitle)}`;
-      return `---\n${nextFrontmatter}\n---\n${markdown.slice(closingIndex + 5)}`;
-    }
-  }
-
-  return `---\ntitle: ${JSON.stringify(fallbackTitle)}\n---\n\n${markdown}`;
 }
 
 function linkLuthorMentions(markdown) {
@@ -82,11 +68,26 @@ function splitTargetAndAnchor(target) {
 
 function toDocsReferenceUrl(relativeDocPath) {
   const normalized = relativeDocPath.replace(/\\/g, '/').replace(/\.(md|mdx)$/i, '');
-  if (normalized === 'index') return '/docs/reference/';
+  if (normalized === 'index') return '/docs/';
   if (normalized.endsWith('/index')) {
-    return `/docs/reference/${normalized.slice(0, -'/index'.length)}/`;
+    return `/docs/${normalized.slice(0, -'/index'.length)}/`;
   }
-  return `/docs/reference/${normalized}/`;
+  return `/docs/${normalized}/`;
+}
+
+function toSlugFromRelativePath(relativePath) {
+  const normalized = relativePath.replace(/\\/g, '/');
+  const withoutExt = normalized.replace(/\.(md|mdx)$/i, '');
+
+  if (withoutExt === 'index') return [];
+  if (withoutExt.endsWith('/index')) {
+    return withoutExt
+      .slice(0, -'/index'.length)
+      .split('/')
+      .filter(Boolean);
+  }
+
+  return withoutExt.split('/').filter(Boolean);
 }
 
 async function resolveMarkdownTargetPath(sourceFile, targetPath) {
@@ -167,7 +168,7 @@ async function rewriteMarkdownLinks(markdown, sourceFile) {
         .replace(/^(\.\.\/)+/, '')
         .replace(/^\.\//, '');
       if (!repoRelativeDocsGuess) continue;
-      const githubFallback = `${GITHUB_BLOB_BASE}/documentation/${repoRelativeDocsGuess}${hash}`;
+      const githubFallback = `${GITHUB_BLOB_BASE}/apps/web/src/content/docs/${repoRelativeDocsGuess}${hash}`;
       replacements.push({
         from: fullMatch,
         to: `[${label}](${githubFallback})`,
@@ -221,27 +222,43 @@ async function syncDocs() {
     throw new Error(`Expected directory at ${SOURCE_DOCS_DIR}`);
   }
 
-  await rm(TARGET_DOCS_DIR, { recursive: true, force: true });
-  await mkdir(TARGET_DOCS_DIR, { recursive: true });
+  await mkdir(path.dirname(GENERATED_DOCS_INDEX_FILE), { recursive: true });
 
-  let copiedFiles = 0;
+  let indexedFiles = 0;
+  const docsIndex = [];
   for await (const sourceFile of walkMarkdownFiles(SOURCE_DOCS_DIR)) {
     const relativePath = path.relative(SOURCE_DOCS_DIR, sourceFile);
-    const targetFile = path.join(TARGET_DOCS_DIR, relativePath);
-    const targetDir = path.dirname(targetFile);
-
-    await mkdir(targetDir, { recursive: true });
 
     const markdown = await readFile(sourceFile, 'utf8');
     const title = buildTitle(markdown, sourceFile);
-    const withFrontmatter = ensureTitleFrontmatter(markdown, title);
-    const withLuthorLinks = linkLuthorMentions(withFrontmatter);
+    const withLuthorLinks = linkLuthorMentions(markdown);
     const nextContent = await rewriteMarkdownLinks(withLuthorLinks, sourceFile);
-    await writeFile(targetFile, nextContent, 'utf8');
-    copiedFiles += 1;
+
+    const { data, content } = matter(nextContent);
+    const sourceStats = await stat(sourceFile);
+    const slug = toSlugFromRelativePath(relativePath);
+    const resolvedTitle = (typeof data.title === 'string' && data.title.trim()) || title;
+    const description =
+      (typeof data.description === 'string' && data.description.trim()) ||
+      `Reference documentation for ${resolvedTitle}.`;
+
+    docsIndex.push({
+      slug,
+      title: resolvedTitle,
+      description,
+      content,
+      urlPath: toDocsReferenceUrl(relativePath),
+      sourcePath: path.relative(REPO_ROOT, sourceFile).replace(/\\/g, '/'),
+      updatedAt: sourceStats.mtime.toISOString(),
+    });
+    indexedFiles += 1;
   }
 
-  console.log(`Synced ${copiedFiles} documentation files to ${TARGET_DOCS_DIR}`);
+  docsIndex.sort((a, b) => a.urlPath.localeCompare(b.urlPath));
+  const generatedSource = `export const docsIndex = ${JSON.stringify(docsIndex, null, 2)};\n`;
+  await writeFile(GENERATED_DOCS_INDEX_FILE, generatedSource, 'utf8');
+
+  console.log(`Indexed ${indexedFiles} documentation files from ${SOURCE_DOCS_DIR}`);
 }
 
 syncDocs().catch((error) => {

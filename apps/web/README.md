@@ -1,27 +1,29 @@
 # apps/web
 
-Phase 1 foundation for the Luthor website using Astro + Starlight + React.
+Next.js App Router website for Luthor marketing, demo, and documentation.
 
 ## What this app includes
 
-1. Shared marketing layout with sticky nav:
-   - `Documentation` (`/docs`)
-   - `Demo` (`/demo`)
-   - `GitHub` (external)
-2. Odyssey-style CSS foundation in `src/styles/global.css`:
-   - Typography: Inter + Lexend
-   - Palette: Slate / Zinc / Indigo tokens
-   - Shared spacing scale and reusable UI primitives
-3. Starlight docs site served under `/docs` using the `docs` content collection.
-4. Documentation mirror pipeline from root `documentation/` into `src/content/docs/docs/reference/`.
+1. SEO-focused landing page at `/` with:
+   - Structured data (`SoftwareApplication`, `SoftwareSourceCode`, `WebSite`, `Organization`, `FAQPage`)
+   - Live package credibility metrics from npm + GitHub APIs
+   - Crawlable semantic content and canonical metadata
+2. Live demo page at `/demo/` using the extensive editor preset.
+3. Markdown documentation pages under `/docs/**` rendered from:
+   - `src/content/docs/**/*.md`
+4. Generated sitemap at `/sitemap.xml`.
+5. LLM discovery artifacts in `public/llms.txt` and `public/llms-full.txt`.
 
 ## Scripts
 
-- `npm run sync:docs`: mirror root docs into Starlight content directory.
-- `npm run dev`: run docs sync, then start Astro dev server.
-- `npm run build`: run docs sync, then build production output.
+- `npm run sync:docs`: index docs from `src/content/docs/` and regenerate `src/data/docs-index.generated.ts`.
+- `npm run sync:llms`: regenerate `public/llms.txt` and `public/llms-full.txt`.
+- `npm run dev`: sync content, then run Next dev server.
+- `npm run build`: sync content, then run Next production build.
+- `npm run start`: run the built Next.js server.
+- `npm run preview`: start Next server from the production build.
 
 ## Notes
 
 - Tailwind is intentionally not used in this app.
-- Docs search is provided by Starlight Pagefind during build.
+- Documentation is statically generated and directly indexable by crawlers and bots.

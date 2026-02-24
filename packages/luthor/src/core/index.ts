@@ -5,6 +5,7 @@ export * from "./emoji-suggestion-menu";
 export * from "./slash-command-menu";
 export * from "./extensions";
 export * from "./floating-toolbar";
+export * from "./link-hover-bubble";
 export * from "./icons";
 export * from "./layout";
 export * from "./preset-config";

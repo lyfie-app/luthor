@@ -1,7 +1,18 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: [
+    "src/index.ts",
+    "src/presets/extensive/index.ts",
+    "src/presets/simple-text/index.ts",
+    "src/presets/rich-text-box/index.ts",
+    "src/presets/chat-window/index.ts",
+    "src/presets/email-compose/index.ts",
+    "src/presets/md-text/index.ts",
+    "src/presets/notion-like/index.ts",
+    "src/presets/headless-editor/index.ts",
+    "src/presets/notes/index.ts",
+  ],
   format: ["esm"],
   dts: true,
   clean: true,
@@ -10,7 +21,6 @@ export default defineConfig({
   external: [
     "react",
     "react-dom",
-    "lucide-react",
     "@lyfie/luthor-headless",
     "lexical",
     "@lexical/code",

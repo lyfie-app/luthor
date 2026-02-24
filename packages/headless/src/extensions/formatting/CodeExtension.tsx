@@ -11,13 +11,22 @@ import {
   $isCodeNode,
   CodeHighlightNode,
   CodeNode,
-  PrismTokenizer,
   registerCodeHighlighting,
 } from "@lexical/code";
 import { $createParagraphNode } from "lexical";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
+import { BaseExtensionConfig } from "@lyfie/luthor-headless/extensions/types";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { ReactNode } from "react";
+import {
+  type CodeTokenizer,
+  type CodeHighlightProvider,
+  type CodeHighlightProviderConfig,
+  getDefaultCodeTokenizer,
+  getFallbackCodeTheme,
+  resolveCodeHighlightProvider,
+  resolveCodeTokenizer,
+} from "./codeHighlightProvider";
 
 /**
  * Commands exposed by the CodeExtension for toggling code blocks
@@ -34,6 +43,12 @@ export type CodeStateQueries = {
   /** Check whether the current selection is within a code block */
   isInCodeBlock: () => Promise<boolean>;
 };
+
+export type CodeExtensionConfig = BaseExtensionConfig &
+  CodeHighlightProviderConfig & {
+    syntaxHighlighting?: "auto" | "disabled";
+    tokenizer?: CodeTokenizer | null;
+  };
 
 /**
  * CodeExtension - Adds code block support for the Lexical editor
@@ -59,13 +74,18 @@ export type CodeStateQueries = {
  */
 export class CodeExtension extends BaseExtension<
   "code",
-  Record<string, never>,
+  CodeExtensionConfig,
   CodeCommands,
   CodeStateQueries,
   ReactNode[]
 > {
+  private codeHighlightProviderPromise: Promise<CodeHighlightProvider | null> | null = null;
+
   constructor() {
     super("code", [ExtensionCategory.Toolbar]);
+    this.config = {
+      syntaxHighlighting: "auto",
+    };
   }
 
   /**
@@ -74,7 +94,27 @@ export class CodeExtension extends BaseExtension<
    * @returns Cleanup function
    */
   register(editor: LexicalEditor): () => void {
-    const unregisterCodeHighlighting = registerCodeHighlighting(editor, PrismTokenizer);
+    let unregisterCodeHighlighting = () => {};
+    let didDispose = false;
+
+    const applyHighlighting = (tokenizer: CodeTokenizer) => {
+      unregisterCodeHighlighting();
+      unregisterCodeHighlighting = registerCodeHighlighting(
+        editor,
+        tokenizer as Parameters<typeof registerCodeHighlighting>[1],
+      );
+    };
+
+    if (this.config.syntaxHighlighting !== "disabled") {
+      applyHighlighting(this.config.tokenizer ?? getDefaultCodeTokenizer());
+
+      void this.resolveConfiguredTokenizer().then((tokenizer) => {
+        if (didDispose || !tokenizer) {
+          return;
+        }
+        applyHighlighting(tokenizer);
+      });
+    }
 
     const unregisterTabCommand = editor.registerCommand<KeyboardEvent>(
       KEY_TAB_COMMAND,
@@ -108,6 +148,7 @@ export class CodeExtension extends BaseExtension<
     );
 
     return () => {
+      didDispose = true;
       unregisterCodeHighlighting();
       unregisterTabCommand();
     };
@@ -149,9 +190,39 @@ export class CodeExtension extends BaseExtension<
         }
 
         // Enter code block
-        $setBlocksType(selection, () => $createCodeNode());
+        $setBlocksType(selection, () => {
+          const node = $createCodeNode();
+          (
+            node as unknown as {
+              setTheme?: (theme: string) => void;
+            }
+          ).setTheme?.(getFallbackCodeTheme());
+          return node;
+        });
       }
     });
+  }
+
+  private async resolveConfiguredTokenizer(): Promise<CodeTokenizer | null> {
+    if (this.config.tokenizer) {
+      return this.config.tokenizer;
+    }
+
+    const provider = await this.loadCodeHighlightProvider();
+    return resolveCodeTokenizer(provider);
+  }
+
+  private async loadCodeHighlightProvider(): Promise<CodeHighlightProvider | null> {
+    if (this.config.provider) {
+      return this.config.provider;
+    }
+
+    if (this.codeHighlightProviderPromise) {
+      return this.codeHighlightProviderPromise;
+    }
+
+    this.codeHighlightProviderPromise = resolveCodeHighlightProvider(this.config);
+    return this.codeHighlightProviderPromise;
   }
 
   /**

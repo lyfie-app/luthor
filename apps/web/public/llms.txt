@@ -2,56 +2,34 @@
 
 This file helps AI agents discover Luthor docs quickly.
 
-- Site: https://luthor.lyfie.app
-- Demo: https://luthor.lyfie.app/demo/
-- Docs home: https://luthor.lyfie.app/docs/
-- Full corpus: https://luthor.lyfie.app/llms-full.txt
-- Sitemap: https://luthor.lyfie.app/sitemap-index.xml
+- Site: https://www.luthor.fyi
+- Demo: https://www.luthor.fyi/demo/
+- Docs home: https://www.luthor.fyi/docs/
+- Full corpus: https://www.luthor.fyi/llms-full.txt
+- Sitemap: https://www.luthor.fyi/sitemap.xml
 
 ## Documentation Table of Contents
 
 ### General
-- [demo-app/website-development-phased-plan.md](https://luthor.lyfie.app/docs/reference/demo-app/website-development-phased-plan/)
-- [developer_notes/readme-map.md](https://luthor.lyfie.app/docs/reference/developer_notes/readme-map/)
-- [documentation-hub.md](https://luthor.lyfie.app/docs/reference/documentation-hub/)
-- [index.md](https://luthor.lyfie.app/docs/reference/index/)
-- [markdown-catalog.md](https://luthor.lyfie.app/docs/reference/markdown-catalog/)
-- [PROJECT-DELIVERABLES.md](https://luthor.lyfie.app/docs/reference/PROJECT-DELIVERABLES/)
-
-### Developer Docs
-- [developer/demo/architecture.md](https://luthor.lyfie.app/docs/reference/developer/demo/architecture/)
-- [developer/demo/maintainer-notes.md](https://luthor.lyfie.app/docs/reference/developer/demo/maintainer-notes/)
-- [developer/demo/source-file-reference.md](https://luthor.lyfie.app/docs/reference/developer/demo/source-file-reference/)
-- [developer/headless/architecture.md](https://luthor.lyfie.app/docs/reference/developer/headless/architecture/)
-- [developer/headless/maintainer-notes.md](https://luthor.lyfie.app/docs/reference/developer/headless/maintainer-notes/)
-- [developer/headless/source-file-reference.md](https://luthor.lyfie.app/docs/reference/developer/headless/source-file-reference/)
-- [developer/luthor/architecture.md](https://luthor.lyfie.app/docs/reference/developer/luthor/architecture/)
-- [developer/luthor/maintainer-notes.md](https://luthor.lyfie.app/docs/reference/developer/luthor/maintainer-notes/)
-- [developer/luthor/source-file-reference.md](https://luthor.lyfie.app/docs/reference/developer/luthor/source-file-reference/)
-
-### Readmes
-- [readmes/apps/demo-readme.md](https://luthor.lyfie.app/docs/reference/readmes/apps/demo-readme/)
-- [readmes/packages/custom-markdown-convertor-readme.md](https://luthor.lyfie.app/docs/reference/readmes/packages/custom-markdown-convertor-readme/)
-- [readmes/packages/eslint-config-readme.md](https://luthor.lyfie.app/docs/reference/readmes/packages/eslint-config-readme/)
-- [readmes/packages/luthor-docs/architecture-map.md](https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/architecture-map/)
-- [readmes/packages/luthor-docs/customization-guide.md](https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/customization-guide/)
-- [readmes/packages/luthor-docs/README.md](https://luthor.lyfie.app/docs/reference/readmes/packages/luthor-docs/README/)
-- [readmes/packages/typescript-config-readme.md](https://luthor.lyfie.app/docs/reference/readmes/packages/typescript-config-readme/)
-- [readmes/presets/extensive-preset-readme.md](https://luthor.lyfie.app/docs/reference/readmes/presets/extensive-preset-readme/)
-- [readmes/presets/README.md](https://luthor.lyfie.app/docs/reference/readmes/presets/README/)
-
-### Tutorials
-- [tutorials/enhanced-markdown-quick-start.md](https://luthor.lyfie.app/docs/reference/tutorials/enhanced-markdown-quick-start/)
-
-### User Docs
-- [user/demo/getting-started.md](https://luthor.lyfie.app/docs/reference/user/demo/getting-started/)
-- [user/demo/toolbar-customization-examples.md](https://luthor.lyfie.app/docs/reference/user/demo/toolbar-customization-examples/)
-- [user/demo/usage-and-persistence.md](https://luthor.lyfie.app/docs/reference/user/demo/usage-and-persistence/)
-- [user/headless/extensions-and-configuration.md](https://luthor.lyfie.app/docs/reference/user/headless/extensions-and-configuration/)
-- [user/headless/getting-started.md](https://luthor.lyfie.app/docs/reference/user/headless/getting-started/)
-- [user/headless/import-export.md](https://luthor.lyfie.app/docs/reference/user/headless/import-export/)
-- [user/luthor/extensive-editor.md](https://luthor.lyfie.app/docs/reference/user/luthor/extensive-editor/)
-- [user/luthor/getting-started.md](https://luthor.lyfie.app/docs/reference/user/luthor/getting-started/)
-- [user/luthor/presets-and-configuration.md](https://luthor.lyfie.app/docs/reference/user/luthor/presets-and-configuration/)
-- [user/luthor/toolbar-customization.md](https://luthor.lyfie.app/docs/reference/user/luthor/toolbar-customization/)
+- [getting-started/index.md](https://www.luthor.fyi/docs/getting-started/)
+- [getting-started/installation.md](https://www.luthor.fyi/docs/getting-started/installation/)
+- [getting-started/luthor-headless.md](https://www.luthor.fyi/docs/getting-started/luthor-headless/)
+- [getting-started/luthor.md](https://www.luthor.fyi/docs/getting-started/luthor/)
+- [luthor-headless/features.md](https://www.luthor.fyi/docs/luthor-headless/features/)
+- [luthor-headless/features/code-and-devtools.md](https://www.luthor.fyi/docs/luthor-headless/features/code-and-devtools/)
+- [luthor-headless/features/customization-and-theming.md](https://www.luthor.fyi/docs/luthor-headless/features/customization-and-theming/)
+- [luthor-headless/features/interaction-and-productivity.md](https://www.luthor.fyi/docs/luthor-headless/features/interaction-and-productivity/)
+- [luthor-headless/features/media-and-embeds.md](https://www.luthor.fyi/docs/luthor-headless/features/media-and-embeds/)
+- [luthor-headless/features/structure-and-lists.md](https://www.luthor.fyi/docs/luthor-headless/features/structure-and-lists/)
+- [luthor-headless/features/typography-and-text.md](https://www.luthor.fyi/docs/luthor-headless/features/typography-and-text/)
+- [luthor/presets.md](https://www.luthor.fyi/docs/luthor/presets/)
+- [luthor/presets/chat-window-editor.md](https://www.luthor.fyi/docs/luthor/presets/chat-window-editor/)
+- [luthor/presets/email-compose-editor.md](https://www.luthor.fyi/docs/luthor/presets/email-compose-editor/)
+- [luthor/presets/extensive-editor.md](https://www.luthor.fyi/docs/luthor/presets/extensive-editor/)
+- [luthor/presets/headless-editor-preset.md](https://www.luthor.fyi/docs/luthor/presets/headless-editor-preset/)
+- [luthor/presets/md-text-editor.md](https://www.luthor.fyi/docs/luthor/presets/md-text-editor/)
+- [luthor/presets/notes-editor.md](https://www.luthor.fyi/docs/luthor/presets/notes-editor/)
+- [luthor/presets/notion-like-editor.md](https://www.luthor.fyi/docs/luthor/presets/notion-like-editor/)
+- [luthor/presets/rich-text-box-editor.md](https://www.luthor.fyi/docs/luthor/presets/rich-text-box-editor/)
+- [luthor/presets/simple-text-editor.md](https://www.luthor.fyi/docs/luthor/presets/simple-text-editor/)
 

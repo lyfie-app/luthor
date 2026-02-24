@@ -11,6 +11,7 @@ import React, {
   type ReactElement,
   type SetStateAction,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
@@ -48,7 +49,8 @@ import {
   StrikethroughIcon,
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
-import type { CoreEditorActiveStates, CoreEditorCommands, CoreToolbarClassNames, InsertTableConfig, ImageAlignment, ToolbarLayout, ToolbarItemType } from "./types";
+import { getOverlayThemeStyleFromElement } from "./overlay-theme";
+import { BLOCK_HEADING_LEVELS, type BlockHeadingLevel, type CoreEditorActiveStates, type CoreEditorCommands, type CoreToolbarClassNames, type InsertTableConfig, type ImageAlignment, type ToolbarLayout, type ToolbarItemType, type ToolbarStyleVars, type ToolbarVisibility } from "./types";
 import { TRADITIONAL_TOOLBAR_LAYOUT } from "./types";
 
 type SelectOption = {
@@ -186,27 +188,27 @@ function resolveFontFamilyOptionValue(
 
 function resolveFontSizeOptionValue(
   computedFontSize: string | undefined,
-  options: readonly { value: string; fontSize: string }[],
+  options: readonly { value: string | number; fontSize: string | number }[],
 ): string | null {
   if (!computedFontSize) return null;
 
   const normalized = normalizeToken(computedFontSize);
   const directMatch = options.find((option) => {
-    if (normalizeToken(option.value) === normalized) return true;
-    return normalizeToken(option.fontSize) === normalized;
+    if (normalizeToken(String(option.value)) === normalized) return true;
+    return normalizeToken(String(option.fontSize)) === normalized;
   });
-  if (directMatch) return directMatch.value;
+  if (directMatch) return String(directMatch.value);
 
   const targetPx = parsePixelValue(computedFontSize);
   if (targetPx == null) return null;
 
   let closest: { value: string; distance: number } | null = null;
   for (const option of options) {
-    const optionPx = parsePixelValue(option.fontSize);
+    const optionPx = parsePixelValue(String(option.fontSize));
     if (optionPx == null) continue;
     const distance = Math.abs(optionPx - targetPx);
     if (!closest || distance < closest.distance) {
-      closest = { value: option.value, distance };
+      closest = { value: String(option.value), distance };
     }
   }
 
@@ -333,6 +335,7 @@ function ColorPickerButton({
       left: rect.left,
       width: 230,
       visibility: isVisible ? "visible" : "hidden",
+      ...getOverlayThemeStyleFromElement(trigger),
     });
   }, []);
 
@@ -402,7 +405,7 @@ function ColorPickerButton({
         />
       </button>
 
-      {isOpen && (
+      {isOpen && typeof document !== "undefined" && createPortal(
         <div ref={panelRef} className="luthor-color-picker" style={panelStyle}>
           <div className="luthor-color-picker-header">
             <span className="luthor-color-picker-title">{title}</span>
@@ -486,7 +489,8 @@ function ColorPickerButton({
               }}
             />
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
@@ -598,16 +602,96 @@ function useEmbedHandlers(commands: CoreEditorCommands) {
   );
 }
 
+export function isToolbarItemSupported(itemType: ToolbarItemType, hasExtension: (name: string) => boolean): boolean {
+  switch (itemType) {
+    case "fontFamily":
+      return hasExtension("fontFamily");
+    case "fontSize":
+      return hasExtension("fontSize");
+    case "lineHeight":
+      return hasExtension("lineHeight");
+    case "textColor":
+      return hasExtension("textColor");
+    case "textHighlight":
+      return hasExtension("textHighlight");
+    case "subscript":
+      return hasExtension("subscript");
+    case "superscript":
+      return hasExtension("superscript");
+    case "blockFormat":
+    case "quote":
+    case "alignLeft":
+    case "alignCenter":
+    case "alignRight":
+    case "alignJustify":
+      return hasExtension("blockFormat");
+    case "codeBlock":
+      return hasExtension("code");
+    case "unorderedList":
+    case "orderedList":
+    case "checkList":
+    case "indentList":
+    case "outdentList":
+      return hasExtension("list");
+    case "horizontalRule":
+      return hasExtension("horizontalRule");
+    case "table":
+      return hasExtension("table");
+    case "image":
+      return hasExtension("image");
+    case "emoji":
+      return hasExtension("emoji");
+    case "embed":
+      return hasExtension("iframeEmbed") || hasExtension("youtubeEmbed");
+    case "undo":
+    case "redo":
+      return hasExtension("history");
+    default:
+      return true;
+  }
+}
+
+export function isToolbarItemVisible(
+  itemType: ToolbarItemType,
+  hasExtension: (name: string) => boolean,
+  toolbarVisibility?: ToolbarVisibility,
+): boolean {
+  if (!isToolbarItemSupported(itemType, hasExtension)) {
+    return false;
+  }
+
+  return toolbarVisibility?.[itemType] !== false;
+}
+
+export function filterToolbarLayout(
+  layout: ToolbarLayout,
+  hasExtension: (name: string) => boolean,
+  toolbarVisibility?: ToolbarVisibility,
+): ToolbarLayout {
+  return {
+    sections: layout.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((itemType) => isToolbarItemVisible(itemType, hasExtension, toolbarVisibility)),
+      }))
+      .filter((section) => section.items.length > 0),
+  };
+}
+
 export interface ToolbarProps {
   commands: CoreEditorCommands;
   hasExtension: (name: string) => boolean;
   activeStates: CoreEditorActiveStates;
   isDark: boolean;
   toggleTheme: () => void;
-  onCommandPaletteOpen: () => void;
+  onCommandPaletteOpen?: () => void;
   imageUploadHandler?: (file: File) => Promise<string>;
   classNames?: CoreToolbarClassNames;
+  toolbarStyleVars?: ToolbarStyleVars;
   layout?: ToolbarLayout;
+  toolbarVisibility?: ToolbarVisibility;
+  headingOptions?: readonly BlockHeadingLevel[];
+  paragraphLabel?: string;
 }
 
 export function Toolbar({
@@ -619,7 +703,11 @@ export function Toolbar({
   onCommandPaletteOpen,
   imageUploadHandler,
   classNames,
+  toolbarStyleVars,
   layout,
+  toolbarVisibility,
+  headingOptions,
+  paragraphLabel,
 }: ToolbarProps) {
   const { handlers, fileInputRef, gifInputRef } = useImageHandlers(commands, imageUploadHandler);
   const embedHandlers = useEmbedHandlers(commands);
@@ -654,11 +742,32 @@ export function Toolbar({
     { value: "default", label: "Default", color: "transparent" },
   ]);
   const [recentHighlightColors, setRecentHighlightColors] = useState<string[]>([]);
+  const [selectionVersion, setSelectionVersion] = useState(0);
   const [tableConfig, setTableConfig] = useState<InsertTableConfig>({
     rows: 3,
     columns: 3,
     includeHeaders: false,
   });
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const handleSelectionChange = () => {
+      const typography = getSelectionTypographyValues();
+      if (!typography) {
+        return;
+      }
+
+      setSelectionVersion((previous) => previous + 1);
+    };
+
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, []);
 
   const emojiOptions = useMemo<EmojiOption[]>(() => {
     if (!hasExtension("emoji")) {
@@ -686,9 +795,16 @@ export function Toolbar({
       label: option.label,
     }));
 
-    if (options.length > 0) {
-      setFontFamilyOptions(options);
-    }
+    const normalizedOptions = options.length > 0
+      ? options
+      : [{ value: "default", label: "Default" }];
+    setFontFamilyOptions(normalizedOptions);
+    setFontFamilyValue((previousValue) => {
+      if (normalizedOptions.some((option) => option.value === previousValue)) {
+        return previousValue;
+      }
+      return "default";
+    });
   }, [commands, hasExtension]);
 
   useEffect(() => {
@@ -723,7 +839,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("fontSize") || typeof commands.getFontSizeOptions !== "function") {
@@ -731,13 +847,23 @@ export function Toolbar({
     }
 
     const options = commands.getFontSizeOptions().map((option) => ({
-      value: option.value,
-      label: option.label,
-    }));
+      value: String(option.value).trim(),
+      label: String(option.label).trim(),
+    })).filter((option) => option.value.length > 0 && option.label.length > 0);
 
-    if (options.length > 0) {
-      setFontSizeOptions(options);
-    }
+    const hasDefaultOption = options.some((option) => normalizeToken(option.value) === "default");
+    const normalizedOptions = options.length === 0
+      ? [{ value: "default", label: "Default" }]
+      : hasDefaultOption
+        ? options
+        : [{ value: "default", label: "Default" }, ...options];
+    setFontSizeOptions(normalizedOptions);
+    setFontSizeValue((previousValue) => {
+      if (normalizedOptions.some((option) => option.value === previousValue)) {
+        return previousValue;
+      }
+      return "default";
+    });
   }, [commands, hasExtension]);
 
   useEffect(() => {
@@ -772,7 +898,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("lineHeight") || typeof commands.getLineHeightOptions !== "function") {
@@ -804,7 +930,7 @@ export function Toolbar({
     void commands.getCurrentLineHeight().then((value) => {
       if (isCancelled) return;
 
-      if (value && value !== "default") {
+      if (value) {
         setLineHeightValue(value);
         return;
       }
@@ -822,7 +948,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("textColor") || typeof commands.getTextColorOptions !== "function") {
@@ -855,7 +981,7 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
   useEffect(() => {
     if (!hasExtension("textHighlight") || typeof commands.getTextHighlightOptions !== "function") {
@@ -888,19 +1014,39 @@ export function Toolbar({
     return () => {
       isCancelled = true;
     };
-  }, [activeStates, commands, hasExtension]);
+  }, [activeStates, commands, hasExtension, selectionVersion]);
 
-  const blockFormatOptions = [
-    { value: "p", label: "Paragraph" },
-    { value: "h1", label: "Heading 1" },
-    { value: "h2", label: "Heading 2" },
-    { value: "h3", label: "Heading 3" },
-    { value: "h4", label: "Heading 4" },
-    { value: "h5", label: "Heading 5" },
-    { value: "h6", label: "Heading 6" },
-  ];
+  const availableHeadingOptions = useMemo(() => {
+    if (!headingOptions || headingOptions.length === 0) {
+      return [...BLOCK_HEADING_LEVELS];
+    }
 
-  const currentBlockFormat =
+    const seen = new Set<BlockHeadingLevel>();
+    const normalized: BlockHeadingLevel[] = [];
+    for (const heading of headingOptions) {
+      if (!BLOCK_HEADING_LEVELS.includes(heading) || seen.has(heading)) {
+        continue;
+      }
+      seen.add(heading);
+      normalized.push(heading);
+    }
+    return normalized.length > 0 ? normalized : [...BLOCK_HEADING_LEVELS];
+  }, [headingOptions]);
+
+  const resolvedParagraphLabel = (paragraphLabel?.trim() || "Paragraph");
+  const blockFormatOptions = useMemo(() => {
+    const headingSelectOptions = availableHeadingOptions.map((heading) => ({
+      value: heading,
+      label: `Heading ${heading.slice(1)}`,
+    }));
+
+    return [
+      { value: "p", label: resolvedParagraphLabel },
+      ...headingSelectOptions,
+    ];
+  }, [availableHeadingOptions, resolvedParagraphLabel]);
+
+  const computedCurrentBlockFormat =
     activeStates.isH1 ? "h1" :
     activeStates.isH2 ? "h2" :
     activeStates.isH3 ? "h3" :
@@ -908,10 +1054,15 @@ export function Toolbar({
     activeStates.isH5 ? "h5" :
     activeStates.isH6 ? "h6" :
     "p";
+  const currentBlockFormat = blockFormatOptions.some((option) => option.value === computedCurrentBlockFormat)
+    ? computedCurrentBlockFormat
+    : "p";
 
   const handleBlockFormatChange = (value: string) => {
     if (value === "p") commands.toggleParagraph();
-    else if (value.startsWith("h")) commands.toggleHeading(value as "h1" | "h2" | "h3" | "h4" | "h5" | "h6");
+    else if (value.startsWith("h") && availableHeadingOptions.includes(value as BlockHeadingLevel)) {
+      commands.toggleHeading(value as BlockHeadingLevel);
+    }
   };
 
   const handleFontFamilyChange = (value: string) => {
@@ -934,7 +1085,7 @@ export function Toolbar({
 
   const handleLineHeightChange = (value: string) => {
     if (value === "default") {
-      commands.clearLineHeight?.();
+      commands.setLineHeight?.(value);
     } else {
       commands.setLineHeight?.(value);
     }
@@ -971,7 +1122,7 @@ export function Toolbar({
     setTextHighlightValue(value);
   };
 
-  const renderToolbarItem = useCallback((itemType: ToolbarItemType): ReactElement | null => {
+  const renderToolbarItem = (itemType: ToolbarItemType): ReactElement | null => {
     switch (itemType) {
       case "fontFamily":
         if (!hasExtension("fontFamily")) return null;
@@ -1374,7 +1525,7 @@ export function Toolbar({
 
       case "commandPalette":
         return (
-          <IconButton key="commandPalette" onClick={onCommandPaletteOpen} title="Command Palette (Ctrl+Shift+P)">
+          <IconButton key="commandPalette" onClick={() => onCommandPaletteOpen?.()} title="Command Palette (Ctrl+Shift+P)">
             <CommandIcon size={16} />
           </IconButton>
         );
@@ -1389,58 +1540,19 @@ export function Toolbar({
       default:
         return null;
     }
-  }, [
-    hasExtension,
-    fontFamilyValue,
-    fontFamilyOptions,
-    fontSizeValue,
-    fontSizeOptions,
-    lineHeightValue,
-    lineHeightOptions,
-    textColorValue,
-    textColorOptions,
-    recentTextColors,
-    textHighlightValue,
-    textHighlightOptions,
-    recentHighlightColors,
-    activeStates,
-    commands,
-    currentBlockFormat,
-    handleBlockFormatChange,
-    handleFontFamilyChange,
-    handleFontSizeChange,
-    handleLineHeightChange,
-    handleTextColorChange,
-    handleTextHighlightChange,
-    pushRecentColor,
-    setRecentTextColors,
-    setRecentHighlightColors,
-    showImageDropdown,
-    setShowImageDropdown,
-    handlers,
-    showAlignDropdown,
-    setShowAlignDropdown,
-    emojiOptions,
-    showEmojiDropdown,
-    setShowEmojiDropdown,
-    hasAnyEmbedExtension,
-    isAnyEmbedSelected,
-    showEmbedDropdown,
-    setShowEmbedDropdown,
-    embedHandlers,
-    setShowTableDialog,
-    onCommandPaletteOpen,
-    toggleTheme,
-    isDark,
-  ]);
+  };
 
   // Use the provided layout or default to TRADITIONAL_TOOLBAR_LAYOUT
   const activeLayout = layout ?? TRADITIONAL_TOOLBAR_LAYOUT;
+  const visibleLayout = useMemo(
+    () => filterToolbarLayout(activeLayout, hasExtension, toolbarVisibility),
+    [activeLayout, hasExtension, toolbarVisibility],
+  );
 
   return (
     <>
-      <div className={classNames?.toolbar ?? "luthor-toolbar"}>
-        {activeLayout.sections.map((section, sectionIndex) => {
+      <div className={classNames?.toolbar ?? "luthor-toolbar"} style={toolbarStyleVars as CSSProperties | undefined}>
+        {visibleLayout.sections.map((section, sectionIndex) => {
           // Flatten and assign unique keys to all toolbar items, even if renderToolbarItem returns a fragment or array
           const renderedItems = section.items
             .map((itemType, itemIndex) => {

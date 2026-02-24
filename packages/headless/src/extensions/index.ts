@@ -71,11 +71,22 @@ export {
 
 // Structure extensions
 export { ListExtension, listExtension } from "./formatting/ListExtension";
-export { CodeExtension, codeExtension } from "./formatting/CodeExtension";
+export {
+  CodeExtension,
+  codeExtension,
+  type CodeExtensionConfig,
+} from "./formatting/CodeExtension";
+export {
+  type CodeHighlightProvider,
+  type CodeHighlightProviderConfig,
+} from "./formatting/codeHighlightProvider";
 export {
   CodeIntelligenceExtension,
   codeIntelligenceExtension,
+  type CodeIntelligenceConfig,
   type CodeIntelligenceCommands,
+  type CodeLanguageOptionsMode,
+  type CodeLanguageOptionsConfig,
 } from "./formatting/CodeIntelligenceExtension";
 export {
   CodeFormatExtension,
@@ -124,6 +135,8 @@ export {
 export {
   EmojiExtension,
   emojiExtension,
+  LIGHTWEIGHT_EMOJI_CATALOG,
+  type EmojiCatalogAdapter,
   type EmojiCatalogItem,
   type EmojiSuggestionState,
   type EmojiConfig,

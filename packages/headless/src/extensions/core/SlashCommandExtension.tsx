@@ -24,11 +24,13 @@ export type SlashCommandMenuState = {
 export interface SlashCommandConfig extends BaseExtensionConfig {
   trigger?: string;
   offset?: { x: number; y: number };
+  items?: readonly SlashCommandItem[];
 }
 
 export type SlashCommandCommands = {
   registerSlashCommand: (item: SlashCommandItem) => void;
   unregisterSlashCommand: (id: string) => void;
+  setSlashCommands: (items: readonly SlashCommandItem[]) => void;
   closeSlashMenu: () => void;
   executeSlashCommand: (id: string) => boolean;
 };
@@ -43,6 +45,8 @@ type SlashMatch = {
   endOffset: number;
   query: string;
 };
+
+const ALLOWED_SLASH_CONTAINER_TYPES = new Set(["paragraph", "heading"]);
 
 export class SlashCommandExtension extends BaseExtension<
   "slashCommand",
@@ -65,6 +69,7 @@ export class SlashCommandExtension extends BaseExtension<
       offset: { x: 0, y: 8 },
       ...config,
     };
+    this.setSlashCommands(this.config.items ?? []);
   }
 
   register(editor: LexicalEditor): () => void {
@@ -133,6 +138,7 @@ export class SlashCommandExtension extends BaseExtension<
     return {
       registerSlashCommand: (item: SlashCommandItem) => this.registerSlashCommand(item),
       unregisterSlashCommand: (id: string) => this.unregisterSlashCommand(id),
+      setSlashCommands: (items: readonly SlashCommandItem[]) => this.setSlashCommands(items),
       closeSlashMenu: () => this.closeSlashMenu(),
       executeSlashCommand: (id: string) => this.executeSlashCommand(editor, id),
     };
@@ -164,6 +170,18 @@ export class SlashCommandExtension extends BaseExtension<
 
   private unregisterSlashCommand(id: string) {
     this.commands.delete(id);
+    this.notifyListeners();
+  }
+
+  private setSlashCommands(items: readonly SlashCommandItem[]) {
+    const nextCommands = new Map<string, SlashCommandItem>();
+    for (const item of items) {
+      if (!item?.id || nextCommands.has(item.id)) {
+        continue;
+      }
+      nextCommands.set(item.id, item);
+    }
+    this.commands = nextCommands;
     this.notifyListeners();
   }
 
@@ -219,6 +237,12 @@ export class SlashCommandExtension extends BaseExtension<
         return;
       }
 
+      const containerType = getContainerTypeForNode(anchorNode);
+      if (!ALLOWED_SLASH_CONTAINER_TYPES.has(containerType)) {
+        this.closeIfNeeded();
+        return;
+      }
+
       const offset = selection.anchor.offset;
       const textContent = anchorNode.getTextContent();
       const textBeforeCursor = textContent.slice(0, offset);
@@ -231,8 +255,7 @@ export class SlashCommandExtension extends BaseExtension<
       }
 
       const prefix = textBeforeCursor.slice(0, triggerIndex);
-      const isAtWordBoundary = prefix.length === 0 || /\s/.test(prefix[prefix.length - 1] || "");
-      if (!isAtWordBoundary) {
+      if (!isWhitespaceOnly(prefix)) {
         this.closeIfNeeded();
         return;
       }
@@ -306,3 +329,18 @@ export class SlashCommandExtension extends BaseExtension<
 
 export const slashCommandExtension = new SlashCommandExtension();
 export default slashCommandExtension;
+
+function getContainerTypeForNode(node: {
+  getTopLevelElementOrThrow?: () => { getType?: () => string };
+}): string {
+  try {
+    const topLevelNode = node.getTopLevelElementOrThrow?.();
+    return topLevelNode?.getType?.() ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function isWhitespaceOnly(value: string): boolean {
+  return value.trim().length === 0;
+}

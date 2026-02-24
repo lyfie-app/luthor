@@ -1,1 +1,75 @@
+.docs-toolbar {
+  --luthor-toolbar-bg: color-mix(in srgb, #fff7ed 75%, white 25%);
+  --luthor-toolbar-section-border: #fdba74;
+  --luthor-toolbar-button-fg: #7c2d12;
+  --luthor-toolbar-button-hover-bg: #ffedd5;
+  --luthor-toolbar-button-hover-border: #fb923c;
+  --luthor-toolbar-button-active-bg: #ea580c;
+  --luthor-toolbar-button-active-border: #ea580c;
+  --luthor-toolbar-button-active-fg: #ffffff;
+}
 
+.docs-quote,
+.docs-quote-theme {
+  border-left-width: 6px;
+  border-radius: 0 8px 8px 0;
+}
+
+.slash-visibility-panel {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  width: min(440px, calc(100vw - 32px));
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  backdrop-filter: blur(4px);
+}
+
+.slash-visibility-panel h3 {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.slash-panel-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.slash-panel-label {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+}
+
+.slash-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 8px;
+}
+
+.slash-panel-grid label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+[data-theme="dark"] .slash-visibility-panel {
+  border-color: #334155;
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .slash-panel-label {
+  color: #94a3b8;
+}

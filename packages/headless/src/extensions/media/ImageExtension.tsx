@@ -57,16 +57,26 @@ const INSERT_IMAGE_COMMAND = createCommand<ImagePayload>("insert-image");
  * Default image component used for rendering in the editor
  */
 let defaultImageComponent: ComponentType<ImageComponentProps> = ImageComponent;
+let defaultImageResizable = true;
+let defaultScaleByRatio = false;
+
+const MIN_IMAGE_WIDTH = 50;
+const MIN_IMAGE_HEIGHT = 50;
+const MAX_IMAGE_WIDTH = 2400;
+const MAX_IMAGE_HEIGHT = 2400;
+
+function clampSize(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.round(value)));
+}
 
 /**
  * ImageComponent - React component for rendering and interacting with images
  *
  * Provides a rich image editing experience:
  * - Displays images with alignment and styling
- * - Resizable handles for dimension changes
+ * - Shared embed-style width/height scale controls
  * - Selection state management
- * - Mouse and touch resizing support
- * - Aspect ratio preservation with the Shift key
+ * - Mouse resizing support
  * - Caption support
  *
  * @param props - Image component props
@@ -83,28 +93,23 @@ function ImageComponent({
   width,
   height,
   resizable = true,
+  scaleByRatio = false,
   uploading = false,
 }: ImageComponentProps): ReactNode {
   const [editor] = useLexicalComposerContext();
   const imageRef = useRef<HTMLImageElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
+  const resizeFrameRef = useRef<number | null>(null);
+  const widthRef = useRef<number>(0);
+  const heightRef = useRef<number>(0);
   const [isSelected, setIsSelected] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState(1);
   const [currentWidth, setCurrentWidth] = useState<number | "auto">(
     width || "auto",
   );
   const [currentHeight, setCurrentHeight] = useState<number | "auto">(
     height || "auto",
   );
-
-  useEffect(() => {
-    const img = imageRef.current;
-    if (img) {
-      img.onload = () => {
-        setAspectRatio(img.naturalWidth / img.naturalHeight);
-      };
-    }
-  }, [src]);
 
   // Clean up object URLs on unmount
   useEffect(() => {
@@ -119,7 +124,19 @@ function ImageComponent({
   useEffect(() => {
     setCurrentWidth(width || "auto");
     setCurrentHeight(height || "auto");
+    widthRef.current = typeof width === "number" ? width : 0;
+    heightRef.current = typeof height === "number" ? height : 0;
   }, [width, height]);
+
+  useEffect(() => {
+    return () => {
+      if (resizeFrameRef.current != null) {
+        window.cancelAnimationFrame(resizeFrameRef.current);
+      }
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+  }, []);
 
   // Listen for selection changes
   useEffect(() => {
@@ -151,81 +168,115 @@ function ImageComponent({
     });
   };
 
-  // Resizing logic (unified mouse/touch)
-  const startResize = (direction: string) => (event: any) => {
-    // Only allow resizing if image has loaded and event is valid
-    if (!imageRef.current || !event.target) {
+  const startResize =
+    (axis: "width" | "height") =>
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!imageRef.current || !nodeKey) {
       return;
     }
 
     event.preventDefault();
+    event.stopPropagation();
     setIsResizing(true);
-    const startX =
-      "touches" in event ? event.touches?.[0]?.clientX || 0 : event.clientX;
-    const startY =
-      "touches" in event ? event.touches?.[0]?.clientY || 0 : event.clientY;
-    const startWidth = imageRef.current.clientWidth || 100;
-    const startHeight = imageRef.current.clientHeight || 100;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = axis === "width" ? "ew-resize" : "ns-resize";
 
-    let currentResizeWidth = startWidth;
-    let currentResizeHeight = startHeight;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startWidth =
+      imageRef.current.clientWidth ||
+      (typeof currentWidth === "number" ? currentWidth : 100);
+    const startHeight =
+      imageRef.current.clientHeight ||
+      (typeof currentHeight === "number" ? currentHeight : 100);
+    const hasRatioBaseline =
+      Number.isFinite(startWidth) &&
+      Number.isFinite(startHeight) &&
+      startWidth > 0 &&
+      startHeight > 0;
+    const aspectRatio = hasRatioBaseline ? startWidth / startHeight : null;
 
-    const onMove = (moveEvent: any) => {
-      const x =
-        "touches" in moveEvent
-          ? moveEvent.touches?.[0]?.clientX || 0
-          : moveEvent.clientX;
-      const y =
-        "touches" in moveEvent
-          ? moveEvent.touches?.[0]?.clientY || 0
-          : moveEvent.clientY;
-      let newWidth = startWidth;
-      let newHeight = startHeight;
+    widthRef.current = startWidth;
+    heightRef.current = startHeight;
 
-      if (direction.includes("e")) newWidth += x - startX;
-      if (direction.includes("w")) newWidth += startX - x;
-      if (direction.includes("s")) newHeight += y - startY;
-      if (direction.includes("n")) newHeight += startY - y;
+    const applyPreviewSize = () => {
+      resizeFrameRef.current = null;
+      if (shellRef.current) {
+        shellRef.current.style.width = `${widthRef.current}px`;
+      }
+      if (imageRef.current) {
+        imageRef.current.style.height = `${heightRef.current}px`;
+      }
+    };
 
-      // Maintain aspect ratio if shift key is held
-      if (moveEvent.shiftKey) {
-        newHeight = newWidth / aspectRatio;
+    const onMove = (moveEvent: MouseEvent) => {
+      const useRatio =
+        !!aspectRatio &&
+        (scaleByRatio ? !moveEvent.shiftKey : moveEvent.shiftKey);
+      let nextWidth =
+        axis === "width"
+          ? clampSize(
+              startWidth + (moveEvent.clientX - startX),
+              MIN_IMAGE_WIDTH,
+              MAX_IMAGE_WIDTH,
+            )
+          : widthRef.current;
+      let nextHeight =
+        axis === "height"
+          ? clampSize(
+              startHeight + (moveEvent.clientY - startY),
+              MIN_IMAGE_HEIGHT,
+              MAX_IMAGE_HEIGHT,
+            )
+          : heightRef.current;
+
+      if (useRatio && aspectRatio) {
+        if (axis === "width") {
+          nextHeight = clampSize(
+            nextWidth / aspectRatio,
+            MIN_IMAGE_HEIGHT,
+            MAX_IMAGE_HEIGHT,
+          );
+        } else {
+          nextWidth = clampSize(
+            nextHeight * aspectRatio,
+            MIN_IMAGE_WIDTH,
+            MAX_IMAGE_WIDTH,
+          );
+        }
       }
 
-      newWidth = Math.max(50, newWidth);
-      newHeight = Math.max(50, newHeight);
+      widthRef.current = nextWidth;
+      heightRef.current = nextHeight;
 
-      currentResizeWidth = newWidth;
-      currentResizeHeight = newHeight;
-
-      setCurrentWidth(newWidth);
-      setCurrentHeight(newHeight);
+      if (resizeFrameRef.current == null) {
+        resizeFrameRef.current = window.requestAnimationFrame(applyPreviewSize);
+      }
     };
 
     const onUp = () => {
+      if (resizeFrameRef.current != null) {
+        window.cancelAnimationFrame(resizeFrameRef.current);
+        resizeFrameRef.current = null;
+      }
+
       setIsResizing(false);
+      setCurrentWidth(widthRef.current);
+      setCurrentHeight(heightRef.current);
       editor.update(() => {
-        const node = $getNodeByKey(nodeKey!);
+        const node = $getNodeByKey(nodeKey);
         if (node instanceof ImageNode) {
-          // Only update dimensions if they are numbers
-          if (
-            typeof currentResizeWidth === "number" &&
-            typeof currentResizeHeight === "number"
-          ) {
-            node.setWidthAndHeight(currentResizeWidth, currentResizeHeight);
-          }
+          node.setWidthAndHeight(widthRef.current, heightRef.current);
         }
       });
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("mouseup", onUp);
-      document.removeEventListener("touchmove", onMove);
-      document.removeEventListener("touchend", onUp);
     };
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
-    document.addEventListener("touchmove", onMove, { passive: false });
-    document.addEventListener("touchend", onUp);
   };
 
   const figureStyle: React.CSSProperties = {
@@ -239,8 +290,8 @@ function ImageComponent({
     maxWidth: "100%",
     display: "block",
     borderRadius: "4px",
-    width: typeof currentWidth === "number" ? "100%" : currentWidth,
-    height: typeof currentHeight === "number" ? "100%" : currentHeight,
+    width: typeof currentWidth === "number" ? "100%" : "auto",
+    height: typeof currentHeight === "number" ? `${currentHeight}px` : currentHeight,
     margin: 0,
   };
 
@@ -252,86 +303,49 @@ function ImageComponent({
     textAlign: "center",
   };
 
+  const showResizeHandles = isSelected && resizable && !isResizing;
+
   return (
     <figure
       className={`lexical-image align-${alignment} ${className} ${isSelected ? "selected" : ""} ${isResizing ? "resizing" : ""} ${uploading ? "uploading" : ""}`}
       style={figureStyle}
     >
       <div
+        ref={shellRef}
+        className={`luthor-media-embed-shell${isSelected ? " is-selected" : ""}${isResizing ? " is-resizing" : ""}`}
+        data-luthor-selection-anchor="true"
         style={{
           position: "relative",
           display: "inline-block",
           width: currentWidth,
-          height: currentHeight,
+          maxWidth: "100%",
           cursor: "pointer",
         }}
         onClick={onClick}
       >
         <img ref={imageRef} src={src} alt={alt} style={imgStyle} />
-        {isSelected && resizable && (
+        {resizable ? (
           <>
-            <div
-              className="resizer ne"
-              onMouseDown={startResize("ne")}
-              onTouchStart={startResize("ne")}
-              style={{
-                position: "absolute",
-                top: "-5px",
-                right: "-5px",
-                width: "10px",
-                height: "10px",
-                background: "#007acc",
-                cursor: "ne-resize",
-                borderRadius: "50%",
-              }}
+            <button
+              type="button"
+              className="luthor-media-embed-resize-handle-width"
+              aria-label="Resize image width"
+              aria-hidden={!showResizeHandles}
+              tabIndex={showResizeHandles ? 0 : -1}
+              style={{ opacity: showResizeHandles ? 1 : 0, pointerEvents: showResizeHandles ? "auto" : "none" }}
+              onMouseDown={startResize("width")}
             />
-            <div
-              className="resizer nw"
-              onMouseDown={startResize("nw")}
-              onTouchStart={startResize("nw")}
-              style={{
-                position: "absolute",
-                top: "-5px",
-                left: "-5px",
-                width: "10px",
-                height: "10px",
-                background: "#007acc",
-                cursor: "nw-resize",
-                borderRadius: "50%",
-              }}
-            />
-            <div
-              className="resizer se"
-              onMouseDown={startResize("se")}
-              onTouchStart={startResize("se")}
-              style={{
-                position: "absolute",
-                bottom: "-5px",
-                right: "-5px",
-                width: "10px",
-                height: "10px",
-                background: "#007acc",
-                cursor: "se-resize",
-                borderRadius: "50%",
-              }}
-            />
-            <div
-              className="resizer sw"
-              onMouseDown={startResize("sw")}
-              onTouchStart={startResize("sw")}
-              style={{
-                position: "absolute",
-                bottom: "-5px",
-                left: "-5px",
-                width: "10px",
-                height: "10px",
-                background: "#007acc",
-                cursor: "sw-resize",
-                borderRadius: "50%",
-              }}
+            <button
+              type="button"
+              className="luthor-media-embed-resize-handle-height"
+              aria-label="Resize image height"
+              aria-hidden={!showResizeHandles}
+              tabIndex={showResizeHandles ? 0 : -1}
+              style={{ opacity: showResizeHandles ? 1 : 0, pointerEvents: showResizeHandles ? "auto" : "none" }}
+              onMouseDown={startResize("height")}
             />
           </>
-        )}
+        ) : null}
       </div>
       {caption && <figcaption style={captionStyle}>{caption}</figcaption>}
       <div style={{ clear: "both", height: 0, fontSize: 0 }} />
@@ -575,7 +589,8 @@ export class ImageNode extends DecoratorNode<ReactNode> {
           nodeKey={this.getKey()}
           width={this.__width}
           height={this.__height}
-          resizable={true}
+          resizable={defaultImageResizable}
+          scaleByRatio={defaultScaleByRatio}
           uploading={this.__uploading}
         />
       );
@@ -633,6 +648,8 @@ export class ImageExtension extends BaseExtension<
 > {
   /** Track recent image sources to avoid duplicate inserts */
   private recentImages: Set<string> = new Set();
+  /** Last selected image key for toolbar edits while focus moves to external inputs */
+  private lastSelectedImageNodeKey: NodeKey | null = null;
 
   constructor() {
     super("image", [ExtensionCategory.Toolbar]);
@@ -640,10 +657,13 @@ export class ImageExtension extends BaseExtension<
       // Set defaults
       ...this.config,
       resizable: true,
+      scaleByRatio: false,
       pasteListener: { insert: true, replace: true },
       debug: false,
       forceUpload: false,
     };
+    defaultImageResizable = true;
+    defaultScaleByRatio = false;
   }
 
   configure(config: Partial<ImageExtensionConfig>): this {
@@ -674,15 +694,33 @@ export class ImageExtension extends BaseExtension<
         true,
     };
     this.config.debug = config.debug ?? this.config.debug ?? false;
-    this.config = {
+    const nextConfig = {
       ...this.config,
       ...config,
-      resizable: config.resizable ?? true,
+      resizable: config.resizable ?? this.config.resizable ?? true,
+      scaleByRatio: config.scaleByRatio ?? this.config.scaleByRatio ?? false,
     };
+    this.config = nextConfig;
+    defaultImageResizable = nextConfig.resizable ?? true;
+    defaultScaleByRatio = nextConfig.scaleByRatio ?? false;
     return this;
   }
 
   register(editor: LexicalEditor): () => void {
+    const removeSelectionTracker = editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        if (!$isNodeSelection(selection)) {
+          return;
+        }
+
+        const node = selection.getNodes().find((current) => current instanceof ImageNode) as ImageNode | undefined;
+        if (node) {
+          this.lastSelectedImageNodeKey = node.getKey();
+        }
+      });
+    });
+
     const removeCommand = editor.registerCommand<ImagePayload>(
       INSERT_IMAGE_COMMAND,
       (payload) => {
@@ -932,6 +970,7 @@ export class ImageExtension extends BaseExtension<
     }
 
     return () => {
+      removeSelectionTracker();
       removeCommand();
       removeDelete();
       removeBackspace();
@@ -971,9 +1010,42 @@ export class ImageExtension extends BaseExtension<
                 node.setCaption(caption);
               }
             }
+            return;
+          }
+
+          if (this.lastSelectedImageNodeKey) {
+            const fallbackNode = $getNodeByKey(this.lastSelectedImageNodeKey);
+            if (fallbackNode instanceof ImageNode) {
+              fallbackNode.setCaption(caption);
+            } else {
+              this.lastSelectedImageNodeKey = null;
+            }
           }
         });
       },
+      getImageCaption: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if ($isNodeSelection(selection)) {
+              const node = selection.getNodes().find((current) => current instanceof ImageNode) as ImageNode | undefined;
+              if (node) {
+                resolve(node.__caption ?? "");
+                return;
+              }
+            }
+
+            if (this.lastSelectedImageNodeKey) {
+              const fallbackNode = $getNodeByKey(this.lastSelectedImageNodeKey);
+              if (fallbackNode instanceof ImageNode) {
+                resolve(fallbackNode.__caption ?? "");
+                return;
+              }
+            }
+
+            resolve("");
+          });
+        }),
       setImageClassName: (className: string) => {
         editor.update(() => {
           const selection = $getSelection();

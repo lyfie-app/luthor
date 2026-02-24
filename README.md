@@ -35,6 +35,21 @@ pnpm lint
 pnpm format
 ```
 
+## Windows + WSL Split Workflow
+
+Default development remains Windows-first (`pnpm dev`, `pnpm build`, editors, and local tooling).
+Use WSL only for Cloudflare/OpenNext commands that are less stable on native Windows.
+
+WSL-specific commands:
+
+```bash
+pnpm run web:preview:wsl
+pnpm run web:deploy:wsl
+```
+
+These commands call `tools/run-in-wsl.ps1`, which bridges into WSL and runs the web app command from `apps/web`.
+Prerequisite: install Node.js in your WSL distro (so `pnpm` is available, or `corepack` can activate it).
+
 ## Documentation (Canonical Source)
 
 All long-form project documentation is centralized in [documentation](documentation).
@@ -51,6 +66,7 @@ Primary indexes:
 
 - Getting started: [documentation/user/demo/getting-started.md](documentation/user/demo/getting-started.md)
 - Usage and persistence: [documentation/user/demo/usage-and-persistence.md](documentation/user/demo/usage-and-persistence.md)
+- Syntax highlighting showcase: demo enables `ExtensiveEditor` code highlighting auto-detection via `highlight.js` and imports a highlight.js CSS theme for token colors.
 
 ### `@lyfie/luthor`
 

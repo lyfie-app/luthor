@@ -1,16 +1,13 @@
 {
+  "extends": "../../packages/typescript-config/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@lyfie/luthor-headless": ["../../packages/headless/src"],
-      "@lyfie/luthor-headless/*": ["../../packages/headless/src/*"],
-      "@lyfie/luthor": ["../../packages/luthor/src"],
-      "@lyfie/luthor/*": ["../../packages/luthor/src/*"]
+      "@/*": ["src/*"]
     },
-    "types": ["node"]
+    "types": ["node"],
+    "strictNullChecks": true
   },
-  "extends": "astro/tsconfigs/strict",
-  "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }

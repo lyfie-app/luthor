@@ -6,6 +6,7 @@ import { ReactNode } from "react";
 import { BaseExtension } from "../base";
 import { BaseExtensionConfig, ExtensionCategory } from "../types";
 import { defaultLuthorTheme } from "../../core/theme";
+import { EditorContext } from "../../core/createEditorSystem";
 
 // Base RichText props interface - shared between config and component
 export interface BaseRichTextProps {
@@ -44,19 +45,33 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
     styles,
     errorBoundary,
   } = props;
+  const editorContext = React.useContext(EditorContext);
+  const contextConfig = editorContext?.config as
+    | {
+        placeholder?: unknown;
+        classNames?: BaseRichTextProps["classNames"];
+        styles?: BaseRichTextProps["styles"];
+      }
+    | undefined;
+  const configPlaceholder =
+    typeof contextConfig?.placeholder === "string"
+      ? contextConfig.placeholder
+      : undefined;
+  const configClassNames = contextConfig?.classNames;
+  const configStyles = contextConfig?.styles;
+  const resolvedPlaceholder = placeholder ?? configPlaceholder ?? "Start writing...";
 
   // Extract common placeholder props
   const placeholderClassNameFinal =
     classNames?.placeholder ||
+    configClassNames?.placeholder ||
     defaultLuthorTheme.richText?.placeholder ||
     "luthor-placeholder";
   const placeholderStyle = {
     position: "absolute" as const,
-    top: 0,
-    left: 0,
     pointerEvents: "none" as const,
-    color: "#999",
     zIndex: 1,
+    ...configStyles?.placeholder,
     ...styles?.placeholder,
   };
 
@@ -64,12 +79,14 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
     <div
       className={
         classNames?.container ||
+        configClassNames?.container ||
         className ||
         defaultLuthorTheme.container ||
         "luthor-editor-container"
       }
       style={{
         position: "relative",
+        ...configStyles?.container,
         ...styles?.container,
       }}
     >
@@ -80,21 +97,25 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
               <ContentEditable
                 className={
                   classNames?.contentEditable ||
+                  configClassNames?.contentEditable ||
                   defaultLuthorTheme.richText?.contentEditable ||
                   "luthor-content-editable"
                 }
-                style={styles?.contentEditable}
+                style={{
+                  ...configStyles?.contentEditable,
+                  ...styles?.contentEditable,
+                }}
               />
             </div>
           )
         }
         placeholder={
-          typeof placeholder === "string" ? (
+          typeof resolvedPlaceholder === "string" ? (
             <div className={placeholderClassNameFinal} style={placeholderStyle}>
-              {placeholder}
+              {resolvedPlaceholder}
             </div>
           ) : (
-            placeholder || (
+            resolvedPlaceholder || (
               <div
                 className={placeholderClassNameFinal}
                 style={placeholderStyle}

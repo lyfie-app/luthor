@@ -38,6 +38,8 @@ export interface ImageComponentProps extends ImagePayload {
   nodeKey?: string;
   /** Whether the image is resizable */
   resizable?: boolean;
+  /** Whether resize keeps aspect ratio by default */
+  scaleByRatio?: boolean;
   /** Whether the image is uploading */
   uploading?: boolean;
 }
@@ -84,6 +86,8 @@ export interface ImageExtensionConfig extends BaseExtensionConfig {
   customRenderer?: ComponentType<ImageComponentProps>;
   /** Enable image resizing (default: true) */
   resizable?: boolean;
+  /** Keep aspect ratio while resizing by default (Shift toggles) */
+  scaleByRatio?: boolean;
   /** Paste behavior configuration */
   pasteListener?: {
     /** Insert a new image on paste when none is selected */
@@ -107,6 +111,8 @@ export type ImageCommands = {
   setImageAlignment: (alignment: Alignment) => void;
   /** Set caption for the selected image */
   setImageCaption: (caption: string) => void;
+  /** Read caption for the selected image */
+  getImageCaption: () => Promise<string>;
   /** Set the CSS class name on the selected image */
   setImageClassName: (className: string) => void;
   /** Set inline styles on the selected image */

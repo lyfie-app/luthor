@@ -1,7 +1,14 @@
-import { $getSelection, $isRangeSelection, LexicalEditor } from "lexical";
+import {
+  $getSelection,
+  $isTextNode,
+  $isElementNode,
+  $isRangeSelection,
+  type ElementNode,
+  LexicalEditor,
+  type RangeSelection,
+} from "lexical";
 import {
   $getSelectionStyleValueForProperty,
-  $patchStyleText,
 } from "@lexical/selection";
 import { BaseExtension } from "../base/BaseExtension";
 import { ExtensionCategory, type BaseExtensionConfig } from "../types";
@@ -14,6 +21,7 @@ export type LineHeightOption = {
 
 export interface LineHeightConfig extends BaseExtensionConfig {
   options: readonly LineHeightOption[];
+  defaultLineHeight: string;
 }
 
 export type LineHeightCommands = {
@@ -36,6 +44,107 @@ const DEFAULT_LINE_HEIGHT_OPTIONS: readonly LineHeightOption[] = [
   { value: "2", label: "2.0", lineHeight: "2" },
 ];
 
+const DEFAULT_LINE_HEIGHT_OPTION: LineHeightOption = {
+  value: "default",
+  label: "Default",
+  lineHeight: "1.5",
+};
+const MIN_LINE_HEIGHT_RATIO = 1;
+
+function normalizeToken(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function isValidLineHeightOptionValue(value: string): boolean {
+  const normalized = normalizeToken(value);
+  if (normalized === "default") {
+    return true;
+  }
+
+  return parseLineHeightRatio(value) !== null;
+}
+
+function parseLineHeightRatio(value: string): string | null {
+  const trimmed = value.trim();
+  if (!/^\d*\.?\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < MIN_LINE_HEIGHT_RATIO) {
+    return null;
+  }
+
+  return parsed.toString();
+}
+
+function sanitizeLineHeightOptions(
+  options: readonly LineHeightOption[],
+  defaultLineHeight: string,
+): readonly LineHeightOption[] {
+  const seenValues = new Set<string>();
+  const sanitized: LineHeightOption[] = [];
+
+  for (const option of options) {
+    const value = option.value.trim();
+    const label = option.label.trim();
+    const normalizedValue = normalizeToken(value);
+
+    if (!value || !label) {
+      continue;
+    }
+
+    if (!isValidLineHeightOptionValue(value)) {
+      continue;
+    }
+
+    if (seenValues.has(normalizedValue)) {
+      continue;
+    }
+
+    if (normalizedValue === "default") {
+      seenValues.add(normalizedValue);
+      sanitized.push({
+        value,
+        label,
+        lineHeight: defaultLineHeight,
+      });
+      continue;
+    }
+
+    const ratio = parseLineHeightRatio(String(option.lineHeight));
+    if (!ratio) {
+      continue;
+    }
+
+    seenValues.add(normalizedValue);
+    sanitized.push({
+      value,
+      label,
+      lineHeight: ratio,
+    });
+  }
+
+  if (sanitized.length === 0) {
+    return DEFAULT_LINE_HEIGHT_OPTIONS;
+  }
+
+  const hasDefaultOption = sanitized.some((option) => {
+    return normalizeToken(option.value) === "default";
+  });
+
+  if (!hasDefaultOption) {
+    return [{ ...DEFAULT_LINE_HEIGHT_OPTION, lineHeight: defaultLineHeight }, ...sanitized];
+  }
+
+  return sanitized;
+}
+
+function sanitizeDefaultLineHeight(value: string): string {
+  const ratio = parseLineHeightRatio(value);
+  return ratio ?? DEFAULT_LINE_HEIGHT_OPTION.lineHeight;
+}
+
 export class LineHeightExtension extends BaseExtension<
   "lineHeight",
   LineHeightConfig,
@@ -46,6 +155,7 @@ export class LineHeightExtension extends BaseExtension<
     super("lineHeight", [ExtensionCategory.Toolbar]);
     this.config = {
       options: DEFAULT_LINE_HEIGHT_OPTIONS,
+      defaultLineHeight: DEFAULT_LINE_HEIGHT_OPTION.lineHeight,
       showInToolbar: true,
       category: [ExtensionCategory.Toolbar],
     };
@@ -53,6 +163,20 @@ export class LineHeightExtension extends BaseExtension<
 
   register(): () => void {
     return () => {};
+  }
+
+  configure(config: Partial<LineHeightConfig>) {
+    const nextConfig: Partial<LineHeightConfig> = { ...config };
+    const defaultLineHeight = sanitizeDefaultLineHeight(
+      String(config.defaultLineHeight ?? this.config.defaultLineHeight),
+    );
+    nextConfig.defaultLineHeight = defaultLineHeight;
+
+    if (config.options) {
+      nextConfig.options = sanitizeLineHeightOptions(config.options, defaultLineHeight);
+    }
+
+    return super.configure(nextConfig);
   }
 
   getCommands(editor: LexicalEditor): LineHeightCommands {
@@ -81,10 +205,64 @@ export class LineHeightExtension extends BaseExtension<
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
 
-      $patchStyleText(selection, {
-        "line-height": lineHeight,
-      });
+      const selectedBlocks = this.getSelectedTopLevelBlocks(selection);
+      for (const block of selectedBlocks) {
+        const nextStyle = this.withStyleProperty(
+          block.getStyle(),
+          "line-height",
+          lineHeight,
+        );
+        block.setStyle(nextStyle);
+
+        // Enforce block-uniform line-height by writing the same value to all
+        // text nodes in the block, regardless of partial selection.
+        for (const node of block.getAllTextNodes()) {
+          if (!$isTextNode(node)) {
+            continue;
+          }
+          node.setStyle(this.withStyleProperty(node.getStyle(), "line-height", lineHeight));
+        }
+      }
     });
+  }
+
+  private getSelectedTopLevelBlocks(selection: RangeSelection): ElementNode[] {
+    const blocks = new Map<string, ElementNode>();
+
+    for (const node of selection.getNodes()) {
+      const topLevel = node.getTopLevelElement();
+      if (!topLevel || !$isElementNode(topLevel)) {
+        continue;
+      }
+
+      if (topLevel.getType() === "root") {
+        continue;
+      }
+
+      blocks.set(topLevel.getKey(), topLevel);
+    }
+
+    return [...blocks.values()];
+  }
+
+  private withStyleProperty(
+    style: string,
+    property: string,
+    value: string,
+  ): string {
+    const propertyMatcher = new RegExp(`^${property}\\s*:`, "i");
+    const declarations = style
+      .split(";")
+      .map((entry) => entry.trim())
+      .filter((entry) => entry.length > 0)
+      .filter((entry) => !propertyMatcher.test(entry));
+
+    const nextValue = value.trim();
+    if (nextValue.length > 0) {
+      declarations.push(`${property}: ${nextValue}`);
+    }
+
+    return declarations.join("; ");
   }
 
   private hasCustomLineHeight(editor: LexicalEditor): boolean {
@@ -94,7 +272,12 @@ export class LineHeightExtension extends BaseExtension<
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
 
-      const current = $getSelectionStyleValueForProperty(selection, "line-height", "");
+      const blockLineHeight = this.getSelectedBlocksLineHeight(selection);
+      if (blockLineHeight === "mixed") {
+        hasCustomLineHeight = true;
+        return;
+      }
+      const current = blockLineHeight ?? $getSelectionStyleValueForProperty(selection, "line-height", "");
       const normalized = this.normalizeValue(current);
       hasCustomLineHeight = normalized.length > 0 && normalized !== "normal";
     });
@@ -109,10 +292,19 @@ export class LineHeightExtension extends BaseExtension<
       const selection = $getSelection();
       if (!$isRangeSelection(selection)) return;
 
-      const current = $getSelectionStyleValueForProperty(selection, "line-height", "");
+      const blockLineHeight = this.getSelectedBlocksLineHeight(selection);
+      if (blockLineHeight === "mixed") {
+        currentValue = null;
+        return;
+      }
+      const current = blockLineHeight ?? $getSelectionStyleValueForProperty(selection, "line-height", "");
       const normalizedCurrent = this.normalizeValue(current);
 
       if (!normalizedCurrent || normalizedCurrent === "normal") {
+        currentValue = "default";
+        return;
+      }
+      if (normalizedCurrent === this.normalizeValue(this.config.defaultLineHeight)) {
         currentValue = "default";
         return;
       }
@@ -130,6 +322,33 @@ export class LineHeightExtension extends BaseExtension<
     return currentValue;
   }
 
+  private getSelectedBlocksLineHeight(selection: RangeSelection): string | "mixed" | null {
+    const selectedBlocks = this.getSelectedTopLevelBlocks(selection);
+    if (selectedBlocks.length === 0) {
+      return null;
+    }
+
+    let firstNormalized: string | null = null;
+    let firstValue = "";
+
+    for (const block of selectedBlocks) {
+      const currentValue = this.readStyleProperty(block.getStyle(), "line-height");
+      const normalizedCurrent = this.normalizeValue(currentValue);
+
+      if (firstNormalized === null) {
+        firstNormalized = normalizedCurrent;
+        firstValue = currentValue;
+        continue;
+      }
+
+      if (firstNormalized !== normalizedCurrent) {
+        return "mixed";
+      }
+    }
+
+    return firstValue;
+  }
+
   private findOption(value: string): LineHeightOption | undefined {
     const normalizedValue = this.normalizeValue(value);
     return this.config.options.find((option) => {
@@ -138,7 +357,15 @@ export class LineHeightExtension extends BaseExtension<
   }
 
   private normalizeValue(value: string): string {
-    return value.trim().toLowerCase().replace(/\s+/g, "");
+    const normalized = value.trim().toLowerCase().replace(/\s+/g, "");
+    const ratio = parseLineHeightRatio(normalized);
+    return ratio ?? normalized;
+  }
+
+  private readStyleProperty(style: string, property: string): string {
+    const escapedProperty = property.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const match = style.match(new RegExp(`(?:^|;)\\s*${escapedProperty}\\s*:\\s*([^;]+)`, "i"));
+    return match?.[1]?.trim() ?? "";
   }
 }
 

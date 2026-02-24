@@ -4,6 +4,8 @@ import {
   $isRangeSelection,
   PASTE_COMMAND,
   $createTextNode,
+  $getNodeByKey,
+  LexicalNode,
 } from "lexical";
 import {
   $isLinkNode,
@@ -55,7 +57,25 @@ export interface LinkConfig extends BaseExtensionConfig {
  */
 export type LinkCommands = {
   insertLink: (url?: string, text?: string) => void;
+  updateLink: (url: string, rel?: string, target?: string) => boolean;
   removeLink: () => void;
+  getCurrentLink: () => Promise<{
+    url: string;
+    rel: string | null;
+    target: string | null;
+  } | null>;
+  getLinkByKey: (linkNodeKey: string) => Promise<{
+    url: string;
+    rel: string | null;
+    target: string | null;
+  } | null>;
+  updateLinkByKey: (
+    linkNodeKey: string,
+    url: string,
+    rel?: string,
+    target?: string,
+  ) => boolean;
+  removeLinkByKey: (linkNodeKey: string) => boolean;
 };
 
 /**
@@ -110,6 +130,8 @@ export class LinkExtension extends BaseExtension<
   LinkStateQueries,
   React.ReactElement[]
 > {
+  private lastSelectedLinkNodeKey: string | null = null;
+
   /**
    * Creates a new link extension instance.
    */
@@ -193,8 +215,26 @@ export class LinkExtension extends BaseExtension<
       3, // Higher priority than LinkPlugin's default
     );
 
+    const unregisterSelectionTracking = editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const linkNode = this.getSelectedLinkNode();
+        if (linkNode) {
+          this.lastSelectedLinkNodeKey = linkNode.getKey();
+          return;
+        }
+
+        if (this.lastSelectedLinkNodeKey) {
+          const cachedNode = $getNodeByKey(this.lastSelectedLinkNodeKey);
+          if (!$isLinkNode(cachedNode)) {
+            this.lastSelectedLinkNodeKey = null;
+          }
+        }
+      });
+    });
+
     return () => {
       unregisterPaste();
+      unregisterSelectionTracking();
     };
   }
 
@@ -257,9 +297,33 @@ export class LinkExtension extends BaseExtension<
    * Returns command handlers exposed by this extension.
    */
   getCommands(editor: LexicalEditor): LinkCommands {
+    const normalizeUrl = (value: string): string => value.trim();
+    const validateUrl = (value: string): boolean =>
+      value.length > 0 && !!this.config.validateUrl?.(value);
+
+    const applyLinkAttributes = (
+      linkNode: LinkNode,
+      url: string,
+      rel?: string,
+      target?: string,
+    ) => {
+      linkNode.setURL(url);
+      if (typeof rel !== "undefined") {
+        linkNode.setRel(rel.trim() || null);
+      }
+      if (typeof target !== "undefined") {
+        linkNode.setTarget(target.trim() || null);
+      }
+    };
+
     return {
       insertLink: (url?: string, text?: string) => {
         if (url) {
+          const normalizedUrl = normalizeUrl(url);
+          if (!validateUrl(normalizedUrl)) {
+            return;
+          }
+
           // If text is provided, insert it first, then apply link
           if (text) {
             editor.update(() => {
@@ -270,20 +334,220 @@ export class LinkExtension extends BaseExtension<
             });
           }
           // Apply link to current selection
-          editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, normalizedUrl);
         } else {
           // Prompt for URL if not provided
           const linkUrl = prompt("Enter URL:");
           if (linkUrl) {
-            editor.dispatchCommand(TOGGLE_LINK_COMMAND, linkUrl);
+            const normalizedUrl = normalizeUrl(linkUrl);
+            if (!validateUrl(normalizedUrl)) {
+              return;
+            }
+
+            editor.dispatchCommand(TOGGLE_LINK_COMMAND, normalizedUrl);
           }
         }
       },
 
+      updateLink: (url: string, rel?: string, target?: string): boolean => {
+        const normalizedUrl = normalizeUrl(url);
+        if (!validateUrl(normalizedUrl)) {
+          return false;
+        }
+
+        let didUpdate = false;
+        editor.update(() => {
+          const linkNode = this.getSelectedLinkNode() ?? this.getCachedLinkNode();
+          if (linkNode) {
+            applyLinkAttributes(linkNode, normalizedUrl, rel, target);
+            this.lastSelectedLinkNodeKey = linkNode.getKey();
+            didUpdate = true;
+            return;
+          }
+
+          const selection = $getSelection();
+          if (!$isRangeSelection(selection)) {
+            didUpdate = false;
+            return;
+          }
+
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, {
+            url: normalizedUrl,
+            rel: typeof rel === "undefined" ? null : rel.trim() || null,
+            target: typeof target === "undefined" ? null : target.trim() || null,
+          });
+          didUpdate = true;
+        });
+
+        return didUpdate;
+      },
+
       removeLink: () => {
-        editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+        let removed = false;
+        editor.update(() => {
+          const linkNode = this.getSelectedLinkNode() ?? this.getCachedLinkNode();
+          if (linkNode) {
+            const children = linkNode.getChildren();
+            for (const child of children) {
+              linkNode.insertBefore(child);
+            }
+            linkNode.remove();
+            this.lastSelectedLinkNodeKey = null;
+            removed = true;
+            return;
+          }
+
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+        });
+
+        if (!removed) {
+          this.lastSelectedLinkNodeKey = null;
+        }
+      },
+
+      getCurrentLink: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const linkNode = this.getSelectedLinkNode() ?? this.getCachedLinkNode();
+            if (!linkNode) {
+              resolve(null);
+              return;
+            }
+
+            resolve(this.serializeLinkNode(linkNode));
+          });
+        }),
+
+      getLinkByKey: (linkNodeKey: string) =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const linkNode = this.getLinkNodeByKey(linkNodeKey);
+            if (!linkNode) {
+              resolve(null);
+              return;
+            }
+
+            resolve(this.serializeLinkNode(linkNode));
+          });
+        }),
+
+      updateLinkByKey: (
+        linkNodeKey: string,
+        url: string,
+        rel?: string,
+        target?: string,
+      ): boolean => {
+        const normalizedUrl = normalizeUrl(url);
+        if (!validateUrl(normalizedUrl)) {
+          return false;
+        }
+
+        let didUpdate = false;
+        editor.update(() => {
+          const linkNode = this.getLinkNodeByKey(linkNodeKey);
+          if (!linkNode) {
+            didUpdate = false;
+            return;
+          }
+
+          applyLinkAttributes(linkNode, normalizedUrl, rel, target);
+          this.lastSelectedLinkNodeKey = linkNode.getKey();
+          didUpdate = true;
+        });
+
+        return didUpdate;
+      },
+
+      removeLinkByKey: (linkNodeKey: string): boolean => {
+        let didRemove = false;
+        editor.update(() => {
+          const linkNode = this.getLinkNodeByKey(linkNodeKey);
+          if (!linkNode) {
+            didRemove = false;
+            return;
+          }
+
+          this.removeLinkNode(linkNode);
+          this.lastSelectedLinkNodeKey = null;
+          didRemove = true;
+        });
+
+        return didRemove;
       },
     };
+  }
+
+  private serializeLinkNode(linkNode: LinkNode): {
+    url: string;
+    rel: string | null;
+    target: string | null;
+  } {
+    return {
+      url: linkNode.getURL(),
+      rel: linkNode.getRel(),
+      target: linkNode.getTarget(),
+    };
+  }
+
+  private removeLinkNode(linkNode: LinkNode): void {
+    const children = linkNode.getChildren();
+    for (const child of children) {
+      linkNode.insertBefore(child);
+    }
+    linkNode.remove();
+  }
+
+  private getLinkNodeByKey(linkNodeKey: string): LinkNode | null {
+    const normalizedKey = linkNodeKey.trim();
+    if (!normalizedKey) {
+      return null;
+    }
+
+    const node = $getNodeByKey(normalizedKey);
+    if (!$isLinkNode(node)) {
+      return null;
+    }
+
+    return node;
+  }
+
+  private getSelectedLinkNode(): LinkNode | null {
+    const selection = $getSelection();
+    if (!selection || !$isRangeSelection(selection)) {
+      return null;
+    }
+
+    const anchorNode = selection.anchor.getNode();
+    const focusNode = selection.focus.getNode();
+    const nodes = selection.getNodes();
+    const candidates: LexicalNode[] = [anchorNode, focusNode, ...nodes];
+
+    for (const candidate of candidates) {
+      if ($isLinkNode(candidate)) {
+        return candidate;
+      }
+
+      const parent = candidate.getParent();
+      if (parent && $isLinkNode(parent)) {
+        return parent;
+      }
+    }
+
+    return null;
+  }
+
+  private getCachedLinkNode(): LinkNode | null {
+    if (!this.lastSelectedLinkNodeKey) {
+      return null;
+    }
+
+    const node = $getNodeByKey(this.lastSelectedLinkNodeKey);
+    if ($isLinkNode(node)) {
+      return node;
+    }
+
+    this.lastSelectedLinkNodeKey = null;
+    return null;
   }
 
   /**

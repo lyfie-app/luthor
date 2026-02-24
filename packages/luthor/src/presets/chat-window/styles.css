@@ -1,0 +1,28 @@
+.luthor-preset-chat-window {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.luthor-chat-window-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.luthor-chat-window-action {
+  border: 1px solid var(--luthor-border);
+  background: var(--luthor-muted);
+  color: var(--luthor-fg);
+  border-radius: 8px;
+  height: 32px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.luthor-chat-window-action-send {
+  border-color: var(--luthor-accent);
+  background: var(--luthor-accent);
+  color: var(--luthor-bg);
+}

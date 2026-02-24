@@ -25,6 +25,7 @@ export type YouTubeEmbedPayload = {
   width: number;
   height: number;
   alignment: EmbedAlignment;
+  caption?: string;
   start?: number;
 };
 
@@ -43,6 +44,10 @@ export type YouTubeEmbedCommands = {
   insertYouTubeEmbed: (inputUrl: string, width?: number, height?: number, start?: number) => void;
   setYouTubeEmbedAlignment: (alignment: EmbedAlignment) => void;
   resizeYouTubeEmbed: (width: number, height: number) => void;
+  setYouTubeEmbedCaption: (caption: string) => void;
+  getYouTubeEmbedCaption: () => Promise<string>;
+  updateYouTubeEmbedUrl: (inputUrl: string) => boolean;
+  getYouTubeEmbedUrl: () => Promise<string>;
 };
 
 export type YouTubeEmbedQueries = {
@@ -60,6 +65,7 @@ type SerializedYouTubeEmbedNode = Spread<
     width: number;
     height: number;
     alignment: EmbedAlignment;
+    caption?: string;
     start?: number;
   },
   SerializedLexicalNode
@@ -120,44 +126,64 @@ function isValidYoutubeUrl(input: string): boolean {
   );
 }
 
-function getYouTubeId(url: URL): { videoId?: string; playlistId?: string } {
+function isValidYouTubeToken(value?: string | null): value is string {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{3,}$/.test(value);
+}
+
+function getYouTubeTarget(url: URL): { videoId?: string; playlistId?: string } | null {
   const hostname = url.hostname.toLowerCase();
+  const pathname = url.pathname;
 
   if (hostname === "youtu.be") {
-    const id = url.pathname.split("/").filter(Boolean)[0];
-    return { videoId: id };
+    const id = pathname.split("/").filter(Boolean)[0];
+    return isValidYouTubeToken(id) ? { videoId: id } : null;
   }
 
-  if (url.pathname === "/playlist") {
-    return { playlistId: url.searchParams.get("list") ?? undefined };
+  if (pathname === "/playlist") {
+    const list = url.searchParams.get("list");
+    return isValidYouTubeToken(list) ? { playlistId: list } : null;
   }
 
-  if (url.pathname.startsWith("/shorts/")) {
-    return { videoId: url.pathname.split("/")[2] };
+  if (pathname.startsWith("/shorts/")) {
+    const id = pathname.split("/")[2];
+    return isValidYouTubeToken(id) ? { videoId: id } : null;
   }
 
-  if (url.pathname.startsWith("/embed/")) {
-    return { videoId: url.pathname.split("/")[2] };
+  if (pathname.startsWith("/embed/")) {
+    const segment = pathname.split("/")[2];
+    if (!segment) {
+      return null;
+    }
+    if (segment === "videoseries") {
+      const list = url.searchParams.get("list");
+      return isValidYouTubeToken(list) ? { playlistId: list } : null;
+    }
+    return isValidYouTubeToken(segment) ? { videoId: segment } : null;
   }
 
-  if (url.pathname === "/watch") {
-    const playlistId = url.searchParams.get("list") ?? undefined;
-    const videoId = url.searchParams.get("v") ?? undefined;
-    return { videoId, playlistId };
+  if (pathname === "/watch") {
+    const playlistId = url.searchParams.get("list");
+    const videoId = url.searchParams.get("v");
+    const result: { videoId?: string; playlistId?: string } = {};
+    if (isValidYouTubeToken(videoId)) {
+      result.videoId = videoId;
+    }
+    if (isValidYouTubeToken(playlistId)) {
+      result.playlistId = playlistId;
+    }
+    return result.videoId || result.playlistId ? result : null;
   }
 
-  const regex = /(?:(v|list)=|shorts\/)([-\w]+)/gm;
-  const match = regex.exec(url.toString());
-
-  if (!match) {
-    return {};
+  const fallbackVideo = url.searchParams.get("v");
+  const fallbackList = url.searchParams.get("list");
+  if (isValidYouTubeToken(fallbackVideo) || isValidYouTubeToken(fallbackList)) {
+    return {
+      videoId: isValidYouTubeToken(fallbackVideo) ? fallbackVideo : undefined,
+      playlistId: isValidYouTubeToken(fallbackList) ? fallbackList : undefined,
+    };
   }
 
-  if (match[1] === "list") {
-    return { playlistId: match[2] };
-  }
-
-  return { videoId: match[2] };
+  return null;
 }
 
 function toEmbedUrl(
@@ -184,7 +210,10 @@ function toEmbedUrl(
     return parsed.toString();
   }
 
-  const ids = getYouTubeId(parsed);
+  const ids = getYouTubeTarget(parsed);
+  if (!ids) {
+    return null;
+  }
   const base = options.nocookie
     ? "https://www.youtube-nocookie.com/embed/"
     : "https://www.youtube.com/embed/";
@@ -226,6 +255,44 @@ function toEmbedUrl(
   return `${outputUrl}${separator}${params.join("&")}`;
 }
 
+function updateEmbedUrlPreservingParams(currentEmbedUrl: string, inputUrl: string): string | null {
+  const parsedCurrent = parseUrl(currentEmbedUrl);
+  if (!parsedCurrent) {
+    return null;
+  }
+
+  if (!isValidYoutubeUrl(inputUrl)) {
+    return null;
+  }
+
+  const parsedInput = parseUrl(inputUrl);
+  if (!parsedInput) {
+    return null;
+  }
+
+  const target = getYouTubeTarget(parsedInput);
+  if (!target || (!target.videoId && !target.playlistId)) {
+    return null;
+  }
+
+  const preserveParams = new URLSearchParams(parsedCurrent.search);
+  preserveParams.delete("v");
+  preserveParams.delete("list");
+  preserveParams.delete("index");
+
+  if (target.playlistId) {
+    preserveParams.set("list", target.playlistId);
+  }
+
+  const useNoCookie = parsedCurrent.hostname.toLowerCase().includes("youtube-nocookie.com");
+  const base = useNoCookie ? "https://www.youtube-nocookie.com" : "https://www.youtube.com";
+  const path = target.videoId ? `/embed/${encodeURIComponent(target.videoId)}` : "/embed/videoseries";
+
+  const nextUrl = new URL(`${base}${path}`);
+  nextUrl.search = preserveParams.toString();
+  return nextUrl.toString();
+}
+
 export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
   __payload: YouTubeEmbedPayload;
 
@@ -243,6 +310,7 @@ export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
       width: clampSize(serialized.width, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
       height: clampSize(serialized.height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
       alignment: serialized.alignment,
+      caption: serialized.caption ?? "",
       start: serialized.start,
     });
   }
@@ -271,6 +339,8 @@ export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
             const alignment =
               (element.getAttribute("data-align") as EmbedAlignment | null) ??
               "center";
+            const figcaption = element.querySelector("figcaption");
+            const caption = figcaption?.textContent ?? element.getAttribute("data-caption") ?? "";
             const start = Number(iframe.getAttribute("data-start") ?? "0");
 
             return {
@@ -279,6 +349,47 @@ export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
                 width: clampSize(width, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
                 height: clampSize(height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
                 alignment,
+                caption,
+                start: Number.isFinite(start) ? start : 0,
+              }),
+            };
+          },
+          priority: 4,
+        };
+      },
+      figure: (domNode: HTMLElement) => {
+        const isYoutubeEmbed =
+          domNode.hasAttribute("data-lexical-youtube-embed") ||
+          domNode.hasAttribute("data-youtube-video");
+
+        if (!isYoutubeEmbed) {
+          return null;
+        }
+
+        return {
+          conversion: (element: HTMLElement): DOMConversionOutput => {
+            const iframe = element.querySelector("iframe");
+            if (!iframe) {
+              return { node: null };
+            }
+
+            const src = iframe.getAttribute("src") ?? "";
+            const width = Number(iframe.getAttribute("width") ?? "640");
+            const height = Number(iframe.getAttribute("height") ?? "480");
+            const alignment =
+              (element.getAttribute("data-align") as EmbedAlignment | null) ??
+              "center";
+            const figcaption = element.querySelector("figcaption");
+            const caption = figcaption?.textContent ?? element.getAttribute("data-caption") ?? "";
+            const start = Number(iframe.getAttribute("data-start") ?? "0");
+
+            return {
+              node: new YouTubeEmbedNode({
+                src,
+                width: clampSize(width, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
+                height: clampSize(height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
+                alignment,
+                caption,
                 start: Number.isFinite(start) ? start : 0,
               }),
             };
@@ -312,15 +423,17 @@ export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
       width: this.__payload.width,
       height: this.__payload.height,
       alignment: this.__payload.alignment,
+      caption: this.__payload.caption,
       start: this.__payload.start,
     };
   }
 
   exportDOM(): { element: HTMLElement } {
-    const element = document.createElement("div");
+    const element = document.createElement("figure");
     element.setAttribute("data-lexical-youtube-embed", "true");
     element.setAttribute("data-youtube-video", "");
     element.setAttribute("data-align", this.__payload.alignment);
+    element.setAttribute("data-caption", this.__payload.caption ?? "");
 
     const iframe = document.createElement("iframe");
     iframe.setAttribute("src", this.__payload.src);
@@ -341,6 +454,11 @@ export class YouTubeEmbedNode extends DecoratorNode<ReactNode> {
     }
 
     element.appendChild(iframe);
+    if (this.__payload.caption) {
+      const figcaption = document.createElement("figcaption");
+      figcaption.textContent = this.__payload.caption;
+      element.appendChild(figcaption);
+    }
 
     return { element };
   }
@@ -507,6 +625,16 @@ function YouTubeEmbedComponent({
 
   const wrapperStyle = useMemo(() => getAlignmentStyles(payload.alignment), [payload.alignment]);
   const showResizeHandles = isSelected && !isResizing;
+  const captionStyle: React.CSSProperties = useMemo(
+    () => ({
+      fontSize: "0.9em",
+      color: "#666",
+      fontStyle: "italic",
+      marginTop: "0.5rem",
+      textAlign: "center",
+    }),
+    [],
+  );
 
   return (
     <div style={wrapperStyle}>
@@ -553,6 +681,7 @@ function YouTubeEmbedComponent({
           onMouseDown={resizeFromHandle("height")}
         />
       </div>
+      {payload.caption ? <figcaption style={captionStyle}>{payload.caption}</figcaption> : null}
     </div>
   );
 }
@@ -564,6 +693,8 @@ export class YouTubeEmbedExtension extends BaseExtension<
   YouTubeEmbedQueries,
   ReactNode[]
 > {
+  private lastSelectedYouTubeNodeKey: NodeKey | null = null;
+
   constructor(config?: Partial<YouTubeEmbedConfig>) {
     super("youtubeEmbed", [ExtensionCategory.Toolbar]);
     this.config = {
@@ -580,8 +711,19 @@ export class YouTubeEmbedExtension extends BaseExtension<
   }
 
   register(editor: LexicalEditor): () => void {
-    void editor;
-    return () => {};
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+        if (!$isNodeSelection(selection)) {
+          return;
+        }
+
+        const node = selection.getNodes().find((current) => current instanceof YouTubeEmbedNode) as YouTubeEmbedNode | undefined;
+        if (node) {
+          this.lastSelectedYouTubeNodeKey = node.getKey();
+        }
+      });
+    });
   }
 
   getNodes(): any[] {
@@ -614,6 +756,7 @@ export class YouTubeEmbedExtension extends BaseExtension<
             width: clampSize(width ?? this.config.defaultWidth ?? 640, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
             height: clampSize(height ?? this.config.defaultHeight ?? 480, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
             alignment: this.config.defaultAlignment ?? "center",
+            caption: "",
             start,
           });
 
@@ -656,6 +799,107 @@ export class YouTubeEmbedExtension extends BaseExtension<
           });
         });
       },
+      setYouTubeEmbedCaption: (caption: string) => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isNodeSelection(selection)) {
+            selection.getNodes().forEach((node) => {
+              if (node instanceof YouTubeEmbedNode) {
+                node.setPayload({ caption });
+              }
+            });
+            return;
+          }
+
+          if (this.lastSelectedYouTubeNodeKey) {
+            const fallbackNode = $getNodeByKey(this.lastSelectedYouTubeNodeKey);
+            if (fallbackNode instanceof YouTubeEmbedNode) {
+              fallbackNode.setPayload({ caption });
+            } else {
+              this.lastSelectedYouTubeNodeKey = null;
+            }
+          }
+        });
+      },
+      getYouTubeEmbedCaption: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if ($isNodeSelection(selection)) {
+              const node = selection.getNodes().find((item) => item instanceof YouTubeEmbedNode) as YouTubeEmbedNode | undefined;
+              if (node) {
+                resolve(node.getPayload().caption ?? "");
+                return;
+              }
+            }
+
+            if (this.lastSelectedYouTubeNodeKey) {
+              const fallbackNode = $getNodeByKey(this.lastSelectedYouTubeNodeKey);
+              if (fallbackNode instanceof YouTubeEmbedNode) {
+                resolve(fallbackNode.getPayload().caption ?? "");
+                return;
+              }
+            }
+
+            resolve("");
+          });
+        }),
+      updateYouTubeEmbedUrl: (inputUrl: string) => {
+        let updated = false;
+        editor.update(() => {
+          const selection = $getSelection();
+          if ($isNodeSelection(selection)) {
+            selection.getNodes().forEach((node) => {
+              if (node instanceof YouTubeEmbedNode) {
+                const nextUrl = updateEmbedUrlPreservingParams(node.getPayload().src, inputUrl);
+                if (!nextUrl) {
+                  return;
+                }
+                node.setPayload({ src: nextUrl });
+                updated = true;
+              }
+            });
+            return;
+          }
+
+          if (this.lastSelectedYouTubeNodeKey) {
+            const fallbackNode = $getNodeByKey(this.lastSelectedYouTubeNodeKey);
+            if (fallbackNode instanceof YouTubeEmbedNode) {
+              const nextUrl = updateEmbedUrlPreservingParams(fallbackNode.getPayload().src, inputUrl);
+              if (nextUrl) {
+                fallbackNode.setPayload({ src: nextUrl });
+                updated = true;
+              }
+            } else {
+              this.lastSelectedYouTubeNodeKey = null;
+            }
+          }
+        });
+        return updated;
+      },
+      getYouTubeEmbedUrl: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if ($isNodeSelection(selection)) {
+              const node = selection.getNodes().find((item) => item instanceof YouTubeEmbedNode) as YouTubeEmbedNode | undefined;
+              if (node) {
+                resolve(node.getPayload().src ?? "");
+                return;
+              }
+            }
+
+            if (this.lastSelectedYouTubeNodeKey) {
+              const fallbackNode = $getNodeByKey(this.lastSelectedYouTubeNodeKey);
+              if (fallbackNode instanceof YouTubeEmbedNode) {
+                resolve(fallbackNode.getPayload().src ?? "");
+                return;
+              }
+            }
+
+            resolve("");
+          });
+        }),
     };
   }
 

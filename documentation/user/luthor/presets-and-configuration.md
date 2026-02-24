@@ -43,6 +43,8 @@ The extensive preset is the full-feature default and includes:
 - `className`
 - `variantClassName`
 - `onReady`
+- `minimumDefaultLineHeight` (line-height lower-bound for baseline/default behavior, default `1.5`, minimum `1.0`)
+- `defaultSettings` (typed visual defaults for font/link/list/quote/table/hr/placeholder/codeblock/toolbar)
 
 ## Source-mode behavior
 
@@ -63,11 +65,33 @@ import "@lyfie/luthor/styles.css";
 
 You can customize via wrapper classes and CSS variable overrides in your application stylesheet.
 
+### `defaultSettings` and precedence
+
+`defaultSettings` is a style-only prop that maps grouped visual tokens to CSS variables:
+
+- `font.color`, `font.boldColor`
+- `link.color`
+- `list.markerColor`, `list.checkboxColor`
+- `quote.backgroundColor`, `quote.color`, `quote.indicatorColor`
+- `table.borderColor`, `table.headerBackgroundColor`
+- `hr.color`
+- `placeholder.color`
+- `codeblock.backgroundColor`
+- `toolbar.backgroundColor`
+
+Precedence (highest to lowest):
+
+- `toolbarStyleVars` (toolbar root only) and `quoteStyleVars` (quote vars)
+- `editorThemeOverrides`
+- `defaultSettings`
+- stylesheet-level CSS variable values
+
 ## Advanced extension-level options
 
 The extensive preset internally configures options such as:
 
 - font family option catalogs
+- line-height option ratios (`default` + numeric values `>= 1.0`, with `default` controlled by `minimumDefaultLineHeight`)
 - text/background color option catalogs
 - image upload and alignment behavior
 - embed defaults and URL handling

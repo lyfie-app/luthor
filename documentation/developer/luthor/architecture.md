@@ -46,6 +46,8 @@ This layer intentionally avoids hard-coding one preset shell.
 - extension stack composition (`extensions.tsx`)
 - final editor shell component (`ExtensiveEditor.tsx`)
 
+Other preset modules (`simple-text`, `rich-text-box`, `chat-window`, `email-compose`, `md-text`, `notion-like`, `headless-editor`, `notes`) compose reusable core/headless capabilities with focused UX defaults.
+
 `src/presets/index.ts` exposes a registry model for discoverable presets.
 
 ## Data and command flow
@@ -71,6 +73,32 @@ From `packages/luthor/package.json`:
 - Runtime deps include `@lyfie/luthor-headless`, Lexical packages (`^0.40.0`), `lexical`, and `lucide-react`.
 - React and React DOM are peers: `^18.0.0 || ^19.0.0`.
 - Package version: `2.2.0`.
+
+## Ownership contract (authoritative)
+
+- `@lyfie/luthor` must not introduce new direct Lexical-derived feature behavior in runtime preset source.
+- Feature behavior belongs in `@lyfie/luthor-headless`; `@lyfie/luthor` composes, styles, and re-exports.
+- If a preset requires new editor semantics, first add a headless API and consume it here.
+
+## How to add a feature safely
+
+Decision tree:
+
+1. Does the change alter Lexical behavior (nodes, commands, selection semantics, parsing)?
+   - Yes: implement in `@lyfie/luthor-headless`.
+   - No: continue.
+2. Is the change about preset UI, layout, default config, or theme ergonomics?
+   - Yes: implement in `@lyfie/luthor`.
+   - No: continue.
+3. Is it cross-cutting?
+   - Implement headless behavior first, then wire luthor preset UX.
+
+Required delivery steps:
+
+- Update typed public APIs first.
+- Add tests (headless behavior + luthor UX integration).
+- Keep docs synchronized in same PR.
+- Pass rule-contract, lint, test, and build gates.
 
 ## Related documents
 

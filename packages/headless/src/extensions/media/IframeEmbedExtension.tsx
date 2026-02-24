@@ -27,6 +27,7 @@ export type IframeEmbedPayload = {
   height: number;
   alignment: EmbedAlignment;
   title?: string;
+  caption?: string;
 };
 
 export interface IframeEmbedConfig extends BaseExtensionConfig {
@@ -39,6 +40,10 @@ export type IframeEmbedCommands = {
   insertIframeEmbed: (inputUrl: string, width?: number, height?: number, title?: string) => void;
   setIframeEmbedAlignment: (alignment: EmbedAlignment) => void;
   resizeIframeEmbed: (width: number, height: number) => void;
+  setIframeEmbedCaption: (caption: string) => void;
+  getIframeEmbedCaption: () => Promise<string>;
+  updateIframeEmbedUrl: (inputUrl: string) => boolean;
+  getIframeEmbedUrl: () => Promise<string>;
 };
 
 export type IframeEmbedQueries = {
@@ -57,6 +62,7 @@ type SerializedIframeEmbedNode = Spread<
     height: number;
     alignment: EmbedAlignment;
     title?: string;
+    caption?: string;
   },
   SerializedLexicalNode
 >;
@@ -71,7 +77,14 @@ function ensureProtocol(input: string): string {
 
 function parseUrl(input: string): URL | null {
   try {
-    return new URL(ensureProtocol(input));
+    const parsed = new URL(ensureProtocol(input.trim()));
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    if (!parsed.hostname) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -128,10 +141,38 @@ export class IframeEmbedNode extends DecoratorNode<ReactNode> {
       height: clampSize(serialized.height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
       alignment: serialized.alignment,
       title: serialized.title,
+      caption: serialized.caption ?? "",
     });
   }
 
   static importDOM(): DOMConversionMap | null {
+    const conversion = (element: HTMLElement): DOMConversionOutput => {
+      const iframe = element.querySelector("iframe");
+      if (!iframe) {
+        return { node: null };
+      }
+
+      const src = iframe.getAttribute("src") ?? "";
+      const width = Number(iframe.getAttribute("width") ?? "640");
+      const height = Number(iframe.getAttribute("height") ?? "360");
+      const alignment =
+        (element.getAttribute("data-align") as EmbedAlignment | null) ??
+        "center";
+      const figcaption = element.querySelector("figcaption");
+      const caption = figcaption?.textContent ?? element.getAttribute("data-caption") ?? "";
+
+      return {
+        node: new IframeEmbedNode({
+          src,
+          width: clampSize(width, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
+          height: clampSize(height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
+          alignment,
+          title: iframe.getAttribute("title") ?? undefined,
+          caption,
+        }),
+      };
+    };
+
     return {
       div: (domNode: HTMLElement) => {
         const isIframeEmbed =
@@ -143,29 +184,21 @@ export class IframeEmbedNode extends DecoratorNode<ReactNode> {
         }
 
         return {
-          conversion: (element: HTMLElement): DOMConversionOutput => {
-            const iframe = element.querySelector("iframe");
-            if (!iframe) {
-              return { node: null };
-            }
+          conversion,
+          priority: 4,
+        };
+      },
+      figure: (domNode: HTMLElement) => {
+        const isIframeEmbed =
+          domNode.hasAttribute("data-lexical-iframe-embed") ||
+          domNode.hasAttribute("data-iframe-embed");
 
-            const src = iframe.getAttribute("src") ?? "";
-            const width = Number(iframe.getAttribute("width") ?? "640");
-            const height = Number(iframe.getAttribute("height") ?? "360");
-            const alignment =
-              (element.getAttribute("data-align") as EmbedAlignment | null) ??
-              "center";
+        if (!isIframeEmbed) {
+          return null;
+        }
 
-            return {
-              node: new IframeEmbedNode({
-                src,
-                width: clampSize(width, MIN_EMBED_WIDTH, MAX_EMBED_WIDTH),
-                height: clampSize(height, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
-                alignment,
-                title: iframe.getAttribute("title") ?? undefined,
-              }),
-            };
-          },
+        return {
+          conversion,
           priority: 4,
         };
       },
@@ -196,14 +229,17 @@ export class IframeEmbedNode extends DecoratorNode<ReactNode> {
       height: this.__payload.height,
       alignment: this.__payload.alignment,
       title: this.__payload.title,
+      caption: this.__payload.caption,
     };
   }
 
   exportDOM(): { element: HTMLElement } {
-    const element = document.createElement("div");
+    const element = document.createElement("figure");
     element.setAttribute("data-lexical-iframe-embed", "true");
     element.setAttribute("data-iframe-embed", "");
     element.setAttribute("data-align", this.__payload.alignment);
+    element.setAttribute("data-caption", this.__payload.caption ?? "");
+    element.style.margin = "1rem 0";
 
     const iframe = document.createElement("iframe");
     iframe.setAttribute("src", this.__payload.src);
@@ -216,6 +252,12 @@ export class IframeEmbedNode extends DecoratorNode<ReactNode> {
     iframe.style.border = "0";
 
     element.appendChild(iframe);
+
+    if (this.__payload.caption) {
+      const figcaption = document.createElement("figcaption");
+      figcaption.textContent = this.__payload.caption;
+      element.appendChild(figcaption);
+    }
 
     return { element };
   }
@@ -381,6 +423,16 @@ function IframeEmbedComponent({
   };
 
   const wrapperStyle = useMemo(() => getAlignmentStyles(payload.alignment), [payload.alignment]);
+  const captionStyle = useMemo<React.CSSProperties>(
+    () => ({
+      marginTop: "0.5rem",
+      textAlign: "center",
+      color: "#666",
+      fontSize: "0.9em",
+      fontStyle: "italic",
+    }),
+    [],
+  );
   const showResizeHandles = isSelected && !isResizing;
 
   return (
@@ -427,6 +479,7 @@ function IframeEmbedComponent({
           onMouseDown={resizeFromHandle("height")}
         />
       </div>
+      {payload.caption ? <figcaption style={captionStyle}>{payload.caption}</figcaption> : null}
     </div>
   );
 }
@@ -476,6 +529,7 @@ export class IframeEmbedExtension extends BaseExtension<
             height: clampSize(height ?? this.config.defaultHeight ?? 360, MIN_EMBED_HEIGHT, MAX_EMBED_HEIGHT),
             alignment: this.config.defaultAlignment ?? "center",
             title,
+            caption: "",
           });
 
           const selection = $getSelection();
@@ -517,6 +571,68 @@ export class IframeEmbedExtension extends BaseExtension<
           });
         });
       },
+      setIframeEmbedCaption: (caption: string) => {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isNodeSelection(selection)) {
+            return;
+          }
+
+          selection.getNodes().forEach((node) => {
+            if (node instanceof IframeEmbedNode) {
+              node.setPayload({ caption });
+            }
+          });
+        });
+      },
+      getIframeEmbedCaption: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if (!$isNodeSelection(selection)) {
+              resolve("");
+              return;
+            }
+
+            const node = selection.getNodes().find((item) => item instanceof IframeEmbedNode) as IframeEmbedNode | undefined;
+            resolve(node?.getPayload().caption ?? "");
+          });
+        }),
+      updateIframeEmbedUrl: (inputUrl: string) => {
+        const parsedUrl = parseUrl(inputUrl);
+        if (!parsedUrl) {
+          return false;
+        }
+
+        let updated = false;
+        editor.update(() => {
+          const selection = $getSelection();
+          if (!$isNodeSelection(selection)) {
+            return;
+          }
+
+          selection.getNodes().forEach((node) => {
+            if (node instanceof IframeEmbedNode) {
+              node.setPayload({ src: parsedUrl.toString() });
+              updated = true;
+            }
+          });
+        });
+        return updated;
+      },
+      getIframeEmbedUrl: () =>
+        new Promise((resolve) => {
+          editor.getEditorState().read(() => {
+            const selection = $getSelection();
+            if (!$isNodeSelection(selection)) {
+              resolve("");
+              return;
+            }
+
+            const node = selection.getNodes().find((item) => item instanceof IframeEmbedNode) as IframeEmbedNode | undefined;
+            resolve(node?.getPayload().src ?? "");
+          });
+        }),
     };
   }
 

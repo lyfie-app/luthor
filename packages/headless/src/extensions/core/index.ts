@@ -17,6 +17,7 @@ export {
 export {
   EmojiExtension,
   emojiExtension,
+  LIGHTWEIGHT_EMOJI_CATALOG,
 } from "./EmojiExtension";
 export { richTextExtension, type RichTextConfig } from "./RichTextExtension";
 export {
@@ -61,6 +62,7 @@ export type {
 } from "./SlashCommandExtension";
 
 export type {
+  EmojiCatalogAdapter,
   EmojiCatalogItem,
   EmojiSuggestionState,
   EmojiConfig,
