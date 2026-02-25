@@ -20,7 +20,12 @@ function isInternalNavigationTarget(target: EventTarget | null): boolean {
       targetUrl.pathname === currentUrl.pathname &&
       targetUrl.search === currentUrl.search &&
       targetUrl.hash === currentUrl.hash;
+    const isSameRouteDifferentHash =
+      targetUrl.pathname === currentUrl.pathname &&
+      targetUrl.search === currentUrl.search &&
+      targetUrl.hash !== currentUrl.hash;
     if (isSameLocation) return false;
+    if (isSameRouteDifferentHash) return false;
   } catch {
     return false;
   }

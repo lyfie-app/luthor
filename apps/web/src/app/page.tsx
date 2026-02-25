@@ -258,28 +258,13 @@ export default async function HomePage() {
           <div className="hero-heading-container">
             <span className="eyebrow">Open Source & MIT Licensed</span>
             <h1 className="hero-title">
-              Open Source <span className="hero-highlight-title">React Rich Text Editor</span> Built On Lexical
+              Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring
             </h1>
             <p className="hero-copy">
-              Luthor is a TypeScript-first rich text editor for React teams that need production speed without giving
-              up control. Use presets to ship quickly, or use headless primitives to design a fully custom editing
-              surface. Every core workflow is built on Lexical for reliable performance.
+              Type-safe, open-source, typescript friendly and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span>
+              - designed for developers who want control without chaos. Every feature. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
             </p>
-            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>
-            <div className="hero-uses-container" aria-label="Jump links">
-              <a className="eyebrow-muted" href="#getting-started">
-                <span>Getting Started</span>
-              </a>
-              <a className="eyebrow-muted" href="#installation">
-                <span>Installation</span>
-              </a>
-              <a className="eyebrow-muted" href="#demo">
-                <span>Demo</span>
-              </a>
-              <a className="eyebrow-muted" href="#features">
-                <span>Features</span>
-              </a>
-            </div>
+            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>            
             <div className="hero-uses-container">
               {heroUseCases.map((useCase) => (
                 <span className="eyebrow-muted" key={useCase.label}>
@@ -287,16 +272,6 @@ export default async function HomePage() {
                   <span>{useCase.label}</span>
                 </span>
               ))}
-            </div>
-            <div className="hero-actions">
-              <Link className="btn btn-primary" href="/docs/getting-started/">
-                <RocketLaunch className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>Get Started</span>
-              </Link>
-              <Link className="btn btn-muted" href={GITHUB_URL}>
-                <GithubLogo className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>View on GitHub</span>
-              </Link>
             </div>
           </div>
 
@@ -316,17 +291,12 @@ export default async function HomePage() {
       </section>
 
       <section className="section start-hub" id="getting-started">
-        <div className="container">
-          <h2 className="section-title">Start Here</h2>
-          <p className="section-copy start-lead">
-            Choose your path in minutes: learn the architecture, install the package, and test the live editor before
-            integrating into production.
-          </p>
+        <div className="container">          
           <div className="start-grid">
             <article className="start-card">
               <p className="start-kicker">
                 <RocketLaunch size={16} weight="duotone" aria-hidden="true" />
-                <span>Getting Started</span>
+                <span>Introduction</span>
               </p>
               <h3>Understand the package model</h3>
               <p>
@@ -334,13 +304,13 @@ export default async function HomePage() {
               </p>
               <Link className="btn btn-muted" href="/docs/getting-started/">
                 <RocketLaunch className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>Open introduction</span>
+                <span>Get Started</span>
               </Link>
             </article>
             <article className="start-card" id="installation">
               <p className="start-kicker">
                 <Package size={16} weight="duotone" aria-hidden="true" />
-                <span>Installation</span>
+                <span>Configuration</span>
               </p>
               <h3>Ship your first editor quickly</h3>
               <p>
@@ -348,13 +318,13 @@ export default async function HomePage() {
               </p>
               <Link className="btn btn-primary" href="/docs/getting-started/installation/">
                 <Package className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>Read installation guide</span>
+                <span>Installation Guide</span>
               </Link>
             </article>
             <article className="start-card" id="demo">
               <p className="start-kicker">
                 <PlayCircle size={16} weight="duotone" aria-hidden="true" />
-                <span>Demo</span>
+                <span>Demonstration</span>
               </p>
               <h3>Validate interaction quality live</h3>
               <p>
@@ -362,7 +332,7 @@ export default async function HomePage() {
               </p>
               <Link className="btn btn-muted" href="/demo/">
                 <PlayCircle className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>Open full demo page</span>
+                <span>Demo</span>
               </Link>
             </article>
           </div>

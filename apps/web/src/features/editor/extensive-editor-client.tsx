@@ -9,5 +9,8 @@ type ExtensiveEditorClientProps = {
 };
 
 export function ExtensiveEditorClient({ siteTheme }: ExtensiveEditorClientProps) {
-  return <ExtensiveEditor initialTheme={siteTheme} />;
+  return <ExtensiveEditor 
+  initialTheme={siteTheme}
+  toolbarAlignment='center'
+   />;
 }

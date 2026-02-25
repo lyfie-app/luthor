@@ -40,7 +40,7 @@ const sora = Sora({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${SITE_NAME} | Open Source React Rich Text Editor for Lexical`,
+    default: `${SITE_NAME} | Open Source Rich Text Editor for React`,
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} | Open Source React Rich Text Editor for Lexical`,
+    title: `${SITE_NAME} | Open Source Rich Text Editor for React`,
     description: SITE_DESCRIPTION,
     images: [
       {
@@ -67,7 +67,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@lyfieapp',
     creator: '@lyfieapp',
-    title: `${SITE_NAME} | Open Source React Rich Text Editor for Lexical`,
+    title: `${SITE_NAME} | Open Source Rich Text Editor for React`,
     description: SITE_DESCRIPTION,
     images: [SOCIAL_CARD_PATH],
   },

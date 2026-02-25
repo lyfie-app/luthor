@@ -201,6 +201,10 @@ a {
   gap: 1.2rem;
 }
 
+.nav-secondary-link {
+  display: inline-flex;
+}
+
 .site-nav a,
 .theme-toggle {
   display: inline-flex;
@@ -1846,6 +1850,10 @@ a {
 }
 
 @media (max-width: 720px) {
+  .nav-secondary-link {
+    display: none !important;
+  }
+
   .start-grid {
     grid-template-columns: 1fr;
   }
