@@ -1,5 +1,14 @@
 import { GITHUB_URL, NPM_URL, SEO_FAQS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/config/site';
 const softwareVersion = '2.x';
+const PRIMARY_NAV_LINKS = [
+  { name: 'Home', url: `${SITE_URL}/` },
+  { name: 'Getting Started', url: `${SITE_URL}/docs/getting-started/` },
+  { name: 'Installation', url: `${SITE_URL}/docs/getting-started/installation/` },
+  { name: 'Demo', url: `${SITE_URL}/demo/` },
+  { name: 'Features', url: `${SITE_URL}/#features` },
+  { name: 'Luthor Presets', url: `${SITE_URL}/docs/luthor/presets/` },
+  { name: 'Headless Features', url: `${SITE_URL}/docs/luthor-headless/features/` },
+];
 
 export function HomeJsonLd() {
   const schema = [
@@ -41,6 +50,11 @@ export function HomeJsonLd() {
       description: SITE_DESCRIPTION,
       url: `${SITE_URL}/`,
       inLanguage: 'en-US',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${SITE_URL}/docs/getting-started/?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
     },
     {
       '@context': 'https://schema.org',
@@ -49,6 +63,12 @@ export function HomeJsonLd() {
       url: `${SITE_URL}/`,
       sameAs: [GITHUB_URL, NPM_URL],
       logo: `${SITE_URL}/favicon.svg`,
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SiteNavigationElement',
+      name: PRIMARY_NAV_LINKS.map((item) => item.name),
+      url: PRIMARY_NAV_LINKS.map((item) => item.url),
     },
     {
       '@context': 'https://schema.org',

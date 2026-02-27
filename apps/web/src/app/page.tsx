@@ -5,11 +5,13 @@ import {
   GitCommit,
   GithubLogo,
   Package,
+  PlayCircle,
   RocketLaunch,
   ShieldCheck,
   Sparkle,
   StackSimple,
 } from '@phosphor-icons/react/dist/ssr';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
   GITHUB_URL,
@@ -19,10 +21,8 @@ import {
   SEO_FAQS,
   SPONSORS_URL,
 } from '@/config/site';
-import { ExtensiveEditorShell } from '@/features/editor/extensive-editor-shell';
 import { HomeJsonLd } from '@/features/home/home-json-ld';
 import { LocalLastSync } from '@/features/home/local-last-sync';
-import { WhyLuthorFeatures } from '@/features/home/why-luthor-features';
 import { WhyLuthorReasons } from '@/features/home/why-luthor-reasons';
 import { formatCompact } from '@/utils/format';
 
@@ -142,13 +142,27 @@ const compatibilityRows = [
   },
 ] as const;
 
+const ExtensiveEditorShell = dynamic(
+  () => import('@/features/editor/extensive-editor-shell').then((mod) => mod.ExtensiveEditorShell),
+  {
+    loading: () => <p className="section-copy">Loading editor demo...</p>,
+  },
+);
+
+const WhyLuthorFeatures = dynamic(
+  () => import('@/features/home/why-luthor-features').then((mod) => mod.WhyLuthorFeatures),
+  {
+    loading: () => <p className="section-copy">Loading feature previews...</p>,
+  },
+);
+
 async function safeFetchJson<T>(url: string): Promise<T | null> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 4500);
+  const timeout = setTimeout(() => controller.abort(), 1800);
 
   try {
     const response = await fetch(url, {
-      next: { revalidate: 900 },
+      next: { revalidate: 21600 },
       headers: {
         accept: 'application/json',
       },
@@ -243,12 +257,14 @@ export default async function HomePage() {
         <div className="container hero-grid">
           <div className="hero-heading-container">
             <span className="eyebrow">Open Source & MIT Licensed</span>
-            <h1 className="hero-title">Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring</h1>
+            <h1 className="hero-title">
+              Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring
+            </h1>
             <p className="hero-copy">
               Type-safe, open-source, typescript friendly and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span>
-              {' '} - designed for developers who want control without chaos. Every feature. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
+              - designed for developers who want control without chaos. Every feature. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
             </p>
-            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>
+            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>            
             <div className="hero-uses-container">
               {heroUseCases.map((useCase) => (
                 <span className="eyebrow-muted" key={useCase.label}>
@@ -256,16 +272,6 @@ export default async function HomePage() {
                   <span>{useCase.label}</span>
                 </span>
               ))}
-            </div>
-            <div className="hero-actions">
-              <Link className="btn btn-primary" href="/docs/getting-started/">
-                <RocketLaunch className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>Get Started</span>
-              </Link>
-              <Link className="btn btn-muted" href={GITHUB_URL}>
-                <GithubLogo className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
-                <span>View on GitHub</span>
-              </Link>
             </div>
           </div>
 
@@ -280,6 +286,55 @@ export default async function HomePage() {
             <div className="editor-pane">
               <ExtensiveEditorShell syncWithSiteTheme />
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section start-hub" id="getting-started">
+        <div className="container">          
+          <div className="start-grid">
+            <article className="start-card">
+              <p className="start-kicker">
+                <RocketLaunch size={16} weight="duotone" aria-hidden="true" />
+                <span>Introduction</span>
+              </p>
+              <h3>Understand the package model</h3>
+              <p>
+                Compare preset and headless approaches, then pick the right integration path for your team.
+              </p>
+              <Link className="btn btn-muted" href="/docs/getting-started/">
+                <RocketLaunch className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+                <span>Get Started</span>
+              </Link>
+            </article>
+            <article className="start-card" id="installation">
+              <p className="start-kicker">
+                <Package size={16} weight="duotone" aria-hidden="true" />
+                <span>Configuration</span>
+              </p>
+              <h3>Ship your first editor quickly</h3>
+              <p>
+                Install from npm, import styles, and render a production-ready preset with TypeScript-safe defaults.
+              </p>
+              <Link className="btn btn-primary" href="/docs/getting-started/installation/">
+                <Package className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+                <span>Installation Guide</span>
+              </Link>
+            </article>
+            <article className="start-card" id="demo">
+              <p className="start-kicker">
+                <PlayCircle size={16} weight="duotone" aria-hidden="true" />
+                <span>Demonstration</span>
+              </p>
+              <h3>Validate interaction quality live</h3>
+              <p>
+                Test typing performance, formatting behavior, and extension readiness in a real browser environment.
+              </p>
+              <Link className="btn btn-muted" href="/demo/">
+                <PlayCircle className="btn-icon" size={16} weight="duotone" aria-hidden="true" />
+                <span>Demo</span>
+              </Link>
+            </article>
           </div>
         </div>
       </section>
@@ -349,7 +404,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="section">
+      <section className="section" id="features">
         <div className="container">
           <h2 className="section-title">Features</h2>
           <p className="section-copy">

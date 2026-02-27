@@ -1,11 +1,11 @@
 'use client';
 
-import { BookOpen, GithubLogo, MoonStars, PlayCircle, Sun } from '@phosphor-icons/react';
+import { BookOpen, GithubLogo, House, MoonStars, PlayCircle, RocketLaunch, Sun } from '@phosphor-icons/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { GITHUB_URL, REACT_PLAYGROUND_URL } from '@/config/site';
+import { GITHUB_URL } from '@/config/site';
 
 const THEME_STORAGE_KEY = 'luthor-site-theme';
 
@@ -39,7 +39,9 @@ export function SiteHeader() {
   }, []);
 
   useEffect(() => {
+    router.prefetch('/');
     router.prefetch('/docs/getting-started/');
+    router.prefetch('/docs/getting-started/installation/');
     router.prefetch('/demo/');
   }, [router]);
 
@@ -51,6 +53,7 @@ export function SiteHeader() {
     document.documentElement.style.colorScheme = nextTheme;
   }
 
+  const isHomeActive = pathname === '/';
   const isDocsActive = pathname.startsWith('/docs');
   const isDemoActive = pathname.startsWith('/demo');
 
@@ -65,25 +68,34 @@ export function SiteHeader() {
               className="brand-logo"
               src="/luthor-logo-horizontal.png"
               alt="Luthor"
-              width={7200}
-              height={1394}
+              width={360}
+              height={70}
+              sizes="(max-width: 768px) 180px, 220px"
               priority
               onError={() => setLogoFailed(true)}
             />
           )}
         </Link>
         <nav className="site-nav" aria-label="Primary">
-          <Link href="/docs/" aria-current={isDocsActive ? 'page' : undefined} className={isDocsActive ? 'active' : undefined}>
-            <BookOpen size={16} weight="duotone" aria-hidden="true" />
-            <span>Documentation</span>
-          </Link>
+          <Link href="/" aria-current={isHomeActive ? 'page' : undefined} className={isHomeActive ? 'active' : undefined}>
+            <House size={16} weight="duotone" aria-hidden="true" />
+            <span>Home</span>
+          </Link>          
+          <Link href="/#features" className="nav-secondary-link">
+            <PlayCircle size={16} weight="duotone" aria-hidden="true" />
+            <span>Features</span>
+          </Link>          
           <Link href="/demo/" aria-current={isDemoActive ? 'page' : undefined} className={isDemoActive ? 'active' : undefined}>
             <PlayCircle size={16} weight="duotone" aria-hidden="true" />
             <span>Demo</span>
-          </Link>
-          <Link href={REACT_PLAYGROUND_URL} target="_blank" rel="noopener noreferrer">
-            <PlayCircle size={16} weight="duotone" aria-hidden="true" />
-            <span>Playground</span>
+          </Link>    
+          <Link
+            href="/docs/getting-started/"
+            aria-current={isDocsActive ? 'page' : undefined}
+            className={isDocsActive ? 'active' : undefined}
+          >
+            <BookOpen size={16} weight="duotone" aria-hidden="true" />
+            <span>Documentation</span>
           </Link>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
             <GithubLogo size={16} weight="duotone" aria-hidden="true" />
