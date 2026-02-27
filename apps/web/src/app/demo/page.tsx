@@ -14,8 +14,15 @@ export default function DemoPage() {
   return (
     <section className="section">
       <div className="container">
-        <h1 className="hero-title demo-title">Demo playground</h1>
-        <p className="section-copy">Browse every preset from one place and preview each in a full interactive editor.</p>
+        <div className="demo-hero">
+          <p className="eyebrow demo-hero-eyebrow">Live Playground</p>
+          <h1 className="hero-title demo-title demo-page-title">
+            Build Faster With <span className="hero-highlight-text">Production-Ready</span> Presets
+          </h1>
+          <p className="section-copy demo-page-copy">
+            Compare editing experiences, fine-tune behavior, and ship the setup that matches your product.
+          </p>
+        </div>
         <PresetShowcaseShell />
       </div>
     </section>

@@ -47,11 +47,15 @@
   min-height: 0;
   overflow-y: auto;
   scrollbar-width: thin;
+  --luthor-editor-content-padding-y: 12px;
+  --luthor-editor-content-padding-x: 14px;
+  --luthor-first-block-offset: 0px;
 }
 
 .luthor-preset-chat-window .luthor-content-editable {
-  padding: 12px 14px;
+  padding: var(--luthor-editor-content-padding-y) var(--luthor-editor-content-padding-x);
   min-height: 100%;
+  box-sizing: border-box;
   line-height: 1.45;
 }
 
@@ -61,8 +65,9 @@
 }
 
 .luthor-preset-chat-window .luthor-placeholder {
-  top: 12px;
-  left: 14px;
+  top: var(--luthor-editor-content-padding-y);
+  left: var(--luthor-editor-content-padding-x);
+  line-height: 1.45;
 }
 
 .luthor-chat-window-bottom-toolbar {
