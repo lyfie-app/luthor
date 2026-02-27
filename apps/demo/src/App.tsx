@@ -48,7 +48,25 @@ function App() {
       case "rich-text-box":
         return <RichTextBoxEditor showDefaultContent={false} compactToolbar placeholder="Short rich text..." />;
       case "chat-window":
-        return <ChatWindowEditor showDefaultContent={false} onSend={(payload) => console.log("chat send", payload)} />;
+        return <ChatWindowEditor
+          placeholder="Type a message"
+          maxHeight={250}
+          minHeight={150}
+          submitOnEnter={false}
+          showBottomToolbar
+          toolbarButtons={[
+            { id: 'attachment', content: 'Attach', ariaLabel: 'Attach file', onClick: () => {} },
+            { id: 'image', content: 'Image', ariaLabel: 'Add image', onClick: () => {} },
+          ]}
+          sendButtonPlacement="inside"
+          outputFormat="md"
+          formattingOptions={{ bold: true, italic: true, strikethrough: true }}
+          onSend={({ format, text, markdown, json }) => {
+            console.log("chat-send", { format, text });
+            // Full payload available if needed:
+            // console.log({ format, text, markdown, json });
+          }}
+        />
       case "email-compose":
         return <EmailComposeEditor showDefaultContent={false} showCc showSubject />;
       case "md-text":
