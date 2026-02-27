@@ -48,12 +48,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lyfie-app/luthor.git"
+    "url": "https://github.com/lyfie-org/luthor.git"
   },
   "bugs": {
-    "url": "https://github.com/lyfie-app/luthor/issues"
+    "url": "https://github.com/lyfie-org/luthor/issues"
   },
-  "homepage": "https://github.com/lyfie-app/luthor#readme",
+  "homepage": "https://github.com/lyfie-org/luthor#readme",
   "dependencies": {
     "@lexical/code": "^0.40.0",
     "@lexical/link": "^0.40.0",

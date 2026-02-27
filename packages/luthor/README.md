@@ -6,15 +6,15 @@
 
 <div align="center">
 
-[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=flat-square)](https://github.com/lyfie-app/luthor)
-[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=flat-square)](https://github.com/lyfie-app/luthor/releases)
+[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=flat-square)](https://github.com/lyfie-org/luthor)
+[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=flat-square)](https://github.com/lyfie-org/luthor/releases)
 
 [![npm version](https://img.shields.io/npm/v/@lyfie/luthor?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor)
 [![npm downloads](https://img.shields.io/npm/dm/@lyfie/luthor?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@lyfie/luthor?style=flat-square)](https://bundlephobia.com/package/@lyfie/luthor)
 [![types](https://img.shields.io/npm/types/@lyfie/luthor?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor)
-[![license](https://img.shields.io/npm/l/@lyfie/luthor?style=flat-square)](https://github.com/lyfie-app/luthor/blob/main/LICENSE)
-[![last commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=flat-square)](https://github.com/lyfie-app/luthor/commits/main)
+[![license](https://img.shields.io/npm/l/@lyfie/luthor?style=flat-square)](https://github.com/lyfie-org/luthor/blob/main/LICENSE)
+[![last commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=flat-square)](https://github.com/lyfie-org/luthor/commits/main)
 
 </div>
 
@@ -69,9 +69,9 @@ export function App() {
 
 - Docs landing: [luthor.fyi/docs/getting-started/luthor](https://www.luthor.fyi/docs/getting-started/luthor)
 - Presets docs: [luthor.fyi/docs/luthor/presets](https://www.luthor.fyi/docs/luthor/presets)
-- User guide (repo): [documentation/user/luthor/getting-started.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/getting-started.md)
-- Presets/config: [documentation/user/luthor/presets-and-configuration.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/presets-and-configuration.md)
-- Extensive editor guide: [documentation/user/luthor/extensive-editor.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/luthor/extensive-editor.md)
+- User guide (repo): [documentation/user/luthor/getting-started.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/luthor/getting-started.md)
+- Presets/config: [documentation/user/luthor/presets-and-configuration.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/luthor/presets-and-configuration.md)
+- Extensive editor guide: [documentation/user/luthor/extensive-editor.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/luthor/extensive-editor.md)
 
 ## Need Headless Control?
 

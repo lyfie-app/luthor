@@ -6,15 +6,15 @@
 
 <div align="center">
 
-[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=flat-square)](https://github.com/lyfie-app/luthor)
-[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=flat-square)](https://github.com/lyfie-app/luthor/releases)
+[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=flat-square)](https://github.com/lyfie-org/luthor)
+[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=flat-square)](https://github.com/lyfie-org/luthor/releases)
 
 [![npm version](https://img.shields.io/npm/v/@lyfie/luthor-headless?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor-headless)
 [![npm downloads](https://img.shields.io/npm/dm/@lyfie/luthor-headless?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor-headless)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@lyfie/luthor-headless?style=flat-square)](https://bundlephobia.com/package/@lyfie/luthor-headless)
 [![types](https://img.shields.io/npm/types/@lyfie/luthor-headless?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor-headless)
-[![license](https://img.shields.io/npm/l/@lyfie/luthor-headless?style=flat-square)](https://github.com/lyfie-app/luthor/blob/main/LICENSE)
-[![last commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=flat-square)](https://github.com/lyfie-app/luthor/commits/main)
+[![license](https://img.shields.io/npm/l/@lyfie/luthor-headless?style=flat-square)](https://github.com/lyfie-org/luthor/blob/main/LICENSE)
+[![last commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=flat-square)](https://github.com/lyfie-org/luthor/commits/main)
 
 </div>
 
@@ -88,9 +88,9 @@ export function Editor() {
 
 - Docs landing: [luthor.fyi/docs/getting-started/luthor-headless](https://www.luthor.fyi/docs/getting-started/luthor-headless)
 - Features docs: [luthor.fyi/docs/luthor-headless/features](https://www.luthor.fyi/docs/luthor-headless/features)
-- User guide (repo): [documentation/user/headless/getting-started.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/getting-started.md)
-- Extensions/config: [documentation/user/headless/extensions-and-configuration.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/extensions-and-configuration.md)
-- Import/export: [documentation/user/headless/import-export.md](https://github.com/lyfie-app/luthor/blob/main/documentation/user/headless/import-export.md)
+- User guide (repo): [documentation/user/headless/getting-started.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/headless/getting-started.md)
+- Extensions/config: [documentation/user/headless/extensions-and-configuration.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/headless/extensions-and-configuration.md)
+- Import/export: [documentation/user/headless/import-export.md](https://github.com/lyfie-org/luthor/blob/main/documentation/user/headless/import-export.md)
 
 ## Related Packages
 

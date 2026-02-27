@@ -6,7 +6,7 @@ const WEB_ROOT = process.cwd();
 const REPO_ROOT = path.resolve(WEB_ROOT, '..', '..');
 const SOURCE_DOCS_DIR = path.join(WEB_ROOT, 'src', 'content', 'docs');
 const GENERATED_DOCS_INDEX_FILE = path.join(WEB_ROOT, 'src', 'data', 'docs-index.generated.ts');
-const GITHUB_BLOB_BASE = 'https://github.com/lyfie-app/luthor/blob/main';
+const GITHUB_BLOB_BASE = 'https://github.com/lyfie-org/luthor/blob/main';
 
 function isMarkdownFile(filename) {
   return filename.endsWith('.md') || filename.endsWith('.mdx');
