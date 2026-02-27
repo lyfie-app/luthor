@@ -567,6 +567,86 @@ a {
   font-size: 0.95rem;
 }
 
+.demo-showcase-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 260px) 1fr;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.demo-preset-sidebar {
+  position: sticky;
+  top: calc(74px + var(--space-3));
+  max-height: calc(100vh - 74px - (var(--space-3) * 2));
+  height: fit-content;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--bg-elevated) 88%, var(--surface) 12%);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-3);
+}
+
+.demo-preset-sidebar h2 {
+  margin: 0;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  font-size: 1.05rem;
+}
+
+.demo-preset-sidebar-copy {
+  margin: 0.4rem 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.demo-preset-sidebar nav {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.demo-preset-nav-item {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-elevated) 90%, var(--surface) 10%);
+  color: var(--muted);
+  padding: 0.6rem 0.7rem;
+  text-align: left;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.demo-preset-nav-item:hover {
+  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 44%, transparent);
+}
+
+.demo-preset-nav-item.is-active {
+  color: #fff;
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: linear-gradient(130deg, var(--accent), #1387da);
+}
+
+.demo-showcase-frame {
+  min-height: clamp(360px, 50vh, 620px);
+  max-height: none;
+  height: auto;
+}
+
+.demo-showcase-editor-pane {
+  display: block;
+  overflow: visible;
+}
+
+.demo-showcase-editor-pane > * {
+  width: min(100%, 1080px);
+  min-height: clamp(320px, 42vh, 540px);
+}
+
 .section-title {
   margin: 0 0 var(--space-2);
   font-family: var(--font-display), var(--font-body), sans-serif;
@@ -1832,6 +1912,20 @@ a {
 }
 
 @media (max-width: 900px) {
+  .demo-showcase-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-preset-sidebar {
+    position: static;
+    max-height: none;
+    top: auto;
+  }
+
+  .demo-preset-sidebar nav {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
   .docs-layout {
     grid-template-columns: 1fr;
   }
