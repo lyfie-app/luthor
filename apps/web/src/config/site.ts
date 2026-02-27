@@ -25,7 +25,7 @@ export const SOCIAL_CARD_PATH = '/social-card.svg';
 
 export const PRIMARY_PACKAGE_NAME = '@lyfie/luthor';
 export const HEADLESS_PACKAGE_NAME = '@lyfie/luthor-headless';
-export const GITHUB_URL = 'https://github.com/lyfie-app/luthor';
+export const GITHUB_URL = 'https://github.com/lyfie-org/luthor';
 export const NPM_URL = 'https://www.npmjs.com/package/@lyfie/luthor';
 export const SPONSORS_URL = 'https://github.com/sponsors/lyfie-app';
 export const REACT_PLAYGROUND_URL = 'https://stackblitz.com/edit/luthor-playground';

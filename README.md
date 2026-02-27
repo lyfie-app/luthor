@@ -6,13 +6,13 @@
 
 <div align="center">
 
-[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=for-the-badge)](https://github.com/lyfie-app/luthor)
-[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=for-the-badge)](https://github.com/lyfie-app/luthor/releases)
+[![Project Status](https://img.shields.io/badge/status-active%20development-orange?style=for-the-badge)](https://github.com/lyfie-org/luthor)
+[![Stability](https://img.shields.io/badge/stable%20release-expected%20soon-blue?style=for-the-badge)](https://github.com/lyfie-org/luthor/releases)
 
-[![Quality Gates](https://img.shields.io/github/actions/workflow/status/lyfie-app/luthor/quality-gates.yml?branch=main&label=quality%20gates&style=for-the-badge)](https://github.com/lyfie-app/luthor/actions/workflows/quality-gates.yml)
-[![Publish Packages](https://img.shields.io/github/actions/workflow/status/lyfie-app/luthor/publish-packages.yml?branch=main&label=publish&style=for-the-badge)](https://github.com/lyfie-app/luthor/actions/workflows/publish-packages.yml)
-[![GitHub Release](https://img.shields.io/github/v/release/lyfie-app/luthor?style=for-the-badge)](https://github.com/lyfie-app/luthor/releases)
-[![Last Commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=for-the-badge)](https://github.com/lyfie-app/luthor/commits/main)
+[![Quality Gates](https://img.shields.io/github/actions/workflow/status/lyfie-app/luthor/quality-gates.yml?branch=main&label=quality%20gates&style=for-the-badge)](https://github.com/lyfie-org/luthor/actions/workflows/quality-gates.yml)
+[![Publish Packages](https://img.shields.io/github/actions/workflow/status/lyfie-app/luthor/publish-packages.yml?branch=main&label=publish&style=for-the-badge)](https://github.com/lyfie-org/luthor/actions/workflows/publish-packages.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/lyfie-app/luthor?style=for-the-badge)](https://github.com/lyfie-org/luthor/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=for-the-badge)](https://github.com/lyfie-org/luthor/commits/main)
 [![NPM - @lyfie/luthor](https://img.shields.io/npm/v/@lyfie/luthor?style=for-the-badge&label=@lyfie/luthor)](https://www.npmjs.com/package/@lyfie/luthor)
 [![NPM - @lyfie/luthor-headless](https://img.shields.io/npm/v/@lyfie/luthor-headless?style=for-the-badge&label=@lyfie/luthor-headless)](https://www.npmjs.com/package/@lyfie/luthor-headless)
 
@@ -65,7 +65,7 @@ pnpm add @lyfie/luthor-headless lexical @lexical/code @lexical/link @lexical/lis
 - Website: [luthor.fyi](https://www.luthor.fyi)
 - Docs home: [luthor.fyi/docs/getting-started](https://www.luthor.fyi/docs/getting-started)
 - Live demo: [luthor.fyi/demo](https://www.luthor.fyi/demo)
-- GitHub: [lyfie-app/luthor](https://github.com/lyfie-app/luthor)
+- GitHub: [lyfie-app/luthor](https://github.com/lyfie-org/luthor)
 - Sponsor: [github.com/sponsors/lyfie-app](https://github.com/sponsors/lyfie-app)
 
 ## :books: Documentation
@@ -126,7 +126,7 @@ pnpm run web:deploy:wsl
 3. Run checks locally (`pnpm lint`, `pnpm build`, `pnpm test` where applicable).
 4. Open a PR with a clear scope and screenshots/GIFs for UI changes.
 
-Issue tracker: [github.com/lyfie-app/luthor/issues](https://github.com/lyfie-app/luthor/issues)
+Issue tracker: [github.com/lyfie-org/luthor/issues](https://github.com/lyfie-org/luthor/issues)
 
 ## :chart_with_upwards_trend: Community
 
@@ -136,7 +136,7 @@ Issue tracker: [github.com/lyfie-app/luthor/issues](https://github.com/lyfie-app
 
 ### Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=lyfie-app/luthor)](https://github.com/lyfie-app/luthor/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=lyfie-app/luthor)](https://github.com/lyfie-org/luthor/graphs/contributors)
 
 ## :page_facing_up: License
 
