@@ -130,6 +130,10 @@ type SelectionTypographyValues = {
   lineHeight: string;
 };
 
+const DEFAULT_FONT_FAMILY_FALLBACK_LABEL = "Inherited";
+const DEFAULT_FONT_SIZE_FALLBACK_LABEL = "16px";
+const DEFAULT_LINE_HEIGHT_FALLBACK_LABEL = "1.5";
+
 function normalizeToken(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "");
 }
@@ -168,6 +172,69 @@ function getSelectionTypographyValues(): SelectionTypographyValues | null {
     fontSize: computed.fontSize,
     lineHeight: computed.lineHeight,
   };
+}
+
+function getEditorTypographyValues(): SelectionTypographyValues | null {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return null;
+  }
+
+  const host = document.querySelector(".luthor-content-editable");
+  if (!(host instanceof HTMLElement)) {
+    return null;
+  }
+
+  const computed = window.getComputedStyle(host);
+  return {
+    fontFamily: computed.fontFamily,
+    fontSize: computed.fontSize,
+    lineHeight: computed.lineHeight,
+  };
+}
+
+function toPrimaryFontLabel(fontFamily: string): string {
+  const firstFamily = fontFamily.split(",")[0]?.trim() ?? "";
+  return firstFamily.replace(/^['"]|['"]$/g, "").trim();
+}
+
+function resolveDefaultFontFamilyLabel(
+  optionFontFamily: string,
+  typography: SelectionTypographyValues | null,
+): string {
+  const normalized = normalizeToken(optionFontFamily);
+  if (normalized && normalized !== "inherit") {
+    const direct = toPrimaryFontLabel(optionFontFamily);
+    if (direct) return direct;
+  }
+
+  const fromTypography = toPrimaryFontLabel(typography?.fontFamily ?? "");
+  return fromTypography || DEFAULT_FONT_FAMILY_FALLBACK_LABEL;
+}
+
+function resolveDefaultFontSizeLabel(
+  optionFontSize: string,
+  typography: SelectionTypographyValues | null,
+): string {
+  const normalized = normalizeToken(optionFontSize);
+  if (normalized && normalized !== "inherit") {
+    return optionFontSize.trim();
+  }
+
+  const fromTypography = (typography?.fontSize ?? "").trim();
+  return fromTypography || DEFAULT_FONT_SIZE_FALLBACK_LABEL;
+}
+
+function resolveDefaultLineHeightLabel(
+  optionLineHeight: string,
+  typography: SelectionTypographyValues | null,
+): string {
+  const normalized = normalizeToken(optionLineHeight);
+  if (normalized && normalized !== "normal") {
+    return optionLineHeight.trim();
+  }
+
+  const fromTypography = (typography?.lineHeight ?? "").trim();
+  return fromTypography || DEFAULT_LINE_HEIGHT_FALLBACK_LABEL;
 }
 
 function resolveFontFamilyOptionValue(
@@ -289,6 +356,7 @@ function ColorPickerButton({
   const pendingPreviewColorRef = useRef<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [panelStyle, setPanelStyle] = useState<CSSProperties | undefined>(undefined);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const currentColor = resolveCurrentColor(value, options, fallbackColor);
 
   const presetColors = useMemo(() => {
@@ -329,6 +397,22 @@ function ColorPickerButton({
     if (!trigger) return;
 
     const rect = trigger.getBoundingClientRect();
+    const container =
+      (trigger.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
+    setPortalContainer(container);
+    if (container) {
+      const containerRect = container.getBoundingClientRect();
+      setPanelStyle({
+        position: "absolute",
+        top: rect.bottom - containerRect.top + 6,
+        left: Math.max(0, rect.left - containerRect.left),
+        width: 230,
+        visibility: isVisible ? "visible" : "hidden",
+        ...getOverlayThemeStyleFromElement(trigger),
+      });
+      return;
+    }
+
     setPanelStyle({
       position: "fixed",
       top: rect.bottom + 6,
@@ -381,6 +465,7 @@ function ColorPickerButton({
       window.removeEventListener("scroll", handleReposition, true);
       document.removeEventListener("mousedown", handlePointerDown);
       document.removeEventListener("keydown", handleEscape);
+      setPortalContainer(null);
     };
   }, [isOpen, updatePanelPosition]);
 
@@ -490,7 +575,7 @@ function ColorPickerButton({
             />
           </div>
         </div>,
-        document.body,
+        portalContainer ?? document.body,
       )}
     </>
   );
@@ -722,15 +807,15 @@ export function Toolbar({
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [fontFamilyValue, setFontFamilyValue] = useState("default");
   const [fontFamilyOptions, setFontFamilyOptions] = useState<SelectOption[]>([
-    { value: "default", label: "Default" },
+    { value: "default", label: DEFAULT_FONT_FAMILY_FALLBACK_LABEL },
   ]);
   const [fontSizeValue, setFontSizeValue] = useState("default");
   const [fontSizeOptions, setFontSizeOptions] = useState<SelectOption[]>([
-    { value: "default", label: "Default" },
+    { value: "default", label: DEFAULT_FONT_SIZE_FALLBACK_LABEL },
   ]);
   const [lineHeightValue, setLineHeightValue] = useState("default");
   const [lineHeightOptions, setLineHeightOptions] = useState<SelectOption[]>([
-    { value: "default", label: "Default" },
+    { value: "default", label: DEFAULT_LINE_HEIGHT_FALLBACK_LABEL },
   ]);
   const [textColorValue, setTextColorValue] = useState("default");
   const [textColorOptions, setTextColorOptions] = useState<ColorOption[]>([
@@ -748,6 +833,8 @@ export function Toolbar({
     columns: 3,
     includeHeaders: false,
   });
+  const selectionSyncRafRef = useRef<number | null>(null);
+  const lastSelectionTypographyRef = useRef<string>("");
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -755,17 +842,44 @@ export function Toolbar({
     }
 
     const handleSelectionChange = () => {
-      const typography = getSelectionTypographyValues();
-      if (!typography) {
+      if (selectionSyncRafRef.current !== null) {
         return;
       }
 
-      setSelectionVersion((previous) => previous + 1);
+      selectionSyncRafRef.current = window.requestAnimationFrame(() => {
+        selectionSyncRafRef.current = null;
+
+        const domSelection = window.getSelection();
+        if (!domSelection || domSelection.rangeCount === 0) {
+          return;
+        }
+        // Drag-select emits many selectionchange events; avoid rerender churn mid-drag.
+        if (!domSelection.getRangeAt(0).collapsed) {
+          return;
+        }
+
+        const typography = getSelectionTypographyValues();
+        if (!typography) {
+          return;
+        }
+
+        const signature = `${typography.fontFamily}|${typography.fontSize}|${typography.lineHeight}`;
+        if (signature === lastSelectionTypographyRef.current) {
+          return;
+        }
+
+        lastSelectionTypographyRef.current = signature;
+        setSelectionVersion((previous) => previous + 1);
+      });
     };
 
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
       document.removeEventListener("selectionchange", handleSelectionChange);
+      if (selectionSyncRafRef.current !== null) {
+        cancelAnimationFrame(selectionSyncRafRef.current);
+        selectionSyncRafRef.current = null;
+      }
     };
   }, []);
 
@@ -790,14 +904,17 @@ export function Toolbar({
       return;
     }
 
+    const typography = getSelectionTypographyValues() ?? getEditorTypographyValues();
     const options = commands.getFontFamilyOptions().map((option) => ({
       value: option.value,
-      label: option.label,
+      label: normalizeToken(option.value) === "default"
+        ? resolveDefaultFontFamilyLabel(option.fontFamily, typography)
+        : option.label,
     }));
 
     const normalizedOptions = options.length > 0
       ? options
-      : [{ value: "default", label: "Default" }];
+      : [{ value: "default", label: DEFAULT_FONT_FAMILY_FALLBACK_LABEL }];
     setFontFamilyOptions(normalizedOptions);
     setFontFamilyValue((previousValue) => {
       if (normalizedOptions.some((option) => option.value === previousValue)) {
@@ -846,17 +963,20 @@ export function Toolbar({
       return;
     }
 
+    const typography = getSelectionTypographyValues() ?? getEditorTypographyValues();
     const options = commands.getFontSizeOptions().map((option) => ({
       value: String(option.value).trim(),
-      label: String(option.label).trim(),
+      label: normalizeToken(String(option.value)) === "default"
+        ? resolveDefaultFontSizeLabel(String(option.fontSize), typography)
+        : String(option.label).trim(),
     })).filter((option) => option.value.length > 0 && option.label.length > 0);
 
     const hasDefaultOption = options.some((option) => normalizeToken(option.value) === "default");
     const normalizedOptions = options.length === 0
-      ? [{ value: "default", label: "Default" }]
+      ? [{ value: "default", label: DEFAULT_FONT_SIZE_FALLBACK_LABEL }]
       : hasDefaultOption
         ? options
-        : [{ value: "default", label: "Default" }, ...options];
+        : [{ value: "default", label: DEFAULT_FONT_SIZE_FALLBACK_LABEL }, ...options];
     setFontSizeOptions(normalizedOptions);
     setFontSizeValue((previousValue) => {
       if (normalizedOptions.some((option) => option.value === previousValue)) {
@@ -905,14 +1025,18 @@ export function Toolbar({
       return;
     }
 
+    const typography = getSelectionTypographyValues() ?? getEditorTypographyValues();
     const options = commands.getLineHeightOptions().map((option) => ({
       value: option.value,
-      label: option.label,
+      label: normalizeToken(option.value) === "default"
+        ? resolveDefaultLineHeightLabel(option.lineHeight, typography)
+        : option.label,
     }));
 
-    if (options.length > 0) {
-      setLineHeightOptions(options);
-    }
+    const normalizedOptions = options.length > 0
+      ? options
+      : [{ value: "default", label: DEFAULT_LINE_HEIGHT_FALLBACK_LABEL }];
+    setLineHeightOptions(normalizedOptions);
   }, [commands, hasExtension]);
 
   useEffect(() => {

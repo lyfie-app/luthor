@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/lyfie-app/luthor/main/apps/web/public/luthor-logo-horizontal.png" alt="Luthor" width="360" />
+  <img src="https://raw.githubusercontent.com/lyfie-org/luthor/main/apps/web/public/luthor-logo-horizontal.png" alt="Luthor" width="360" />
   <h1>@lyfie/luthor</h1>
   <p><strong>Plug-and-play rich text editor presets for React, powered by Luthor Headless + Lexical.</strong></p>
 </div>
@@ -14,7 +14,7 @@
 [![bundle size](https://img.shields.io/bundlephobia/minzip/@lyfie/luthor?style=flat-square)](https://bundlephobia.com/package/@lyfie/luthor)
 [![types](https://img.shields.io/npm/types/@lyfie/luthor?style=flat-square)](https://www.npmjs.com/package/@lyfie/luthor)
 [![license](https://img.shields.io/npm/l/@lyfie/luthor?style=flat-square)](https://github.com/lyfie-org/luthor/blob/main/LICENSE)
-[![last commit](https://img.shields.io/github/last-commit/lyfie-app/luthor/main?style=flat-square)](https://github.com/lyfie-org/luthor/commits/main)
+[![last commit](https://img.shields.io/github/last-commit/lyfie-org/luthor/main?style=flat-square)](https://github.com/lyfie-org/luthor/commits/main)
 
 </div>
 
