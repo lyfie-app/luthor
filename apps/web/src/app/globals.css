@@ -1289,6 +1289,9 @@ a {
 }
 
 .why-feature-media-shell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: linear-gradient(140deg, color-mix(in srgb, var(--surface) 84%, #fff), var(--bg-elevated));
@@ -1296,9 +1299,12 @@ a {
 }
 
 .why-feature-media {
-  width: 100%;
-  height: clamp(180px, 38vw, 320px);
-  object-fit: cover;
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(62vh, 520px);
+  object-fit: contain;
   border-radius: 10px;
   background: color-mix(in srgb, var(--surface) 82%, transparent);
 }

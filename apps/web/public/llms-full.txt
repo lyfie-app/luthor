@@ -3,7 +3,7 @@
 Concatenated markdown corpus for AI ingestion.
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\apps\web\src\content\docs
-Generated at: 2026-02-27T17:09:47.334Z
+Generated at: 2026-02-28T07:09:25.927Z
 
 ---
 ## FILE: getting-started/index.md
@@ -27,7 +27,7 @@ Use this when you want a production-ready editor quickly.
 - Includes `@lyfie/luthor-headless` under the hood
 - Best for fast shipping with strong defaults
 
-## @lyfie/headless
+## @lyfie/luthor-headless
 
 Use this when you want full control over UI and behavior.
 
@@ -50,7 +50,7 @@ Based on package metadata in `packages/luthor/package.json` and `packages/headle
 
 1. [Introduction](/docs/getting-started/)
 2. [Installation](/docs/getting-started/installation/)
-3. [@lyfie/headless](/docs/getting-started/luthor-headless/)
+3. [@lyfie/luthor-headless](/docs/getting-started/luthor-headless/)
 4. [@lyfie/luthor](/docs/getting-started/luthor/)
 
 ---
@@ -116,11 +116,11 @@ npm uninstall lexical @lexical/code @lexical/link @lexical/list @lexical/markdow
 ---
 
 ---
-title: "@lyfie/headless"
+title: "@lyfie/luthor-headless"
 description: Minimal setup and validation for @lyfie/luthor-headless.
 ---
 
-# @lyfie/headless
+# @lyfie/luthor-headless
 
 Use this when you need full control over editor UI.
 
