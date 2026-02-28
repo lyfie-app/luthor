@@ -199,7 +199,7 @@ async function getLiveStats() {
   const [luthorRegistry, headlessRegistry, latestMainCommit] = await Promise.all([
     safeFetchJson<RegistryResponse>(`https://registry.npmjs.org/${encodeURIComponent(PRIMARY_PACKAGE_NAME)}`),
     safeFetchJson<RegistryResponse>(`https://registry.npmjs.org/${encodeURIComponent(HEADLESS_PACKAGE_NAME)}`),
-    safeFetchJson<GitHubCommitResponse>('https://api.github.com/repos/lyfie-app/luthor/commits/main'),
+    safeFetchJson<GitHubCommitResponse>('https://api.github.com/repos/lyfie-org/luthor/commits/main'),
   ]);
 
   const today = new Date().toISOString().slice(0, 10);
