@@ -248,7 +248,7 @@ export function ChatWindowEditor({
       disabledCommandIds,
       bindings,
     };
-  }, [resolvedFormattingOptions]);
+  }, []);
 
   const resolveOutput = useCallback(() => {
     const json = editorRef.current?.getJSON() ?? EMPTY_DOCUMENT_JSON;
