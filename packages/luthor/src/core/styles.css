@@ -1741,7 +1741,10 @@
 	opacity: 1;
 }
 
-.luthor-list-ul[style*="--luthor-checklist-variant: plain"] .luthor-list-item-checked {
+.luthor-list-ul[style*="--luthor-checklist-variant: plain"] .luthor-list-item-checked,
+.luthor-list-ol[style*="--luthor-checklist-variant: plain"] .luthor-list-item-checked,
+.luthor-list-item-checked[style*="--luthor-checklist-variant: plain"],
+.luthor-list-item-checked:has([style*="--luthor-checklist-variant: plain"]) {
 	--luthor-checklist-text-decoration: none;
 	--luthor-checklist-opacity: 1;
 }

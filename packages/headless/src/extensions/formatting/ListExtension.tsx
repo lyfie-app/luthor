@@ -20,6 +20,7 @@ import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
 import { ListNode, ListItemNode, $isListNode, $isListItemNode } from "@lexical/list";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
+import { $isTextNode, type TextNode } from "lexical";
 
 const MAX_LIST_DEPTH = 9;
 
@@ -79,6 +80,7 @@ type ListType = "bullet" | "number" | "check";
 
 const DEFAULT_ORDERED_PATTERN: OrderedListPattern = "decimal-alpha-roman";
 const DEFAULT_UNORDERED_PATTERN: UnorderedListPattern = "disc-circle-square";
+const CHECKLIST_VARIANT_TOKEN = "--luthor-checklist-variant";
 
 function parseInlineStyle(styleText: string): Map<string, string> {
   const map = new Map<string, string>();
@@ -101,7 +103,13 @@ function stringifyInlineStyle(styleMap: Map<string, string>): string {
     .join("; ");
 }
 
-function setStyleEntries(node: ListNode, entries: Record<string, string | null>): void {
+function setStyleEntries(
+  node: {
+    getStyle: () => string;
+    setStyle: (style: string) => unknown;
+  },
+  entries: Record<string, string | null>,
+): void {
   const currentStyle = node.getStyle();
   const styleMap = parseInlineStyle(currentStyle);
   let changed = false;
@@ -128,7 +136,12 @@ function setStyleEntries(node: ListNode, entries: Record<string, string | null>)
   node.setStyle(stringifyInlineStyle(styleMap));
 }
 
-function readStyleValue(node: ListNode, key: string): string | null {
+function readStyleValue(
+  node: {
+    getStyle: () => string;
+  },
+  key: string,
+): string | null {
   const styleMap = parseInlineStyle(node.getStyle());
   return styleMap.get(key) ?? null;
 }
@@ -243,6 +256,66 @@ function isSelectionAtMaxListDepth(selection: any): boolean {
   const listNode = findNearestListNode(selection.anchor.getNode());
   if (!listNode) return false;
   return $getListDepth(listNode) >= MAX_LIST_DEPTH;
+}
+
+function collectListItemContentTextNodes(listItemNode: ListItemNode): TextNode[] {
+  const textNodes: TextNode[] = [];
+  const queue = [...listItemNode.getChildren()];
+
+  while (queue.length > 0) {
+    const node = queue.shift() as any;
+    if ($isListNode(node)) {
+      continue;
+    }
+    if ($isTextNode(node)) {
+      textNodes.push(node);
+      continue;
+    }
+    if (typeof node.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
+
+  return textNodes;
+}
+
+function readChecklistVariantFromListItems(topListNode: ListNode): CheckListVariant | null {
+  const stack: ListNode[] = [topListNode];
+  while (stack.length > 0) {
+    const node = stack.pop() as ListNode;
+    if (node.getListType() !== "check") {
+      continue;
+    }
+
+    for (const child of node.getChildren()) {
+      if (!$isListItemNode(child)) continue;
+
+      const textNodes = collectListItemContentTextNodes(child);
+      for (const textNode of textNodes) {
+        const token = readStyleValue(textNode, CHECKLIST_VARIANT_TOKEN);
+        if (token === "plain") {
+          return "plain";
+        }
+      }
+
+      const nested = child.getFirstChild();
+      if ($isListNode(nested)) {
+        stack.push(nested);
+      }
+    }
+  }
+
+  return null;
+}
+
+function resolveCheckListVariant(topListNode: ListNode): CheckListVariant {
+  const listStyleToken = readStyleValue(topListNode, CHECKLIST_VARIANT_TOKEN);
+  if (listStyleToken === "plain") {
+    return "plain";
+  }
+
+  const itemToken = readChecklistVariantFromListItems(topListNode);
+  return itemToken ?? "strikethrough";
 }
 
 type ListSelectionContext = {
@@ -578,20 +651,44 @@ export class ListExtension extends BaseExtension<
         });
       },
       setCheckListVariant: (variant) => {
+        let shouldInsertChecklist = false;
+
         editor.update(() => {
           const selection = $getSelection();
           if (!$isRangeSelection(selection)) {
             return;
           }
 
-          editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-
           const topListNodes = collectSelectedTopListNodes(selection);
+          if (topListNodes.length === 0) {
+            shouldInsertChecklist = true;
+            return;
+          }
+
           for (const topListNode of topListNodes) {
             if (topListNode.getListType() !== "check") {
-              continue;
+              this.convertTopListType(topListNode, "check");
             }
+            this.applyCheckListVariant(topListNode, variant);
+          }
+        });
 
+        if (!shouldInsertChecklist) {
+          return;
+        }
+
+        editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
+        editor.update(() => {
+          const activeSelection = $getSelection();
+          if (!$isRangeSelection(activeSelection)) {
+            return;
+          }
+
+          const topListNodes = collectSelectedTopListNodes(activeSelection);
+          for (const topListNode of topListNodes) {
+            if (topListNode.getListType() !== "check") {
+              this.convertTopListType(topListNode, "check");
+            }
             this.applyCheckListVariant(topListNode, variant);
           }
         });
@@ -720,6 +817,15 @@ export class ListExtension extends BaseExtension<
 
       for (const child of node.getChildren()) {
         if (!$isListItemNode(child)) continue;
+        setStyleEntries(child, {
+          "--luthor-checklist-variant": variant,
+        });
+        const textNodes = collectListItemContentTextNodes(child);
+        for (const textNode of textNodes) {
+          setStyleEntries(textNode, {
+            [CHECKLIST_VARIANT_TOKEN]: variant === "plain" ? "plain" : null,
+          });
+        }
         const nested = child.getFirstChild();
         if ($isListNode(nested)) {
           stack.push(nested);
@@ -773,7 +879,7 @@ export class ListExtension extends BaseExtension<
     }
 
     if (topListNode.getListType() === "check") {
-      const variant = readStyleValue(topListNode, "--luthor-checklist-variant") ?? "strikethrough";
+      const variant = resolveCheckListVariant(topListNode);
       setStyleEntries(node, {
         "--luthor-checklist-variant": variant,
         "--luthor-unordered-marker-content": null,
@@ -782,6 +888,19 @@ export class ListExtension extends BaseExtension<
         "--luthor-ordered-suffix": null,
         "list-style-type": null,
       });
+
+      for (const child of node.getChildren()) {
+        if (!$isListItemNode(child)) continue;
+        setStyleEntries(child, {
+          "--luthor-checklist-variant": variant,
+        });
+        const textNodes = collectListItemContentTextNodes(child);
+        for (const textNode of textNodes) {
+          setStyleEntries(textNode, {
+            [CHECKLIST_VARIANT_TOKEN]: variant === "plain" ? "plain" : null,
+          });
+        }
+      }
     }
   }
 
@@ -822,9 +941,7 @@ export class ListExtension extends BaseExtension<
       return;
     }
 
-    const variant = readStyleValue(topListNode, "--luthor-checklist-variant") === "plain"
-      ? "plain"
-      : "strikethrough";
+    const variant = resolveCheckListVariant(topListNode);
     this.applyCheckListVariant(topListNode, variant);
   }
 
