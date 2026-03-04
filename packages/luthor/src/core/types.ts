@@ -118,10 +118,8 @@ export interface CoreEditorCommands {
   setUnorderedListPattern?: (
     pattern:
       | "disc-circle-square"
-      | "disc-arrow-square"
-      | "square-circle-disc"
-      | "arrow-diamond-square"
-      | "star-circle-square"
+      | "arrow-diamond-disc"
+      | "square-square-square"
       | "arrow-circle-square",
   ) => void;
   setCheckListVariant?: (variant: "strikethrough" | "plain") => void;

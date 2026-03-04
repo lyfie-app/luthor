@@ -11,6 +11,7 @@ import {
   KEY_SPACE_COMMAND,
   OUTDENT_CONTENT_COMMAND,
   $isParagraphNode,
+  $getRoot,
 } from "lexical";
 import { $setBlocksType } from "@lexical/selection";
 import { ReactNode } from "react";
@@ -64,11 +65,9 @@ const ORDERED_LIST_PATTERNS = {
 
 const UNORDERED_LIST_PATTERNS = {
   "disc-circle-square": ["disc", "circle", "square"],
-  "disc-arrow-square": ["disc", '"\u27a4"', "square"],
-  "square-circle-disc": ["square", "circle", "disc"],
-  "arrow-diamond-square": ['"\u27a4"', '"\u25c6"', "square"],
-  "star-circle-square": ['"\u2605"', "circle", "square"],
-  "arrow-circle-square": ['"\u27a4"', "circle", "square"],
+  "arrow-diamond-disc": ['"\u25b8"', '"\u25c6"', "disc"],
+  "square-square-square": ["square", "square", "square"],
+  "arrow-circle-square": ['"\u25b8"', "circle", "square"],
 } as const;
 
 type OrderedListPattern = keyof typeof ORDERED_LIST_PATTERNS;
@@ -81,6 +80,16 @@ type ListType = "bullet" | "number" | "check";
 const DEFAULT_ORDERED_PATTERN: OrderedListPattern = "decimal-alpha-roman";
 const DEFAULT_UNORDERED_PATTERN: UnorderedListPattern = "disc-circle-square";
 const CHECKLIST_VARIANT_TOKEN = "--luthor-checklist-variant";
+const UNORDERED_PATTERN_TOKEN = "--luthor-unordered-pattern";
+const UNORDERED_PATTERN_TEXT_TOKEN = "--luthor-unordered-pattern-token";
+const UNORDERED_MARKER_KIND_TOKEN = "--luthor-unordered-marker-kind";
+
+const LEGACY_UNORDERED_PATTERN_ALIAS: Record<string, UnorderedListPattern> = {
+  "disc-arrow-square": "arrow-circle-square",
+  "square-circle-disc": "disc-circle-square",
+  "arrow-diamond-square": "arrow-diamond-disc",
+  "star-circle-square": "disc-circle-square",
+};
 
 function parseInlineStyle(styleText: string): Map<string, string> {
   const map = new Map<string, string>();
@@ -183,8 +192,43 @@ function resolveMarkerStyle(sequence: readonly string[], depth: number): string 
   return sequence[index] ?? sequence[0] ?? "disc";
 }
 
+function resolveUnorderedPatternToken(rawPattern: string | null): UnorderedListPattern {
+  if (rawPattern && Object.hasOwn(UNORDERED_LIST_PATTERNS, rawPattern)) {
+    return rawPattern as UnorderedListPattern;
+  }
+
+  if (rawPattern && Object.hasOwn(LEGACY_UNORDERED_PATTERN_ALIAS, rawPattern)) {
+    return LEGACY_UNORDERED_PATTERN_ALIAS[rawPattern] ?? DEFAULT_UNORDERED_PATTERN;
+  }
+
+  return DEFAULT_UNORDERED_PATTERN;
+}
+
 function isCustomMarkerStyle(markerStyle: string): boolean {
   return markerStyle.startsWith('"') && markerStyle.endsWith('"');
+}
+
+type UnorderedMarkerKind = "disc" | "circle" | "square" | "arrow" | "diamond";
+
+function resolveUnorderedMarkerKind(markerStyle: string): UnorderedMarkerKind {
+  if (isCustomMarkerStyle(markerStyle)) {
+    const normalized = markerStyle.toLowerCase();
+    if (normalized.includes("\\25c6")) {
+      return "diamond";
+    }
+    return "arrow";
+  }
+
+  switch (markerStyle) {
+    case "disc":
+      return "disc";
+    case "circle":
+      return "circle";
+    case "square":
+      return "square";
+    default:
+      return "disc";
+  }
 }
 
 function parseOrderedListShortcut(text: string): {
@@ -279,6 +323,95 @@ function collectListItemContentTextNodes(listItemNode: ListItemNode): TextNode[]
   return textNodes;
 }
 
+function collectNestedListsFromListItem(listItemNode: ListItemNode): ListNode[] {
+  const nestedLists: ListNode[] = [];
+  const queue = [...listItemNode.getChildren()];
+
+  while (queue.length > 0) {
+    const node = queue.shift() as any;
+    if ($isListNode(node)) {
+      nestedLists.push(node);
+      // Stop here so each list node is traversed by the outer stack exactly once.
+      continue;
+    }
+    if (typeof node.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
+  return nestedLists;
+}
+
+function shouldRenderUnorderedMarker(listItemNode: ListItemNode): boolean {
+  // Hide marker for structural wrapper items that only exist to hold nested lists.
+  // Empty paragraph wrappers should not produce their own marker.
+  let hasVisibleContent = false;
+  const queue = [...listItemNode.getChildren()];
+
+  while (queue.length > 0) {
+    const node = queue.shift() as any;
+    if ($isListNode(node)) {
+      continue;
+    }
+    if ($isTextNode(node) && node.getTextContent().trim().length > 0) {
+      hasVisibleContent = true;
+      break;
+    }
+    if (typeof node.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
+
+  if (hasVisibleContent) {
+    return true;
+  }
+
+  return collectNestedListsFromListItem(listItemNode).length === 0;
+}
+
+function setUnorderedPatternTokenOnListItemContent(
+  listItemNode: ListItemNode,
+  pattern: UnorderedListPattern | null,
+): void {
+  const queue = [...listItemNode.getChildren()];
+  while (queue.length > 0) {
+    const node = queue.shift() as any;
+    if ($isListNode(node)) {
+      continue;
+    }
+    if (typeof node.getStyle === "function" && typeof node.setStyle === "function") {
+      setStyleEntries(node, {
+        [UNORDERED_PATTERN_TEXT_TOKEN]: pattern,
+      });
+    }
+    if (typeof node.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
+}
+
+function readUnorderedPatternTokenFromListItemContent(
+  listItemNode: ListItemNode,
+): UnorderedListPattern | null {
+  const queue = [...listItemNode.getChildren()];
+  while (queue.length > 0) {
+    const node = queue.shift() as any;
+    if ($isListNode(node)) {
+      continue;
+    }
+    if (typeof node.getStyle === "function") {
+      const token = readStyleValue(node, UNORDERED_PATTERN_TEXT_TOKEN);
+      if (token) {
+        return resolveUnorderedPatternToken(token);
+      }
+    }
+    if (typeof node.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
+
+  return null;
+}
+
 function readChecklistVariantFromListItems(topListNode: ListNode): CheckListVariant | null {
   const stack: ListNode[] = [topListNode];
   while (stack.length > 0) {
@@ -298,14 +431,50 @@ function readChecklistVariantFromListItems(topListNode: ListNode): CheckListVari
         }
       }
 
-      const nested = child.getFirstChild();
-      if ($isListNode(nested)) {
-        stack.push(nested);
-      }
+      stack.push(...collectNestedListsFromListItem(child));
     }
   }
 
   return null;
+}
+
+function readUnorderedPatternFromListItems(topListNode: ListNode): UnorderedListPattern | null {
+  const stack: ListNode[] = [topListNode];
+  while (stack.length > 0) {
+    const node = stack.pop() as ListNode;
+    if (node.getListType() !== "bullet") {
+      continue;
+    }
+
+    for (const child of node.getChildren()) {
+      if (!$isListItemNode(child)) continue;
+
+      const token = readStyleValue(child, UNORDERED_PATTERN_TOKEN);
+      const pattern = resolveUnorderedPatternToken(token);
+      if (token && Object.hasOwn(UNORDERED_LIST_PATTERNS, pattern)) {
+        return pattern;
+      }
+
+      const contentPattern = readUnorderedPatternTokenFromListItemContent(child);
+      if (contentPattern) {
+        return contentPattern;
+      }
+
+      stack.push(...collectNestedListsFromListItem(child));
+    }
+  }
+
+  return null;
+}
+
+function resolveUnorderedPattern(topListNode: ListNode): UnorderedListPattern {
+  const itemPattern = readUnorderedPatternFromListItems(topListNode);
+  if (itemPattern) {
+    return itemPattern;
+  }
+
+  const listStyleToken = readStyleValue(topListNode, UNORDERED_PATTERN_TOKEN);
+  return resolveUnorderedPatternToken(listStyleToken);
 }
 
 function resolveCheckListVariant(topListNode: ListNode): CheckListVariant {
@@ -370,6 +539,8 @@ export type ListCommands = {
   setUnorderedListPattern: (pattern: UnorderedListPattern) => void;
   /** Switch checklist behavior between strike and plain text */
   setCheckListVariant: (variant: CheckListVariant) => void;
+  /** Rebuild list style tokens after state import/rehydration */
+  rehydrateListStyles: () => void;
 };
 
 /**
@@ -438,6 +609,15 @@ export class ListExtension extends BaseExtension<
         this.syncListNodeStyles(node);
       },
     );
+    const unregisterListItemStyleTransform = editor.registerNodeTransform(
+      ListItemNode,
+      (node) => {
+        const parent = node.getParent();
+        if ($isListNode(parent)) {
+          this.syncListNodeStyles(parent);
+        }
+      },
+    );
 
     const unregisterOrderedShortcut = editor.registerCommand<KeyboardEvent>(
       KEY_SPACE_COMMAND,
@@ -458,6 +638,7 @@ export class ListExtension extends BaseExtension<
 
     return () => {
       unregisterListStyleTransform();
+      unregisterListItemStyleTransform();
       unregisterOrderedShortcut();
     };
   }
@@ -612,7 +793,12 @@ export class ListExtension extends BaseExtension<
 
           editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
 
-          const topListNodes = collectSelectedTopListNodes(selection);
+          const activeSelection = $getSelection();
+          if (!$isRangeSelection(activeSelection)) {
+            return;
+          }
+
+          const topListNodes = collectSelectedTopListNodes(activeSelection);
           for (const topListNode of topListNodes) {
             this.applyOrderedPattern(topListNode, pattern);
           }
@@ -644,7 +830,12 @@ export class ListExtension extends BaseExtension<
 
           editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
 
-          const topListNodes = collectSelectedTopListNodes(selection);
+          const activeSelection = $getSelection();
+          if (!$isRangeSelection(activeSelection)) {
+            return;
+          }
+
+          const topListNodes = collectSelectedTopListNodes(activeSelection);
           for (const topListNode of topListNodes) {
             this.applyUnorderedPattern(topListNode, pattern);
           }
@@ -693,6 +884,51 @@ export class ListExtension extends BaseExtension<
           }
         });
       },
+      rehydrateListStyles: () => {
+        editor.update(() => {
+          const root = $getRoot();
+          const queue = [...root.getChildren()];
+          const topListNodes = new Map<string, ListNode>();
+
+          while (queue.length > 0) {
+            const node = queue.shift() as any;
+            if ($isListNode(node)) {
+              const top = findTopListNode(node);
+              topListNodes.set(top.getKey(), top);
+            }
+            if (typeof node.getChildren === "function") {
+              queue.push(...node.getChildren());
+            }
+          }
+
+          for (const topListNode of topListNodes.values()) {
+            if (topListNode.getListType() === "number") {
+              const pattern = (readStyleValue(topListNode, "--luthor-ordered-pattern") ??
+                DEFAULT_ORDERED_PATTERN) as OrderedListPattern;
+              const safePattern = Object.hasOwn(ORDERED_LIST_PATTERNS, pattern)
+                ? pattern
+                : DEFAULT_ORDERED_PATTERN;
+              const suffix = readStyleValue(topListNode, "--luthor-ordered-suffix") === "paren"
+                ? "paren"
+                : "dot";
+              this.applyOrderedPattern(topListNode, safePattern);
+              this.applyOrderedSuffix(topListNode, suffix);
+              continue;
+            }
+
+            if (topListNode.getListType() === "bullet") {
+              const pattern = resolveUnorderedPattern(topListNode);
+              this.applyUnorderedPattern(topListNode, pattern);
+              continue;
+            }
+
+            if (topListNode.getListType() === "check") {
+              const variant = resolveCheckListVariant(topListNode);
+              this.applyCheckListVariant(topListNode, variant);
+            }
+          }
+        });
+      },
     };
   }
 
@@ -727,10 +963,7 @@ export class ListExtension extends BaseExtension<
 
       for (const child of node.getChildren()) {
         if (!$isListItemNode(child)) continue;
-        const nested = child.getFirstChild();
-        if ($isListNode(nested)) {
-          stack.push(nested);
-        }
+        stack.push(...collectNestedListsFromListItem(child));
       }
     }
   }
@@ -749,10 +982,7 @@ export class ListExtension extends BaseExtension<
 
       for (const child of node.getChildren()) {
         if (!$isListItemNode(child)) continue;
-        const nested = child.getFirstChild();
-        if ($isListNode(nested)) {
-          stack.push(nested);
-        }
+        stack.push(...collectNestedListsFromListItem(child));
       }
     }
   }
@@ -764,7 +994,7 @@ export class ListExtension extends BaseExtension<
 
     const sequence = UNORDERED_LIST_PATTERNS[pattern];
     setStyleEntries(topListNode, {
-      "--luthor-unordered-pattern": pattern,
+      [UNORDERED_PATTERN_TOKEN]: pattern,
     });
 
     const stack: ListNode[] = [topListNode];
@@ -776,20 +1006,26 @@ export class ListExtension extends BaseExtension<
 
       const depth = getListDepthWithinRoot(node, topListNode);
       const markerStyle = resolveMarkerStyle(sequence, depth);
-      const customMarker = isCustomMarkerStyle(markerStyle);
+      const markerKind = resolveUnorderedMarkerKind(markerStyle);
 
       setStyleEntries(node, {
-        "--luthor-unordered-pattern": pattern,
-        "list-style-type": customMarker ? "none" : markerStyle,
-        "--luthor-unordered-marker-content": customMarker ? markerStyle : null,
+        [UNORDERED_PATTERN_TOKEN]: pattern,
+        "list-style-type": "none",
+        "--luthor-unordered-marker-content": null,
+        [UNORDERED_MARKER_KIND_TOKEN]: null,
       });
 
       for (const child of node.getChildren()) {
         if (!$isListItemNode(child)) continue;
-        const nested = child.getFirstChild();
-        if ($isListNode(nested)) {
-          stack.push(nested);
-        }
+        setStyleEntries(child, {
+          [UNORDERED_PATTERN_TOKEN]: pattern,
+          "--luthor-unordered-marker-content": null,
+          [UNORDERED_MARKER_KIND_TOKEN]: shouldRenderUnorderedMarker(child)
+            ? markerKind
+            : null,
+        });
+        setUnorderedPatternTokenOnListItemContent(child, pattern);
+        stack.push(...collectNestedListsFromListItem(child));
       }
     }
   }
@@ -809,6 +1045,7 @@ export class ListExtension extends BaseExtension<
       setStyleEntries(node, {
         "--luthor-checklist-variant": variant,
         "--luthor-unordered-marker-content": null,
+        [UNORDERED_MARKER_KIND_TOKEN]: null,
         "--luthor-unordered-pattern": null,
         "--luthor-ordered-pattern": null,
         "--luthor-ordered-suffix": null,
@@ -819,17 +1056,18 @@ export class ListExtension extends BaseExtension<
         if (!$isListItemNode(child)) continue;
         setStyleEntries(child, {
           "--luthor-checklist-variant": variant,
+          [UNORDERED_PATTERN_TOKEN]: null,
+          "--luthor-unordered-marker-content": null,
+          [UNORDERED_MARKER_KIND_TOKEN]: null,
         });
+        setUnorderedPatternTokenOnListItemContent(child, null);
         const textNodes = collectListItemContentTextNodes(child);
         for (const textNode of textNodes) {
           setStyleEntries(textNode, {
             [CHECKLIST_VARIANT_TOKEN]: variant === "plain" ? "plain" : null,
           });
         }
-        const nested = child.getFirstChild();
-        if ($isListNode(nested)) {
-          stack.push(nested);
-        }
+        stack.push(...collectNestedListsFromListItem(child));
       }
     }
   }
@@ -859,22 +1097,31 @@ export class ListExtension extends BaseExtension<
     }
 
     if (topListNode.getListType() === "bullet") {
-      const pattern = (readStyleValue(topListNode, "--luthor-unordered-pattern") ??
-        DEFAULT_UNORDERED_PATTERN) as UnorderedListPattern;
-      if (!Object.hasOwn(UNORDERED_LIST_PATTERNS, pattern)) {
-        return;
-      }
+      const pattern = resolveUnorderedPattern(topListNode);
 
       const sequence = UNORDERED_LIST_PATTERNS[pattern];
       const depth = getListDepthWithinRoot(node, topListNode);
       const markerStyle = resolveMarkerStyle(sequence, depth);
-      const customMarker = isCustomMarkerStyle(markerStyle);
+      const markerKind = resolveUnorderedMarkerKind(markerStyle);
 
       setStyleEntries(node, {
-        "--luthor-unordered-pattern": pattern,
-        "list-style-type": customMarker ? "none" : markerStyle,
-        "--luthor-unordered-marker-content": customMarker ? markerStyle : null,
+        [UNORDERED_PATTERN_TOKEN]: pattern,
+        "list-style-type": "none",
+        "--luthor-unordered-marker-content": null,
+        [UNORDERED_MARKER_KIND_TOKEN]: null,
       });
+
+      for (const child of node.getChildren()) {
+        if (!$isListItemNode(child)) continue;
+        setStyleEntries(child, {
+          [UNORDERED_PATTERN_TOKEN]: pattern,
+          "--luthor-unordered-marker-content": null,
+          [UNORDERED_MARKER_KIND_TOKEN]: shouldRenderUnorderedMarker(child)
+            ? markerKind
+            : null,
+        });
+        setUnorderedPatternTokenOnListItemContent(child, pattern);
+      }
       return;
     }
 
@@ -883,6 +1130,7 @@ export class ListExtension extends BaseExtension<
       setStyleEntries(node, {
         "--luthor-checklist-variant": variant,
         "--luthor-unordered-marker-content": null,
+        [UNORDERED_MARKER_KIND_TOKEN]: null,
         "--luthor-unordered-pattern": null,
         "--luthor-ordered-pattern": null,
         "--luthor-ordered-suffix": null,
@@ -893,6 +1141,9 @@ export class ListExtension extends BaseExtension<
         if (!$isListItemNode(child)) continue;
         setStyleEntries(child, {
           "--luthor-checklist-variant": variant,
+          [UNORDERED_PATTERN_TOKEN]: null,
+          "--luthor-unordered-marker-content": null,
+          [UNORDERED_MARKER_KIND_TOKEN]: null,
         });
         const textNodes = collectListItemContentTextNodes(child);
         for (const textNode of textNodes) {
@@ -912,10 +1163,7 @@ export class ListExtension extends BaseExtension<
 
       for (const child of node.getChildren()) {
         if (!$isListItemNode(child)) continue;
-        const nested = child.getFirstChild();
-        if ($isListNode(nested)) {
-          stack.push(nested);
-        }
+        stack.push(...collectNestedListsFromListItem(child));
       }
     }
 
@@ -933,10 +1181,7 @@ export class ListExtension extends BaseExtension<
     }
 
     if (nextType === "bullet") {
-      const rawPattern = readStyleValue(topListNode, "--luthor-unordered-pattern");
-      const pattern = rawPattern && Object.hasOwn(UNORDERED_LIST_PATTERNS, rawPattern)
-        ? (rawPattern as UnorderedListPattern)
-        : DEFAULT_UNORDERED_PATTERN;
+      const pattern = resolveUnorderedPattern(topListNode);
       this.applyUnorderedPattern(topListNode, pattern);
       return;
     }
@@ -1068,4 +1313,10 @@ export class ListExtension extends BaseExtension<
  * Ready for use in extension arrays.
  */
 export const listExtension = new ListExtension();
+
+export const __TEST_ONLY_LIST_INTERNALS = {
+  resolveUnorderedPatternToken,
+  resolveUnorderedMarkerKind,
+  unorderedPatternKeys: Object.keys(UNORDERED_LIST_PATTERNS),
+} as const;
 

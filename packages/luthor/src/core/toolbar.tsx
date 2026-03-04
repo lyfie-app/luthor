@@ -99,22 +99,102 @@ const ORDERED_LIST_OPTIONS: ReadonlyArray<{
 ];
 
 const UNORDERED_LIST_OPTIONS: ReadonlyArray<{
-  label: string;
+  title: string;
   pattern:
     | "disc-circle-square"
-    | "disc-arrow-square"
-    | "square-circle-disc"
-    | "arrow-diamond-square"
-    | "star-circle-square"
+    | "arrow-diamond-disc"
+    | "square-square-square"
     | "arrow-circle-square";
 }> = [
-  { label: "\u2022 \u25E6 \u25A0", pattern: "disc-circle-square" },
-  { label: "\u2022 \u27A4 \u25A0", pattern: "disc-arrow-square" },
-  { label: "\u25A0 \u25E6 \u2022", pattern: "square-circle-disc" },
-  { label: "\u27A4 \u25C6 \u25A0", pattern: "arrow-diamond-square" },
-  { label: "\u2605 \u25E6 \u25A0", pattern: "star-circle-square" },
-  { label: "\u27A4 \u25E6 \u25A0", pattern: "arrow-circle-square" },
+  { title: "Dot / Circle / Square", pattern: "disc-circle-square" },
+  { title: "Arrow / Diamond / Dot", pattern: "arrow-diamond-disc" },
+  { title: "Square / Square / Square", pattern: "square-square-square" },
+  { title: "Arrow / Circle / Square", pattern: "arrow-circle-square" },
 ];
+
+type UnorderedMarkerType = "disc" | "circle" | "square" | "arrow" | "diamond";
+
+function getUnorderedMarkerPattern(
+  pattern: "disc-circle-square" | "arrow-diamond-disc" | "square-square-square" | "arrow-circle-square",
+): readonly [UnorderedMarkerType, UnorderedMarkerType, UnorderedMarkerType] {
+  switch (pattern) {
+    case "disc-circle-square":
+      return ["disc", "circle", "square"];
+    case "arrow-diamond-disc":
+      return ["arrow", "diamond", "disc"];
+    case "square-square-square":
+      return ["square", "square", "square"];
+    case "arrow-circle-square":
+      return ["arrow", "circle", "square"];
+  }
+}
+
+function UnorderedMarkerShape({ type, cy }: { type: UnorderedMarkerType; cy: number }) {
+  switch (type) {
+    case "disc":
+      return <circle cx="16" cy={cy} r="3.2" className="luthor-unordered-variant-marker" />;
+    case "circle":
+      return <circle cx="16" cy={cy} r="3.2" className="luthor-unordered-variant-marker-open" />;
+    case "square":
+      return <rect x="12.8" y={cy - 3.2} width="6.4" height="6.4" className="luthor-unordered-variant-marker" />;
+    case "diamond":
+      return <path d={`M16 ${cy - 3.8} L19.8 ${cy} L16 ${cy + 3.8} L12.2 ${cy} Z`} className="luthor-unordered-variant-marker" />;
+    case "arrow":
+      return <path d={`M11.6 ${cy - 2.8} L16.8 ${cy} L11.6 ${cy + 2.8} M11.6 ${cy} H19.6`} className="luthor-unordered-variant-arrow" />;
+  }
+}
+
+function UnorderedListVariantPreview({
+  pattern,
+}: {
+  pattern: "disc-circle-square" | "arrow-diamond-disc" | "square-square-square" | "arrow-circle-square";
+}) {
+  const markers = getUnorderedMarkerPattern(pattern);
+  const rowY = [12.5, 24.5, 36.5, 48.5, 60.5] as const;
+  const rowIndent =
+    pattern === "disc-circle-square"
+      ? [0, 1, 1, 2, 0]
+      : pattern === "arrow-diamond-disc"
+        ? [0, 1, 1, 2, 0]
+        : pattern === "square-square-square"
+          ? [0, 1, 2, 1, 0]
+          : [0, 1, 1, 2, 0];
+  const rowMarkers: readonly UnorderedMarkerType[] = [
+    markers[0],
+    markers[1],
+    markers[1],
+    markers[2],
+    markers[0],
+  ];
+
+  return (
+    <svg
+      width="94"
+      height="74"
+      viewBox="0 0 94 74"
+      role="img"
+      aria-hidden="true"
+      className="luthor-unordered-variant-svg"
+    >
+      <rect x="0.5" y="0.5" width="93" height="73" rx="3" className="luthor-unordered-variant-frame" />
+
+      {rowY.map((y, index) => {
+        const indentLevel = rowIndent[index] ?? 0;
+        const markerX = 12 + indentLevel * 12;
+        const textX = 24 + indentLevel * 12;
+        const textWidth = 57 - indentLevel * 10;
+        return (
+          <g key={`${pattern}-row-${index}`}>
+            <g transform={`translate(${markerX - 16}, 0)`}>
+              <UnorderedMarkerShape type={rowMarkers[index] ?? markers[0]} cy={y} />
+            </g>
+            <rect x={textX} y={y - 2.5} width={textWidth} height="5" rx="2.5" className="luthor-unordered-variant-line" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 function ChecklistVariantPreview({ variant }: { variant: "strikethrough" | "plain" }) {
   const strike = variant === "strikethrough";
@@ -1332,10 +1412,8 @@ export function Toolbar({
   const applyUnorderedListPattern = (
     pattern:
       | "disc-circle-square"
-      | "disc-arrow-square"
-      | "square-circle-disc"
-      | "arrow-diamond-square"
-      | "star-circle-square"
+      | "arrow-diamond-disc"
+      | "square-square-square"
       | "arrow-circle-square",
   ) => {
     if (typeof commands.setUnorderedListPattern === "function") {
@@ -1572,19 +1650,23 @@ export function Toolbar({
               isOpen={showUnorderedListDropdown}
               onOpenChange={setShowUnorderedListDropdown}
             >
-              {UNORDERED_LIST_OPTIONS.map((option) => (
-                <button
-                  key={option.pattern}
-                  className="luthor-dropdown-item"
-                  type="button"
-                  onClick={() => {
-                    applyUnorderedListPattern(option.pattern);
-                    setShowUnorderedListDropdown(false);
-                  }}
-                >
-                  <span>{option.label}</span>
-                </button>
-              ))}
+              <div className="luthor-unordered-variant-grid">
+                {UNORDERED_LIST_OPTIONS.map((option) => (
+                  <button
+                    key={option.pattern}
+                    className="luthor-unordered-variant-option"
+                    type="button"
+                    title={option.title}
+                    aria-label={option.title}
+                    onClick={() => {
+                      applyUnorderedListPattern(option.pattern);
+                      setShowUnorderedListDropdown(false);
+                    }}
+                  >
+                    <UnorderedListVariantPreview pattern={option.pattern} />
+                  </button>
+                ))}
+              </div>
             </Dropdown>
           </div>
         );
