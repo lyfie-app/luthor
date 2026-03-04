@@ -213,8 +213,17 @@ type UnorderedMarkerKind = "disc" | "circle" | "square" | "arrow" | "diamond";
 function resolveUnorderedMarkerKind(markerStyle: string): UnorderedMarkerKind {
   if (isCustomMarkerStyle(markerStyle)) {
     const normalized = markerStyle.toLowerCase();
-    if (normalized.includes("\\25c6")) {
+    const literalMarker = normalized.slice(1, -1);
+    if (normalized.includes("\\25c6") || literalMarker === "\u25c6") {
       return "diamond";
+    }
+    if (
+      normalized.includes("\\25b8") ||
+      normalized.includes("\\27a4") ||
+      literalMarker === "\u25b8" ||
+      literalMarker === "\u27a4"
+    ) {
+      return "arrow";
     }
     return "arrow";
   }

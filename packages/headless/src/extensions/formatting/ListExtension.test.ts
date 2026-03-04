@@ -37,5 +37,7 @@ describe("ListExtension unordered pattern internals", () => {
     expect(marker('"\\25B8"')).toBe("arrow");
     expect(marker('"\\27A4"')).toBe("arrow");
     expect(marker('"\\25C6"')).toBe("diamond");
+    expect(marker('"\u25b8"')).toBe("arrow");
+    expect(marker('"\u25c6"')).toBe("diamond");
   });
 });
