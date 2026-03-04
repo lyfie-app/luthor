@@ -19,12 +19,48 @@ This group covers links, headings, paragraphs, lists, and table workflows.
 ## List depth and marker patterns
 
 - List indentation is capped at `8` sub-indent levels (`9` total levels including top-level).
+- `ListExtension` supports `maxDepth` configuration for custom depth caps.
+- `TabIndentExtension` supports `maxListDepth` so `Tab`/`Shift+Tab` behavior can match list depth limits.
 - `listExtension` supports ordered and unordered marker patterns through:
   - `commands.setOrderedListPattern(pattern)`
   - `commands.setUnorderedListPattern(pattern)`
   - `commands.setOrderedListSuffix('dot' | 'paren')`
+- Supported unordered patterns:
+  - `disc-circle-square`
+  - `arrow-diamond-disc`
+  - `square-square-square`
+  - `arrow-circle-square`
 - Checklist variants are available through:
   - `commands.setCheckListVariant('strikethrough' | 'plain')`
+
+### Depth configuration example
+
+```tsx
+import {
+  createEditorSystem,
+  RichText,
+  ListExtension,
+  TabIndentExtension,
+} from '@lyfie/luthor-headless';
+
+const MAX_SUB_INDENT = 5;
+const maxDepth = MAX_SUB_INDENT + 1; // include top-level
+
+const extensions = [
+  new ListExtension({ maxDepth }),
+  new TabIndentExtension({ maxListDepth: maxDepth }),
+] as const;
+
+const { Provider } = createEditorSystem<typeof extensions>();
+
+export function App() {
+  return (
+    <Provider extensions={extensions}>
+      <RichText placeholder="Write..." />
+    </Provider>
+  );
+}
+```
 
 ## Example
 

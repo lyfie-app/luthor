@@ -35,6 +35,7 @@ export function App() {
 - `commandPaletteShortcutOnly`: `false (default) | true`
 - `isCopyAllowed`: `true (default) | false`
 - `syntaxHighlighting`: `'auto' | 'disabled'` | extension default behavior if omitted
+- `maxListIndentation`: `8 (default) | number` (sub-indent levels below root)
 
 ## Theme callback example (`highlight.js`)
 
