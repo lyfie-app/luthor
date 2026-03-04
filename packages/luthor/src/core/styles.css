@@ -341,7 +341,7 @@
 
 .luthor-toolbar-split-button .luthor-toolbar-button-arrow {
 	width: 20px;
-	border-left-color: var(--luthor-border);
+	border-left-color: transparent;
 	border-top-right-radius: 6px;
 	border-bottom-right-radius: 6px;
 	padding: 0;
@@ -641,6 +641,72 @@
 
 .luthor-dropdown-item:hover {
 	background-color: var(--luthor-muted);
+}
+
+.luthor-checklist-variant-grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+	padding: 8px;
+}
+
+.luthor-checklist-variant-option {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 1px solid var(--luthor-border);
+	border-radius: 6px;
+	background-color: var(--luthor-bg);
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.luthor-checklist-variant-option:hover {
+	border-color: var(--luthor-border-hover);
+	background-color: var(--luthor-muted);
+	transform: translateY(-1px);
+}
+
+.luthor-checklist-variant-option:focus-visible {
+	outline: none;
+	border-color: var(--luthor-accent);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--luthor-accent) 24%, transparent);
+}
+
+.luthor-checklist-variant-svg {
+	display: block;
+	width: 78px;
+	height: 42px;
+}
+
+.luthor-checklist-variant-frame {
+	fill: var(--luthor-bg);
+	stroke: var(--luthor-border);
+}
+
+.luthor-checklist-variant-box {
+	fill: var(--luthor-bg);
+	stroke: var(--luthor-list-checkbox-color, var(--luthor-accent));
+	stroke-width: 1.5;
+}
+
+.luthor-checklist-variant-check {
+	fill: none;
+	stroke: var(--luthor-list-checkbox-color, var(--luthor-accent));
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.luthor-checklist-variant-line {
+	fill: color-mix(in srgb, var(--luthor-muted-fg) 32%, transparent);
+}
+
+.luthor-checklist-variant-strike {
+	stroke: var(--luthor-muted-fg);
+	stroke-width: 1.35;
+	stroke-linecap: round;
 }
 
 .luthor-file-input {

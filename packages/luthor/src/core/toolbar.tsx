@@ -116,6 +116,35 @@ const UNORDERED_LIST_OPTIONS: ReadonlyArray<{
   { label: "\u27A4 \u25E6 \u25A0", pattern: "arrow-circle-square" },
 ];
 
+function ChecklistVariantPreview({ variant }: { variant: "strikethrough" | "plain" }) {
+  const strike = variant === "strikethrough";
+
+  return (
+    <svg
+      width="78"
+      height="42"
+      viewBox="0 0 78 42"
+      role="img"
+      aria-hidden="true"
+      className="luthor-checklist-variant-svg"
+    >
+      <rect x="0.5" y="0.5" width="77" height="41" rx="3" className="luthor-checklist-variant-frame" />
+
+      <rect x="10.5" y="10.5" width="10" height="10" rx="1.5" className="luthor-checklist-variant-box" />
+      <rect x="10.5" y="24.5" width="10" height="10" rx="1.5" className="luthor-checklist-variant-box" />
+      <path d="M12.6 29.2l2 2.2 3.8-4.3" className="luthor-checklist-variant-check" />
+
+      <rect x="26.5" y="11.8" width="40" height="6" rx="2" className="luthor-checklist-variant-line" />
+      <rect x="26.5" y="25.8" width="40" height="6" rx="2" className="luthor-checklist-variant-line" />
+      {strike ? (
+        <>
+          <line x1="26.5" y1="28.8" x2="66.5" y2="28.8" className="luthor-checklist-variant-strike" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
 function normalizeColorValue(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "");
 }
@@ -1640,26 +1669,32 @@ export function Toolbar({
               isOpen={showCheckListDropdown}
               onOpenChange={setShowCheckListDropdown}
             >
-              <button
-                className="luthor-dropdown-item"
-                type="button"
-                onClick={() => {
-                  applyCheckListVariant("strikethrough");
-                  setShowCheckListDropdown(false);
-                }}
-              >
-                <span>Checked = Strike through</span>
-              </button>
-              <button
-                className="luthor-dropdown-item"
-                type="button"
-                onClick={() => {
-                  applyCheckListVariant("plain");
-                  setShowCheckListDropdown(false);
-                }}
-              >
-                <span>Checked = Keep text</span>
-              </button>
+              <div className="luthor-checklist-variant-grid">
+                <button
+                  className="luthor-checklist-variant-option"
+                  type="button"
+                  title="Checked = Strike through"
+                  aria-label="Checked = Strike through"
+                  onClick={() => {
+                    applyCheckListVariant("strikethrough");
+                    setShowCheckListDropdown(false);
+                  }}
+                >
+                  <ChecklistVariantPreview variant="strikethrough" />
+                </button>
+                <button
+                  className="luthor-checklist-variant-option"
+                  type="button"
+                  title="Checked = Keep text"
+                  aria-label="Checked = Keep text"
+                  onClick={() => {
+                    applyCheckListVariant("plain");
+                    setShowCheckListDropdown(false);
+                  }}
+                >
+                  <ChecklistVariantPreview variant="plain" />
+                </button>
+              </div>
             </Dropdown>
           </div>
         );
