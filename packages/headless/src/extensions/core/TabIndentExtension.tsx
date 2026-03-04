@@ -10,7 +10,7 @@ import {
   OUTDENT_CONTENT_COMMAND,
 } from "lexical";
 import { $isCodeNode } from "@lexical/code";
-import { $getListDepth, $isListNode } from "@lexical/list";
+import { $getListDepth, $isListItemNode, $isListNode } from "@lexical/list";
 import { $isHeadingNode } from "@lexical/rich-text";
 import { BaseExtension } from "@lyfie/luthor-headless/extensions/base";
 import { ExtensionCategory } from "@lyfie/luthor-headless/extensions/types";
@@ -142,17 +142,26 @@ export class TabIndentExtension extends BaseExtension<
    * Check whether current list depth reached the configured max depth.
    */
   private isListAtMaxDepth(node: any): boolean {
+    const configuredMaxDepth = this.config.maxListDepth;
+    const maxDepth = Number.isFinite(configuredMaxDepth)
+      ? Math.max(1, Math.floor(configuredMaxDepth as number))
+      : MAX_LIST_INDENT_DEPTH;
+    const maxSubIndent = Math.max(0, maxDepth - 1);
+
+    const listItemNode = this.findNearestListItemNode(node);
+    if (listItemNode && typeof listItemNode.getIndent === "function") {
+      const indent = listItemNode.getIndent();
+      if (typeof indent === "number") {
+        return indent >= maxSubIndent;
+      }
+    }
+
     const listNode = this.findNearestListNode(node);
     if (!listNode) {
       return false;
     }
 
-    const configuredMaxDepth = this.config.maxListDepth;
-    const maxDepth = Number.isFinite(configuredMaxDepth)
-      ? Math.max(1, Math.floor(configuredMaxDepth as number))
-      : MAX_LIST_INDENT_DEPTH;
-
-    return $getListDepth(listNode) >= maxDepth;
+    return $getListDepth(listNode) - 1 >= maxSubIndent;
   }
 
   /**
@@ -199,6 +208,17 @@ export class TabIndentExtension extends BaseExtension<
     let current = node;
     while (current) {
       if ($isListNode(current)) {
+        return current;
+      }
+      current = current.getParent();
+    }
+    return null;
+  }
+
+  private findNearestListItemNode(node: any): any {
+    let current = node;
+    while (current) {
+      if ($isListItemNode(current)) {
         return current;
       }
       current = current.getParent();

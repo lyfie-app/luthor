@@ -167,6 +167,17 @@ function findNearestListNode(node: any): ListNode | null {
   return null;
 }
 
+function findNearestListItemNode(node: any): ListItemNode | null {
+  let current = node;
+  while (current) {
+    if ($isListItemNode(current)) {
+      return current;
+    }
+    current = current.getParent();
+  }
+  return null;
+}
+
 function findTopListNode(node: ListNode): ListNode {
   let current = node;
   while (true) {
@@ -405,9 +416,20 @@ function collectSelectedTopListNodes(selection: any): ListNode[] {
 }
 
 function isSelectionAtMaxListDepth(selection: any, maxListDepth: number): boolean {
-  const listNode = findNearestListNode(selection.anchor.getNode());
+  const maxSubIndent = Math.max(0, maxListDepth - 1);
+  const anchorNode = selection.anchor.getNode();
+
+  const listItemNode = findNearestListItemNode(anchorNode);
+  if (listItemNode) {
+    const indent = listItemNode.getIndent();
+    if (typeof indent === "number") {
+      return indent >= maxSubIndent;
+    }
+  }
+
+  const listNode = findNearestListNode(anchorNode);
   if (!listNode) return false;
-  return $getListDepth(listNode) >= maxListDepth;
+  return $getListDepth(listNode) - 1 >= maxSubIndent;
 }
 
 function collectListItemContentTextNodes(listItemNode: ListItemNode): TextNode[] {
@@ -758,11 +780,27 @@ export class ListExtension extends BaseExtension<
       },
       COMMAND_PRIORITY_EDITOR,
     );
+    const unregisterListIndentLimit = editor.registerCommand(
+      INDENT_CONTENT_COMMAND,
+      () => {
+        const selection = $getSelection();
+        if (!$isRangeSelection(selection)) {
+          return false;
+        }
+        const context = getSelectionListContext(selection);
+        if (!context.listNode) {
+          return false;
+        }
+        return isSelectionAtMaxListDepth(selection, this.getMaxListDepth());
+      },
+      COMMAND_PRIORITY_EDITOR,
+    );
 
     return () => {
       unregisterListStyleTransform();
       unregisterListItemStyleTransform();
       unregisterOrderedShortcut();
+      unregisterListIndentLimit();
     };
   }
 
