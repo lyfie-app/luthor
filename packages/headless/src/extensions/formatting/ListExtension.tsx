@@ -5,6 +5,7 @@ import {
   $getListDepth,
 } from "@lexical/list";
 import {
+  COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_LOW,
   INDENT_CONTENT_COMMAND,
   KEY_SPACE_COMMAND,
@@ -74,6 +75,7 @@ type UnorderedListPattern = keyof typeof UNORDERED_LIST_PATTERNS;
 
 type OrderedListSuffix = "dot" | "paren";
 type CheckListVariant = "strikethrough" | "plain";
+type ListType = "bullet" | "number" | "check";
 
 const DEFAULT_ORDERED_PATTERN: OrderedListPattern = "decimal-alpha-roman";
 const DEFAULT_UNORDERED_PATTERN: UnorderedListPattern = "disc-circle-square";
@@ -194,7 +196,7 @@ function parseOrderedListShortcut(text: string): {
     };
   }
 
-  const upperRomanMatch = normalized.match(/^([IVXLCDM]+)([.)])$/);
+  const upperRomanMatch = normalized.match(/^([IVXLCDMivxlcdm]+)([.)])$/);
   if (upperRomanMatch) {
     const suffixToken = upperRomanMatch[2] ?? ".";
     return {
@@ -241,6 +243,32 @@ function isSelectionAtMaxListDepth(selection: any): boolean {
   const listNode = findNearestListNode(selection.anchor.getNode());
   if (!listNode) return false;
   return $getListDepth(listNode) >= MAX_LIST_DEPTH;
+}
+
+type ListSelectionContext = {
+  listNode: ListNode | null;
+  listItemNode: ListItemNode | null;
+  topListNode: ListNode | null;
+};
+
+function getSelectionListContext(selection: any): ListSelectionContext {
+  let current = selection.anchor.getNode();
+  let listNode: ListNode | null = null;
+  let listItemNode: ListItemNode | null = null;
+
+  while (current) {
+    if (!listItemNode && $isListItemNode(current)) {
+      listItemNode = current;
+    }
+    if ($isListNode(current)) {
+      listNode = current;
+      break;
+    }
+    current = current.getParent();
+  }
+
+  const topListNode = listNode ? findTopListNode(listNode) : null;
+  return { listNode, listItemNode, topListNode };
 }
 
 /**
@@ -352,7 +380,7 @@ export class ListExtension extends BaseExtension<
 
         return handled;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_EDITOR,
     );
 
     return () => {
@@ -393,116 +421,76 @@ export class ListExtension extends BaseExtension<
       toggleUnorderedList: () => {
         editor.update(() => {
           const selection = $getSelection();
-          if ($isRangeSelection(selection)) {
-            const anchorNode = selection.anchor.getNode();
-            let parent = anchorNode.getParent();
-            let listNode: any = null;
-            let listItemNode: any = null;
-            while (parent) {
-              if ($isListItemNode(parent)) {
-                listItemNode = parent;
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
+          const context = getSelectionListContext(selection);
+          if (context.topListNode) {
+            if (context.topListNode.getListType() === "bullet") {
+              if (context.listItemNode && context.listItemNode.getIndent() > 0) {
+                editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+              } else {
+                $setBlocksType(selection, $createParagraphNode);
               }
-              if ($isListNode(parent)) {
-                listNode = parent;
-                break;
-              }
-              parent = parent.getParent();
+              return;
             }
 
-            if (listNode) {
-              if (listNode.getListType() === "bullet") {
-                // If already an unordered list, check if we can outdent
-                if (listItemNode && listItemNode.getIndent() > 0) {
-                  // If nested, outdent instead of removing list
-                  editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-                } else {
-                  // If at top level, convert to paragraph
-                  $setBlocksType(selection, $createParagraphNode);
-                }
-              } else {
-                // If it's an ordered list, convert to unordered
-                editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-              }
-            } else {
-              // No list, create unordered list
-              editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
-            }
+            this.convertTopListType(context.topListNode, "bullet");
+            return;
           }
+
+          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
         });
       },
       toggleOrderedList: () => {
         editor.update(() => {
           const selection = $getSelection();
-          if ($isRangeSelection(selection)) {
-            const anchorNode = selection.anchor.getNode();
-            let parent = anchorNode.getParent();
-            let listNode: any = null;
-            let listItemNode: any = null;
-            while (parent) {
-              if ($isListItemNode(parent)) {
-                listItemNode = parent;
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
+          const context = getSelectionListContext(selection);
+          if (context.topListNode) {
+            if (context.topListNode.getListType() === "number") {
+              if (context.listItemNode && context.listItemNode.getIndent() > 0) {
+                editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+              } else {
+                $setBlocksType(selection, $createParagraphNode);
               }
-              if ($isListNode(parent)) {
-                listNode = parent;
-                break;
-              }
-              parent = parent.getParent();
+              return;
             }
 
-            if (listNode) {
-              if (listNode.getListType() === "number") {
-                // If already an ordered list, check if we can outdent
-                if (listItemNode && listItemNode.getIndent() > 0) {
-                  // If nested, outdent instead of removing list
-                  editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-                } else {
-                  // If at top level, convert to paragraph
-                  $setBlocksType(selection, $createParagraphNode);
-                }
-              } else {
-                // If it's an unordered list, convert to ordered
-                editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-              }
-            } else {
-              // No list, create ordered list
-              editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
-            }
+            this.convertTopListType(context.topListNode, "number");
+            return;
           }
+
+          editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
         });
       },
       toggleCheckList: () => {
         editor.update(() => {
           const selection = $getSelection();
-          if ($isRangeSelection(selection)) {
-            const anchorNode = selection.anchor.getNode();
-            let parent = anchorNode.getParent();
-            let listNode: any = null;
-            let listItemNode: any = null;
-            while (parent) {
-              if ($isListItemNode(parent)) {
-                listItemNode = parent;
+          if (!$isRangeSelection(selection)) {
+            return;
+          }
+
+          const context = getSelectionListContext(selection);
+          if (context.topListNode) {
+            if (context.topListNode.getListType() === "check") {
+              if (context.listItemNode && context.listItemNode.getIndent() > 0) {
+                editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
+              } else {
+                $setBlocksType(selection, $createParagraphNode);
               }
-              if ($isListNode(parent)) {
-                listNode = parent;
-                break;
-              }
-              parent = parent.getParent();
+              return;
             }
 
-            if (listNode) {
-              if (listNode.getListType() === "check") {
-                if (listItemNode && listItemNode.getIndent() > 0) {
-                  editor.dispatchCommand(OUTDENT_CONTENT_COMMAND, undefined);
-                } else {
-                  $setBlocksType(selection, $createParagraphNode);
-                }
-              } else {
-                editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-              }
-            } else {
-              editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
-            }
+            this.convertTopListType(context.topListNode, "check");
+            return;
           }
+
+          editor.dispatchCommand(INSERT_CHECK_LIST_COMMAND, undefined);
         });
       },
       indentList: () => {
@@ -604,9 +592,7 @@ export class ListExtension extends BaseExtension<
               continue;
             }
 
-            setStyleEntries(topListNode, {
-              "--luthor-checklist-variant": variant,
-            });
+            this.applyCheckListVariant(topListNode, variant);
           }
         });
       },
@@ -711,6 +697,37 @@ export class ListExtension extends BaseExtension<
     }
   }
 
+  private applyCheckListVariant(topListNode: ListNode, variant: CheckListVariant): void {
+    if (topListNode.getListType() !== "check") {
+      return;
+    }
+
+    const stack: ListNode[] = [topListNode];
+    while (stack.length > 0) {
+      const node = stack.pop() as ListNode;
+      if (node.getListType() !== "check") {
+        continue;
+      }
+
+      setStyleEntries(node, {
+        "--luthor-checklist-variant": variant,
+        "--luthor-unordered-marker-content": null,
+        "--luthor-unordered-pattern": null,
+        "--luthor-ordered-pattern": null,
+        "--luthor-ordered-suffix": null,
+        "list-style-type": null,
+      });
+
+      for (const child of node.getChildren()) {
+        if (!$isListItemNode(child)) continue;
+        const nested = child.getFirstChild();
+        if ($isListNode(nested)) {
+          stack.push(nested);
+        }
+      }
+    }
+  }
+
   private syncListNodeStyles(node: ListNode): void {
     const topListNode = findTopListNode(node);
 
@@ -766,6 +783,49 @@ export class ListExtension extends BaseExtension<
         "list-style-type": null,
       });
     }
+  }
+
+  private convertTopListType(topListNode: ListNode, nextType: ListType): void {
+    const stack: ListNode[] = [topListNode];
+    while (stack.length > 0) {
+      const node = stack.pop() as ListNode;
+      node.setListType(nextType);
+
+      for (const child of node.getChildren()) {
+        if (!$isListItemNode(child)) continue;
+        const nested = child.getFirstChild();
+        if ($isListNode(nested)) {
+          stack.push(nested);
+        }
+      }
+    }
+
+    if (nextType === "number") {
+      const rawPattern = readStyleValue(topListNode, "--luthor-ordered-pattern");
+      const pattern = rawPattern && Object.hasOwn(ORDERED_LIST_PATTERNS, rawPattern)
+        ? (rawPattern as OrderedListPattern)
+        : DEFAULT_ORDERED_PATTERN;
+      const suffix = readStyleValue(topListNode, "--luthor-ordered-suffix") === "paren"
+        ? "paren"
+        : "dot";
+      this.applyOrderedPattern(topListNode, pattern);
+      this.applyOrderedSuffix(topListNode, suffix);
+      return;
+    }
+
+    if (nextType === "bullet") {
+      const rawPattern = readStyleValue(topListNode, "--luthor-unordered-pattern");
+      const pattern = rawPattern && Object.hasOwn(UNORDERED_LIST_PATTERNS, rawPattern)
+        ? (rawPattern as UnorderedListPattern)
+        : DEFAULT_UNORDERED_PATTERN;
+      this.applyUnorderedPattern(topListNode, pattern);
+      return;
+    }
+
+    const variant = readStyleValue(topListNode, "--luthor-checklist-variant") === "plain"
+      ? "plain"
+      : "strikethrough";
+    this.applyCheckListVariant(topListNode, variant);
   }
 
   private handleOrderedListShortcut(editor: LexicalEditor): boolean {
