@@ -973,6 +973,13 @@
 	transition: background-color var(--luthor-theme-transition), color var(--luthor-theme-transition), border-color var(--luthor-theme-transition);
 }
 
+.luthor-source-view--wrapped {
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	overflow-x: hidden;
+}
+
 .luthor-source-error {
 	display: flex;
 	gap: 12px;

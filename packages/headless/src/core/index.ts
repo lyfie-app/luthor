@@ -25,4 +25,18 @@ export {
   jsonToMarkdown,
   type JsonDocument,
 } from "./markdown";
+export {
+  htmlToJSON,
+  jsonToHTML,
+} from "./html";
+export {
+  appendMetadataEnvelopes,
+  extractMetadataEnvelopes,
+  prepareDocumentForBridge,
+  rehydrateDocumentFromEnvelopes,
+  type BridgeMode,
+  type MetadataEnvelope,
+  type ExtractedMetadataEnvelopes,
+  type PreparedBridgeDocument,
+} from "./metadata-envelope";
 

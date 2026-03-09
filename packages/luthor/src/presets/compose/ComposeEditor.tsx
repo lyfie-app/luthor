@@ -107,6 +107,7 @@ export const ComposeEditor = forwardRef<ExtensiveEditorRef, ComposeEditorProps>(
           ]
             .filter(Boolean)
             .join(" ")}
+          availableModes={["visual", "json"]}
           featureFlags={{ ...COMPOSE_DEFAULT_FLAGS, ...(featureFlags ?? {}) }}
         />
       </div>

@@ -1,5 +1,17 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
-import { clearLexicalSelection, createEditorSystem, createEditorThemeStyleVars, defaultLuthorTheme, mergeThemes, RichText, type LuthorTheme } from "@lyfie/luthor-headless";
+import {
+  clearLexicalSelection,
+  createEditorSystem,
+  createEditorThemeStyleVars,
+  defaultLuthorTheme,
+  htmlToJSON,
+  jsonToHTML,
+  jsonToMarkdown,
+  markdownToJSON,
+  mergeThemes,
+  RichText,
+  type LuthorTheme,
+} from "@lyfie/luthor-headless";
 import {
   createExtensiveExtensions,
   extensiveExtensions,
@@ -16,7 +28,9 @@ import {
   EmojiSuggestionMenu,
   commandsToCommandPaletteItems,
   commandsToSlashCommandItems,
+  formatHTMLSource,
   formatJSONSource,
+  formatMarkdownSource,
   generateCommands,
   ModeTabs,
   LinkHoverBubble,
@@ -68,16 +82,28 @@ import type {
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
-export type ExtensiveEditorMode = "visual" | "json";
+export type ExtensiveEditorMode = "visual" | "json" | "markdown" | "html";
 export type ExtensiveEditorPlaceholder =
   | string
   | {
       visual?: string;
       json?: string;
+      markdown?: string;
+      html?: string;
     };
 
 const DEFAULT_VISUAL_PLACEHOLDER = "Write anything...";
 const DEFAULT_JSON_PLACEHOLDER = "Enter JSON document content...";
+const DEFAULT_MARKDOWN_PLACEHOLDER = "Enter Markdown content...";
+const DEFAULT_HTML_PLACEHOLDER = "Enter HTML content...";
+
+type ExtensiveEditorSourceMode = Exclude<ExtensiveEditorMode, "visual">;
+
+const SOURCE_MODE_ERROR_TITLE: Record<ExtensiveEditorSourceMode, string> = {
+  json: "Invalid JSON",
+  markdown: "Invalid Markdown",
+  html: "Invalid HTML",
+};
 
 export interface ExtensiveEditorRef {
   injectJSON: (content: string) => void;
@@ -530,6 +556,8 @@ function ExtensiveEditorContent({
   toggleTheme,
   visualPlaceholder,
   jsonPlaceholder,
+  markdownPlaceholder,
+  htmlPlaceholder,
   initialMode,
   availableModes,
   onReady,
@@ -553,6 +581,8 @@ function ExtensiveEditorContent({
   toggleTheme: () => void;
   visualPlaceholder: string;
   jsonPlaceholder: string;
+  markdownPlaceholder: string;
+  htmlPlaceholder: string;
   initialMode: ExtensiveEditorMode;
   availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
@@ -582,9 +612,13 @@ function ExtensiveEditorContent({
     import: importApi,
   } = useEditor();
   const [mode, setMode] = useState<ExtensiveEditorMode>(initialMode);
-  const [content, setContent] = useState({ json: "" });
+  const [content, setContent] = useState<Record<ExtensiveEditorSourceMode, string>>({
+    json: "",
+    markdown: "",
+    html: "",
+  });
   const [convertingMode, setConvertingMode] = useState<ExtensiveEditorMode | null>(null);
-  const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorMode; error: string } | null>(null);
+  const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorSourceMode; error: string } | null>(null);
   const [commandPaletteState, setCommandPaletteState] = useState({
     isOpen: false,
     commands: [] as ReturnType<typeof commandsToCommandPaletteItems>,
@@ -917,42 +951,84 @@ function ExtensiveEditorContent({
     return unsubscribe;
   }, [editor, exportApi]);
 
+  const importFromSourceMode = (sourceMode: ExtensiveEditorSourceMode): void => {
+    const sourceValue = content[sourceMode];
+
+    if (sourceMode === "json") {
+      if (!sourceValue.trim()) {
+        importApi.fromJSON(createJSONDocumentFromText(""));
+        return;
+      }
+
+      const parsed = JSON.parse(sourceValue);
+      importApi.fromJSON(parsed);
+      return;
+    }
+
+    if (sourceMode === "markdown") {
+      importApi.fromJSON(markdownToJSON(sourceValue));
+      return;
+    }
+
+    importApi.fromJSON(htmlToJSON(sourceValue));
+  };
+
+  const exportToSourceMode = (sourceMode: ExtensiveEditorSourceMode): string => {
+    const visualDocument = exportApi.toJSON() ?? createJSONDocumentFromText("");
+
+    if (sourceMode === "json") {
+      return formatJSONSource(JSON.stringify(visualDocument));
+    }
+
+    if (sourceMode === "markdown") {
+      return formatMarkdownSource(jsonToMarkdown(visualDocument));
+    }
+
+    return formatHTMLSource(jsonToHTML(visualDocument));
+  };
+
   const handleModeChange = async (newMode: ExtensiveEditorMode) => {
+    if (newMode === mode) {
+      return;
+    }
+
     if (!availableModes.includes(newMode)) {
       return;
     }
 
+    const currentMode = mode;
+    let errorMode: ExtensiveEditorSourceMode | null = null;
+
     try {
-      // Clear any previous errors when attempting to switch modes
       setSourceError(null);
 
-      // Step 1: Import edited content from source tabs
-      if (mode === "json" && newMode !== "json") {
-        const parsed = JSON.parse(content.json);
-        importApi.fromJSON(parsed);
+      if (currentMode !== "visual") {
+        errorMode = currentMode;
+        importFromSourceMode(currentMode);
         await new Promise((resolve) => setTimeout(resolve, 50));
+        errorMode = null;
       }
 
-      if (mode === "visual" && newMode !== "visual") {
+      if (currentMode === "visual" && newMode !== "visual") {
         if (editor) {
           clearLexicalSelection(editor);
         }
         editor?.getRootElement()?.blur();
       }
 
-      // Immediately switch mode so UI shows new view
       setMode(newMode);
 
-      // Step 2: Lazy export - only convert format if not cached
-      // This ensures smooth tab switching with progressive conversion
-      if (newMode === "json" && mode !== "json") {
-        if (!isModeCached(cacheValidRef.current, "json")) {
-          setConvertingMode("json");
+      if (newMode !== "visual") {
+        const targetMode = newMode as ExtensiveEditorSourceMode;
+        if (!isModeCached(cacheValidRef.current, targetMode)) {
+          setConvertingMode(targetMode);
           await new Promise((resolve) => setTimeout(resolve, 50));
           try {
-            const json = formatJSONSource(JSON.stringify(exportApi.toJSON()));
-            setContent((prev) => ({ ...prev, json }));
-            markModeCached(cacheValidRef.current, "json");
+            errorMode = targetMode;
+            const nextSource = exportToSourceMode(targetMode);
+            setContent((prev) => ({ ...prev, [targetMode]: nextSource }));
+            markModeCached(cacheValidRef.current, targetMode);
+            errorMode = null;
           } finally {
             setConvertingMode(null);
           }
@@ -963,10 +1039,10 @@ function ExtensiveEditorContent({
         setTimeout(() => editor?.focus(), 100);
       }
     } catch (error) {
-      // If an error occurs while importing, show it and keep the user in the current mode
       const errorMessage = error instanceof Error ? error.message : "Invalid format - could not parse content";
-      setSourceError({ mode: mode, error: errorMessage });
-      // Don't change mode if import fails
+      if (errorMode) {
+        setSourceError({ mode: errorMode, error: errorMessage });
+      }
     }
   };
 
@@ -1000,6 +1076,7 @@ function ExtensiveEditorContent({
   const shouldRenderBottomToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "bottom";
   const overlayPortalContainer =
     (editor?.getRootElement()?.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
+  const activeSourceMode = mode === "visual" ? null : (mode as ExtensiveEditorSourceMode);
 
   return (
     <>
@@ -1034,20 +1111,38 @@ function ExtensiveEditorContent({
             }}
           />
         </div>
-        {mode !== "visual" && (
+        {activeSourceMode && (
           <div className="luthor-source-panel">
-            {sourceError && sourceError.mode === mode && (
+            {sourceError && sourceError.mode === activeSourceMode && (
               <div className="luthor-source-error">
-                <div className="luthor-source-error-icon">⚠️</div>
+                <div className="luthor-source-error-icon">!</div>
                 <div className="luthor-source-error-message">
-                  <strong>Invalid JSON</strong>
+                  <strong>{SOURCE_MODE_ERROR_TITLE[activeSourceMode]}</strong>
                   <p>{sourceError.error}</p>
                   <small>Fix the errors above and try switching modes again</small>
                 </div>
               </div>
             )}
-            {mode === "json" && (
+            {activeSourceMode === "json" && (
               <SourceView value={content.json} onChange={(value) => setContent((prev) => ({ ...prev, json: value }))} placeholder={jsonPlaceholder} />
+            )}
+            {activeSourceMode === "markdown" && (
+              <SourceView
+                value={content.markdown}
+                onChange={(value) => setContent((prev) => ({ ...prev, markdown: value }))}
+                placeholder={markdownPlaceholder}
+                className="luthor-source-view--wrapped"
+                wrap="soft"
+              />
+            )}
+            {activeSourceMode === "html" && (
+              <SourceView
+                value={content.html}
+                onChange={(value) => setContent((prev) => ({ ...prev, html: value }))}
+                placeholder={htmlPlaceholder}
+                className="luthor-source-view--wrapped"
+                wrap="soft"
+              />
             )}
           </div>
         )}
@@ -1150,7 +1245,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     showDefaultContent = true,
     placeholder = DEFAULT_VISUAL_PLACEHOLDER,
     initialMode = "visual",
-    availableModes = ["visual", "json"],
+    availableModes = ["visual", "json", "markdown", "html"],
     variantClassName,
     toolbarLayout,
     toolbarVisibility,
@@ -1197,12 +1292,16 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         return {
           visual: placeholder,
           json: DEFAULT_JSON_PLACEHOLDER,
+          markdown: DEFAULT_MARKDOWN_PLACEHOLDER,
+          html: DEFAULT_HTML_PLACEHOLDER,
         };
       }
 
       return {
         visual: placeholder.visual ?? DEFAULT_VISUAL_PLACEHOLDER,
         json: placeholder.json ?? DEFAULT_JSON_PLACEHOLDER,
+        markdown: placeholder.markdown ?? DEFAULT_MARKDOWN_PLACEHOLDER,
+        html: placeholder.html ?? DEFAULT_HTML_PLACEHOLDER,
       };
     }, [placeholder]);
 
@@ -1418,6 +1517,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toggleTheme={toggleTheme}
             visualPlaceholder={resolvedPlaceholders.visual}
             jsonPlaceholder={resolvedPlaceholders.json}
+            markdownPlaceholder={resolvedPlaceholders.markdown}
+            htmlPlaceholder={resolvedPlaceholders.html}
             initialMode={resolvedInitialMode}
             availableModes={availableModes}
             onReady={handleReady}

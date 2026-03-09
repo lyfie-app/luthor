@@ -67,7 +67,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/luthor
       '@opennextjs/cloudflare':
-        specifier: ^1.16.5
+        specifier: 1.16.5
         version: 1.16.5(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.67.0)
       '@phosphor-icons/react':
         specifier: ^2.1.10
@@ -104,7 +104,7 @@ importers:
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
       wrangler:
-        specifier: ^4.67.0
+        specifier: 4.67.0
         version: 4.67.0
 
   packages/eslint-config:
@@ -153,6 +153,9 @@ importers:
   packages/headless:
     dependencies:
       '@lexical/code':
+        specifier: '>=0.40.0'
+        version: 0.40.0
+      '@lexical/html':
         specifier: '>=0.40.0'
         version: 0.40.0
       '@lexical/link':
@@ -236,6 +239,9 @@ importers:
   packages/luthor:
     dependencies:
       '@lexical/code':
+        specifier: ^0.40.0
+        version: 0.40.0
+      '@lexical/html':
         specifier: ^0.40.0
         version: 0.40.0
       '@lexical/link':

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach } from "vitest";
 import { vi } from "vitest";
@@ -12,6 +12,10 @@ const {
   createExtensiveExtensionsMock,
   createEditorThemeStyleVarsMock,
   providerMock,
+  htmlToJSONMock,
+  jsonToHTMLMock,
+  jsonToMarkdownMock,
+  markdownToJSONMock,
   richTextMock,
   sourceViewMock,
 } = vi.hoisted(() => ({
@@ -25,12 +29,35 @@ const {
   createExtensiveExtensionsMock: vi.fn(() => []),
   createEditorThemeStyleVarsMock: vi.fn((overrides?: Record<string, string>) => overrides),
   providerMock: vi.fn(),
+  htmlToJSONMock: vi.fn(() => ({ root: { children: [] } })),
+  jsonToHTMLMock: vi.fn(() => "<p></p>"),
+  jsonToMarkdownMock: vi.fn(() => ""),
+  markdownToJSONMock: vi.fn(() => ({ root: { children: [] } })),
   richTextMock: vi.fn(({ placeholder, classNames }: { placeholder?: string; classNames?: { placeholder?: string } }) => (
     <div data-testid="richtext" data-placeholder-class={classNames?.placeholder}>{placeholder}</div>
   )),
   sourceViewMock: vi.fn(
-    ({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) => (
-      <textarea data-testid="source-view" data-placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
+    ({
+      value,
+      onChange,
+      placeholder,
+      className,
+      wrap,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+      placeholder: string;
+      className?: string;
+      wrap?: "soft" | "hard" | "off";
+    }) => (
+      <textarea
+        data-testid="source-view"
+        data-placeholder={placeholder}
+        data-classname={className}
+        data-wrap={wrap}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
     ),
   ),
 }));
@@ -122,8 +149,18 @@ vi.mock("../../core", () => ({
   EmojiSuggestionMenu: () => null,
   commandsToCommandPaletteItems: commandsToCommandPaletteItemsMock,
   commandsToSlashCommandItems: commandsToSlashCommandItemsMock,
+  formatHTMLSource: (value: string) => value,
   formatJSONSource: (value: string) => value,
-  ModeTabs: () => <div data-testid="mode-tabs" />,
+  formatMarkdownSource: (value: string) => value,
+  ModeTabs: ({ availableModes, onModeChange }: { availableModes?: string[]; onModeChange: (mode: string) => void }) => (
+    <div data-testid="mode-tabs">
+      {(availableModes ?? ["visual", "json"]).map((mode) => (
+        <button key={mode} type="button" onClick={() => onModeChange(mode)}>
+          {mode}
+        </button>
+      ))}
+    </div>
+  ),
   registerKeyboardShortcuts: registerKeyboardShortcutsMock,
   generateCommands: vi.fn(() => [
     { id: "format.bold", shortcuts: [{ key: "b", ctrlKey: true }] },
@@ -183,6 +220,10 @@ vi.mock("@lyfie/luthor-headless", () => ({
     ...override,
   }),
   createEditorThemeStyleVars: createEditorThemeStyleVarsMock,
+  htmlToJSON: htmlToJSONMock,
+  jsonToHTML: jsonToHTMLMock,
+  jsonToMarkdown: jsonToMarkdownMock,
+  markdownToJSON: markdownToJSONMock,
   clearLexicalSelection: vi.fn(),
 }));
 
@@ -206,6 +247,15 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(header).not.toContainElement(toolbar);
     expect(topSlot).toContainElement(toolbar);
     expect(container.querySelector(".luthor-editor-toolbar-slot--bottom")).toBeNull();
+  });
+
+  it("enables visual, json, markdown, and html modes by default", () => {
+    render(<ExtensiveEditor showDefaultContent={false} />);
+
+    expect(screen.getByRole("button", { name: "visual" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "json" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "html" })).toBeInTheDocument();
   });
 
   it("renders toolbar in the bottom slot when toolbarPosition is bottom", () => {
@@ -801,6 +851,121 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       "data-placeholder",
       "Paste JSON here",
     );
+  });
+
+  it("supports mode-specific placeholder pass-through for markdown mode", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="markdown"
+        availableModes={["visual", "markdown"]}
+        placeholder={{
+          visual: "Write in visual mode",
+          markdown: "Write markdown here",
+        }}
+      />,
+    );
+
+    const sourceViewCall = sourceViewMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(sourceViewCall.placeholder).toBe("Write markdown here");
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-placeholder",
+      "Write markdown here",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-wrap",
+      "soft",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-classname",
+      "luthor-source-view--wrapped",
+    );
+  });
+
+  it("supports mode-specific placeholder pass-through for html mode", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+        placeholder={{
+          visual: "Write in visual mode",
+          html: "Write HTML here",
+        }}
+      />,
+    );
+
+    const sourceViewCall = sourceViewMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(sourceViewCall.placeholder).toBe("Write HTML here");
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-placeholder",
+      "Write HTML here",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-wrap",
+      "soft",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-classname",
+      "luthor-source-view--wrapped",
+    );
+  });
+
+  it("routes markdown to json transitions through the visual import/export pipeline", async () => {
+    const importedDocument = { root: { children: [{ type: "paragraph" }] } };
+    const exportedDocument = { root: { children: [{ type: "paragraph", marker: "from-visual" }] } };
+    markdownToJSONMock.mockReturnValueOnce(importedDocument);
+    mockEditorApi.export.toJSON.mockReturnValue(exportedDocument);
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="markdown"
+        availableModes={["visual", "markdown", "json"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "## Draft heading" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "json" }));
+
+    await waitFor(() => {
+      expect(markdownToJSONMock).toHaveBeenCalledWith("## Draft heading");
+    });
+    expect(mockEditorApi.import.fromJSON).toHaveBeenCalledWith(importedDocument);
+    await waitFor(() => {
+      expect(screen.getByTestId("source-view")).toHaveValue(JSON.stringify(exportedDocument));
+    });
+  });
+
+  it("shows mode-specific errors and prevents destructive switch on invalid html", async () => {
+    htmlToJSONMock.mockImplementationOnce(() => {
+      throw new Error("Malformed HTML");
+    });
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "<div><p>broken" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Invalid HTML")).toBeInTheDocument();
+      expect(screen.getByText("Malformed HTML")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("source-view")).toBeInTheDocument();
   });
 
   it("emits onThemeChange on mount and when initialTheme prop changes", () => {

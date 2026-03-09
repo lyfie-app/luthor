@@ -39,6 +39,7 @@ export function NotionLikeEditor({
       variantClassName={["luthor-preset-notion-like__variant", variantClassName]
         .filter(Boolean)
         .join(" ")}
+      availableModes={["visual", "json"]}
       isToolbarEnabled={isToolbarEnabled}
       slashCommandVisibility={slashVisibility}
       featureFlags={{

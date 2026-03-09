@@ -1,17 +1,18 @@
-import { $convertFromMarkdownString, $convertToMarkdownString, TRANSFORMERS } from "@lexical/markdown";
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { ListItemNode, ListNode } from "@lexical/list";
 import { QuoteNode, HeadingNode } from "@lexical/rich-text";
 import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import {
   createEditor,
+  $getRoot,
   ParagraphNode,
   TextNode,
   LineBreakNode,
   TabNode,
   type EditorState,
 } from "lexical";
-import { ImageNode, IMAGE_MARKDOWN_TRANSFORMER } from "@lyfie/luthor-headless/extensions/media";
+import { ImageNode, IframeEmbedNode, YouTubeEmbedNode } from "@lyfie/luthor-headless/extensions/media";
 import {
   appendMetadataEnvelopes,
   extractMetadataEnvelopes,
@@ -20,10 +21,7 @@ import {
   type JsonDocument,
 } from "./metadata-envelope";
 
-export type { JsonDocument } from "./metadata-envelope";
-
-const MARKDOWN_TRANSFORMERS = [...TRANSFORMERS, IMAGE_MARKDOWN_TRANSFORMER];
-const MARKDOWN_SUPPORTED_NODE_TYPES = new Set<string>([
+const HTML_SUPPORTED_NODE_TYPES = new Set<string>([
   "root",
   "paragraph",
   "text",
@@ -38,11 +36,13 @@ const MARKDOWN_SUPPORTED_NODE_TYPES = new Set<string>([
   "code",
   "code-highlight",
   "image",
+  "iframe-embed",
+  "youtube-embed",
 ]);
 
-function createMarkdownEditor() {
+function createHTMLEditor() {
   return createEditor({
-    namespace: "luthor-markdown-converter",
+    namespace: "luthor-html-converter",
     onError: (error) => {
       throw error;
     },
@@ -60,25 +60,44 @@ function createMarkdownEditor() {
       CodeNode,
       CodeHighlightNode,
       ImageNode,
+      IframeEmbedNode,
+      YouTubeEmbedNode,
     ],
   });
 }
 
-function toEditorState(editor: ReturnType<typeof createMarkdownEditor>, input: unknown): EditorState {
+function toEditorState(editor: ReturnType<typeof createHTMLEditor>, input: unknown): EditorState {
   const serialized = typeof input === "string" ? input : JSON.stringify(input ?? {});
   return editor.parseEditorState(serialized);
 }
 
-export function markdownToJSON(markdown: string): JsonDocument {
-  const { content, envelopes, warnings } = extractMetadataEnvelopes(markdown);
+function assertDOMSupport(): void {
+  if (
+    typeof document === "undefined" ||
+    typeof window === "undefined" ||
+    typeof DOMParser === "undefined"
+  ) {
+    throw new Error(
+      "HTML conversion requires browser DOM APIs (document/window/DOMParser).",
+    );
+  }
+}
+
+export function htmlToJSON(html: string): JsonDocument {
+  assertDOMSupport();
+  const { content, envelopes, warnings } = extractMetadataEnvelopes(html);
   for (const warning of warnings) {
     console.warn(`[luthor-headless] ${warning}`);
   }
 
-  const editor = createMarkdownEditor();
+  const editor = createHTMLEditor();
   editor.update(
     () => {
-      $convertFromMarkdownString(content, MARKDOWN_TRANSFORMERS);
+      const parsedDocument = new DOMParser().parseFromString(content, "text/html");
+      const nodes = $generateNodesFromDOM(editor, parsedDocument);
+      const root = $getRoot();
+      root.clear();
+      root.append(...nodes);
     },
     { discrete: true },
   );
@@ -87,18 +106,19 @@ export function markdownToJSON(markdown: string): JsonDocument {
   return rehydrateDocumentFromEnvelopes(baseDocument, envelopes);
 }
 
-export function jsonToMarkdown(input: unknown): string {
+export function jsonToHTML(input: unknown): string {
+  assertDOMSupport();
   const prepared = prepareDocumentForBridge(input, {
-    mode: "markdown",
-    supportedNodeTypes: MARKDOWN_SUPPORTED_NODE_TYPES,
+    mode: "html",
+    supportedNodeTypes: HTML_SUPPORTED_NODE_TYPES,
   });
-  const editor = createMarkdownEditor();
+  const editor = createHTMLEditor();
   const editorState = toEditorState(editor, prepared.document);
   editor.setEditorState(editorState, { tag: "history-merge" });
 
-  const markdown = editorState.read(() => {
-    return $convertToMarkdownString(MARKDOWN_TRANSFORMERS);
+  const html = editorState.read(() => {
+    return $generateHtmlFromNodes(editor, null);
   });
 
-  return appendMetadataEnvelopes(markdown, prepared.envelopes);
+  return appendMetadataEnvelopes(html, prepared.envelopes);
 }

@@ -2,7 +2,7 @@ import type { LuthorEditorThemeOverrides } from "@lyfie/luthor-headless";
 
 export type CoreTheme = "light" | "dark";
 
-export type CoreEditorMode = "visual" | "json";
+export type CoreEditorMode = "visual" | "json" | "markdown" | "html";
 
 export const BLOCK_HEADING_LEVELS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 

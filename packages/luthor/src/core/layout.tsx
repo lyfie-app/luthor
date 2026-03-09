@@ -14,26 +14,24 @@ export function ModeTabs({
   availableModes?: readonly CoreEditorMode[];
   isConverting?: CoreEditorMode | null;
 }) {
-  const modes = availableModes ?? ["visual", "json"];
+  const orderedModes: CoreEditorMode[] = ["visual", "json", "markdown", "html"];
+  const modeSet = new Set(availableModes ?? ["visual", "json", "markdown", "html"]);
+  const modes = orderedModes.filter((candidate) => modeSet.has(candidate));
   const tabLabels: Record<CoreEditorMode, string> = {
     visual: labels?.visual ?? "Visual",
     json: labels?.json ?? "JSON",
+    markdown: labels?.markdown ?? "Markdown",
+    html: labels?.html ?? "HTML",
   };
 
   return (
     <div className="luthor-mode-tabs">
-      {modes.includes("visual") && (
-        <button className={`luthor-mode-tab ${mode === "visual" ? "active" : ""}`} onClick={() => onModeChange("visual")}>
-          {tabLabels.visual}
-          {isConverting === "visual" && <span className="luthor-tab-converting-spinner" />}
+      {modes.map((tabMode) => (
+        <button key={tabMode} className={`luthor-mode-tab ${mode === tabMode ? "active" : ""}`} onClick={() => onModeChange(tabMode)}>
+          {tabLabels[tabMode]}
+          {isConverting === tabMode && <span className="luthor-tab-converting-spinner" />}
         </button>
-      )}
-      {modes.includes("json") && (
-        <button className={`luthor-mode-tab ${mode === "json" ? "active" : ""}`} onClick={() => onModeChange("json")}>
-          {tabLabels.json}
-          {isConverting === "json" && <span className="luthor-tab-converting-spinner" />}
-        </button>
-      )}
+      ))}
     </div>
   );
 }
@@ -43,11 +41,13 @@ export function SourceView({
   onChange,
   placeholder,
   className,
+  wrap,
 }: {
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   className?: string;
+  wrap?: "soft" | "hard" | "off";
 }) {
   const sourceRef = useRef<HTMLTextAreaElement>(null);
 
@@ -70,6 +70,7 @@ export function SourceView({
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       spellCheck={false}
+      wrap={wrap ?? "off"}
     />
   );
 }
