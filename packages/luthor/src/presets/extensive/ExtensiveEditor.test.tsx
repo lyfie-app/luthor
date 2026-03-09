@@ -217,6 +217,14 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(bottomSlot).toContainElement(toolbar);
   });
 
+  it("applies pinned toolbar slot class when isToolbarPinned is true", () => {
+    const { container } = render(<ExtensiveEditor showDefaultContent={false} isToolbarPinned />);
+
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+
+    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+  });
+
   it("applies center and right alignment classes", () => {
     const { rerender } = render(
       <ExtensiveEditor
@@ -782,3 +790,4 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(onThemeChange).toHaveBeenLastCalledWith("dark");
   });
 });
+

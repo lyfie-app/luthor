@@ -23,7 +23,7 @@
   --luthor-toolbar-button-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   --luthor-toolbar-button-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   --luthor-toolbar-button-active-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-  --luthor-toolbar-color-indicator-border: var(--luthor-border);
+  --luthor-toolbar-color-indicator-border: #000000;
   --luthor-toolbar-highlight-bg: var(--luthor-muted);
   --luthor-quote-bg: var(--luthor-muted);
   --luthor-quote-fg: var(--luthor-fg);
@@ -80,7 +80,7 @@
   --luthor-toolbar-button-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
   --luthor-toolbar-button-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
   --luthor-toolbar-button-active-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.06) 100%);
-  --luthor-toolbar-color-indicator-border: var(--luthor-border);
+  --luthor-toolbar-color-indicator-border: #ffffff;
   --luthor-toolbar-highlight-bg: var(--luthor-muted);
   --luthor-quote-bg: color-mix(in srgb, var(--luthor-muted) 92%, #ffffff 8%);
   --luthor-quote-fg: var(--luthor-fg);
@@ -151,6 +151,12 @@
 .luthor-editor-toolbar-slot {
 	background-color: var(--luthor-toolbar-bg, var(--luthor-muted));
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
+}
+
+.luthor-editor-toolbar-slot--pinned {
+	position: sticky;
+	top: 0;
+	z-index: 12;
 }
 
 .luthor-editor-toolbar-slot--bottom {
@@ -370,10 +376,10 @@
 	left: 7px;
 	right: 7px;
 	bottom: 5px;
-	height: 3px;
+	height: 6px;
 	border-radius: 999px;
-	border: 1px solid var(--luthor-toolbar-color-indicator-border, var(--luthor-border));
-	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+	border: 0.5px solid var(--luthor-toolbar-color-indicator-border, var(--luthor-fg));
+	box-shadow: none;
 	z-index: 1;
 }
 
@@ -2659,4 +2665,3 @@
 		font-size: 13px;
 	}
 }
-

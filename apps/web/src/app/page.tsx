@@ -265,7 +265,7 @@ export default async function HomePage() {
               Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring
             </h1>
             <p className="hero-copy">
-              Type-safe, open-source, TypeScript-friendly and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span> and modern JS frameworks like{' '}
+              Type-safe, TypeScript-first and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span> and modern JS frameworks like{' '}
               <span className="hero-highlight-text">Next.js</span> and <span className="hero-highlight-text">Astro</span>. Crafted with love by developers for developers who want control without chaos. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
             </p>
             <p className="hero-live-note">Fully open source. Fully free. Ready for your next project.</p>

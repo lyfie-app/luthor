@@ -77,6 +77,7 @@ function App() {
             }}
             toolbarAlignment="center"
             maxListIndentation={15}
+            isToolbarPinned={true}
           />
         );
     }

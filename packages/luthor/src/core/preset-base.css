@@ -36,7 +36,7 @@
   --luthor-toolbar-button-active-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   --luthor-toolbar-button-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
   --luthor-toolbar-button-active-overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-  --luthor-toolbar-color-indicator-border: var(--luthor-border);
+  --luthor-toolbar-color-indicator-border: var(--luthor-fg);
   --luthor-toolbar-highlight-bg: var(--luthor-muted);
   --luthor-quote-bg: var(--luthor-muted);
   --luthor-quote-fg: var(--luthor-fg);

@@ -540,6 +540,7 @@ function ExtensiveEditorContent({
   toolbarClassName,
   toolbarStyleVars,
   isToolbarEnabled,
+  isToolbarPinned,
   headingOptions,
   paragraphLabel,
   syncHeadingOptionsWithCommands,
@@ -562,6 +563,7 @@ function ExtensiveEditorContent({
   toolbarClassName?: string;
   toolbarStyleVars?: ToolbarStyleVars;
   isToolbarEnabled: boolean;
+  isToolbarPinned: boolean;
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
@@ -992,6 +994,9 @@ function ExtensiveEditorContent({
     />
   ) : null;
   const shouldRenderTopToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "top";
+  const topToolbarSlotClassName = ["luthor-editor-toolbar-slot", "luthor-editor-toolbar-slot--top", isToolbarPinned ? "luthor-editor-toolbar-slot--pinned" : ""]
+    .filter(Boolean)
+    .join(" ");
   const shouldRenderBottomToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "bottom";
   const overlayPortalContainer =
     (editor?.getRootElement()?.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
@@ -1006,7 +1011,7 @@ function ExtensiveEditorContent({
           isConverting={convertingMode}
         />
         {shouldRenderTopToolbar && (
-          <div className="luthor-editor-toolbar-slot luthor-editor-toolbar-slot--top">{toolbarNode}</div>
+          <div className={topToolbarSlotClassName}>{toolbarNode}</div>
         )}
       </div>
       <div
@@ -1110,6 +1115,7 @@ export interface ExtensiveEditorProps {
   defaultSettings?: DefaultSettings;
   editorThemeOverrides?: EditorThemeOverrides;
   isToolbarEnabled?: boolean;
+  isToolbarPinned?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
@@ -1157,6 +1163,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     defaultSettings,
     editorThemeOverrides,
     isToolbarEnabled = true,
+    isToolbarPinned = false,
     fontFamilyOptions,
     fontSizeOptions,
     lineHeightOptions,
@@ -1421,6 +1428,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toolbarClassName={toolbarClassName}
             toolbarStyleVars={toolbarStyleVars}
             isToolbarEnabled={isToolbarEnabled}
+            isToolbarPinned={isToolbarPinned}
             headingOptions={headingOptions}
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
@@ -1436,5 +1444,3 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
 );
 
 ExtensiveEditor.displayName = "ExtensiveEditor";
-
-

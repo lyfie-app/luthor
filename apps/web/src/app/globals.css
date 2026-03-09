@@ -184,11 +184,13 @@ a {
   letter-spacing: -0.04em;
   font-weight: 700;
   line-height: 1;
+  min-width: 0;
 }
 
 .brand-logo {
   width: auto;
   height: clamp(1.45rem, 2.1vw, 1.75rem);
+  max-width: 100%;
   display: block;
 }
 
@@ -217,6 +219,10 @@ a {
 
 .nav-secondary-link {
   display: inline-flex;
+}
+
+.nav-external-indicator {
+  opacity: 0.72;
 }
 
 .site-nav a,
@@ -1132,6 +1138,7 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-2);
+  flex-wrap: wrap;
 }
 
 .plan-package {
@@ -1167,6 +1174,8 @@ a {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  max-width: 100%;
+  white-space: normal;
 }
 
 .why-reason-grid {
@@ -1428,6 +1437,7 @@ a {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.78rem;
   color: color-mix(in srgb, var(--muted) 85%, #000 15%);
+  overflow-wrap: anywhere;
 }
 
 .docs-teaser,
@@ -1663,6 +1673,8 @@ a {
   gap: 0.4rem;
   border-radius: 8px;
   padding: 0.24rem 0.35rem;
+  line-height: 1.35;
+  white-space: normal;
   transition: color 0.24s ease, transform 0.24s ease, background-color 0.24s ease;
 }
 
@@ -1731,6 +1743,7 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .footer-bottom-links a {
