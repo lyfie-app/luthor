@@ -6,7 +6,6 @@ import {
 } from "@lexical/list";
 import {
   COMMAND_PRIORITY_EDITOR,
-  COMMAND_PRIORITY_LOW,
   INDENT_CONTENT_COMMAND,
   KEY_SPACE_COMMAND,
   OUTDENT_CONTENT_COMMAND,
@@ -154,6 +153,31 @@ function readStyleValue(
 ): string | null {
   const styleMap = parseInlineStyle(node.getStyle());
   return styleMap.get(key) ?? null;
+}
+
+type BreadthFirstVisitAction = "skip-children" | "stop";
+
+function traverseBreadthFirst(
+  initialNodes: readonly any[],
+  visit: (node: any) => BreadthFirstVisitAction | void,
+): void {
+  const queue = [...initialNodes];
+  for (let index = 0; index < queue.length; index += 1) {
+    const node = queue[index];
+    const action = visit(node);
+
+    if (action === "stop") {
+      break;
+    }
+
+    if (action === "skip-children") {
+      continue;
+    }
+
+    if (typeof node?.getChildren === "function") {
+      queue.push(...node.getChildren());
+    }
+  }
 }
 
 function findNearestListNode(node: any): ListNode | null {
@@ -434,40 +458,29 @@ function isSelectionAtMaxListDepth(selection: any, maxListDepth: number): boolea
 
 function collectListItemContentTextNodes(listItemNode: ListItemNode): TextNode[] {
   const textNodes: TextNode[] = [];
-  const queue = [...listItemNode.getChildren()];
-
-  while (queue.length > 0) {
-    const node = queue.shift() as any;
+  traverseBreadthFirst(listItemNode.getChildren(), (node) => {
     if ($isListNode(node)) {
-      continue;
+      return "skip-children";
     }
     if ($isTextNode(node)) {
       textNodes.push(node);
-      continue;
     }
-    if (typeof node.getChildren === "function") {
-      queue.push(...node.getChildren());
-    }
-  }
+    return;
+  });
 
   return textNodes;
 }
 
 function collectNestedListsFromListItem(listItemNode: ListItemNode): ListNode[] {
   const nestedLists: ListNode[] = [];
-  const queue = [...listItemNode.getChildren()];
-
-  while (queue.length > 0) {
-    const node = queue.shift() as any;
+  traverseBreadthFirst(listItemNode.getChildren(), (node) => {
     if ($isListNode(node)) {
       nestedLists.push(node);
       // Stop here so each list node is traversed by the outer stack exactly once.
-      continue;
+      return "skip-children";
     }
-    if (typeof node.getChildren === "function") {
-      queue.push(...node.getChildren());
-    }
-  }
+    return;
+  });
   return nestedLists;
 }
 
@@ -475,71 +488,62 @@ function shouldRenderUnorderedMarker(listItemNode: ListItemNode): boolean {
   // Hide marker for structural wrapper items that only exist to hold nested lists.
   // Empty paragraph wrappers should not produce their own marker.
   let hasVisibleContent = false;
-  const queue = [...listItemNode.getChildren()];
-
-  while (queue.length > 0) {
-    const node = queue.shift() as any;
+  let hasNestedLists = false;
+  traverseBreadthFirst(listItemNode.getChildren(), (node) => {
     if ($isListNode(node)) {
-      continue;
+      hasNestedLists = true;
+      return "skip-children";
     }
     if ($isTextNode(node) && node.getTextContent().trim().length > 0) {
       hasVisibleContent = true;
-      break;
+      return "stop";
     }
-    if (typeof node.getChildren === "function") {
-      queue.push(...node.getChildren());
-    }
-  }
+    return;
+  });
 
   if (hasVisibleContent) {
     return true;
   }
 
-  return collectNestedListsFromListItem(listItemNode).length === 0;
+  return !hasNestedLists;
 }
 
 function setUnorderedPatternTokenOnListItemContent(
   listItemNode: ListItemNode,
   pattern: UnorderedListPattern | null,
 ): void {
-  const queue = [...listItemNode.getChildren()];
-  while (queue.length > 0) {
-    const node = queue.shift() as any;
+  traverseBreadthFirst(listItemNode.getChildren(), (node) => {
     if ($isListNode(node)) {
-      continue;
+      return "skip-children";
     }
     if (typeof node.getStyle === "function" && typeof node.setStyle === "function") {
       setStyleEntries(node, {
         [UNORDERED_PATTERN_TEXT_TOKEN]: pattern,
       });
     }
-    if (typeof node.getChildren === "function") {
-      queue.push(...node.getChildren());
-    }
-  }
+    return;
+  });
 }
 
 function readUnorderedPatternTokenFromListItemContent(
   listItemNode: ListItemNode,
 ): UnorderedListPattern | null {
-  const queue = [...listItemNode.getChildren()];
-  while (queue.length > 0) {
-    const node = queue.shift() as any;
+  let resolvedPattern: UnorderedListPattern | null = null;
+  traverseBreadthFirst(listItemNode.getChildren(), (node) => {
     if ($isListNode(node)) {
-      continue;
+      return "skip-children";
     }
     if (typeof node.getStyle === "function") {
       const token = readStyleValue(node, UNORDERED_PATTERN_TEXT_TOKEN);
       if (token) {
-        return resolveUnorderedPatternToken(token);
+        resolvedPattern = resolveUnorderedPatternToken(token);
+        return "stop";
       }
     }
-    if (typeof node.getChildren === "function") {
-      queue.push(...node.getChildren());
-    }
-  }
+    return;
+  });
 
-  return null;
+  return resolvedPattern;
 }
 
 function readChecklistVariantFromListItems(topListNode: ListNode): CheckListVariant | null {
@@ -1054,19 +1058,15 @@ export class ListExtension extends BaseExtension<
       rehydrateListStyles: () => {
         editor.update(() => {
           const root = $getRoot();
-          const queue = [...root.getChildren()];
           const topListNodes = new Map<string, ListNode>();
 
-          while (queue.length > 0) {
-            const node = queue.shift() as any;
+          traverseBreadthFirst(root.getChildren(), (node) => {
             if ($isListNode(node)) {
               const top = findTopListNode(node);
               topListNodes.set(top.getKey(), top);
             }
-            if (typeof node.getChildren === "function") {
-              queue.push(...node.getChildren());
-            }
-          }
+            return;
+          });
 
           for (const topListNode of topListNodes.values()) {
             if (topListNode.getListType() === "number") {
