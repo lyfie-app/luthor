@@ -707,6 +707,11 @@ function ExtensiveEditorContent({
   
   // Lazy conversion state: track which formats are valid cache
   const cacheValidRef = useRef(createModeCache<ExtensiveEditorMode>(["visual"]));
+  const sourceDirtyRef = useRef<Record<ExtensiveEditorSourceMode, boolean>>({
+    json: false,
+    markdown: false,
+    html: false,
+  });
   const editorChangeCountRef = useRef(0);
 
   useEffect(() => {
@@ -967,10 +972,12 @@ function ExtensiveEditorContent({
 
     if (sourceMode === "markdown") {
       importApi.fromJSON(markdownToJSON(sourceValue));
-      return;
+    } else {
+      importApi.fromJSON(htmlToJSON(sourceValue));
     }
 
-    importApi.fromJSON(htmlToJSON(sourceValue));
+    sourceDirtyRef.current[sourceMode] = false;
+    invalidateModeCache(cacheValidRef.current, ["visual"]);
   };
 
   const exportToSourceMode = (sourceMode: ExtensiveEditorSourceMode): string => {
@@ -985,6 +992,15 @@ function ExtensiveEditorContent({
     }
 
     return formatHTMLSource(jsonToHTML(visualDocument));
+  };
+
+  const updateSourceModeContent = (
+    sourceMode: ExtensiveEditorSourceMode,
+    value: string,
+    options?: { dirty?: boolean },
+  ) => {
+    setContent((prev) => ({ ...prev, [sourceMode]: value }));
+    sourceDirtyRef.current[sourceMode] = options?.dirty === true;
   };
 
   const handleModeChange = async (newMode: ExtensiveEditorMode) => {
@@ -1003,10 +1019,13 @@ function ExtensiveEditorContent({
       setSourceError(null);
 
       if (currentMode !== "visual") {
-        errorMode = currentMode;
-        importFromSourceMode(currentMode);
-        await new Promise((resolve) => setTimeout(resolve, 50));
-        errorMode = null;
+        const currentSourceMode = currentMode as ExtensiveEditorSourceMode;
+        if (sourceDirtyRef.current[currentSourceMode]) {
+          errorMode = currentSourceMode;
+          importFromSourceMode(currentSourceMode);
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          errorMode = null;
+        }
       }
 
       if (currentMode === "visual" && newMode !== "visual") {
@@ -1026,7 +1045,7 @@ function ExtensiveEditorContent({
           try {
             errorMode = targetMode;
             const nextSource = exportToSourceMode(targetMode);
-            setContent((prev) => ({ ...prev, [targetMode]: nextSource }));
+            updateSourceModeContent(targetMode, nextSource);
             markModeCached(cacheValidRef.current, targetMode);
             errorMode = null;
           } finally {
@@ -1124,12 +1143,16 @@ function ExtensiveEditorContent({
               </div>
             )}
             {activeSourceMode === "json" && (
-              <SourceView value={content.json} onChange={(value) => setContent((prev) => ({ ...prev, json: value }))} placeholder={jsonPlaceholder} />
+              <SourceView
+                value={content.json}
+                onChange={(value) => updateSourceModeContent("json", value, { dirty: true })}
+                placeholder={jsonPlaceholder}
+              />
             )}
             {activeSourceMode === "markdown" && (
               <SourceView
                 value={content.markdown}
-                onChange={(value) => setContent((prev) => ({ ...prev, markdown: value }))}
+                onChange={(value) => updateSourceModeContent("markdown", value, { dirty: true })}
                 placeholder={markdownPlaceholder}
                 className="luthor-source-view--wrapped"
                 wrap="soft"
@@ -1138,7 +1161,7 @@ function ExtensiveEditorContent({
             {activeSourceMode === "html" && (
               <SourceView
                 value={content.html}
-                onChange={(value) => setContent((prev) => ({ ...prev, html: value }))}
+                onChange={(value) => updateSourceModeContent("html", value, { dirty: true })}
                 placeholder={htmlPlaceholder}
                 className="luthor-source-view--wrapped"
                 wrap="soft"

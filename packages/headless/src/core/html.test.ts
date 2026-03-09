@@ -3,63 +3,119 @@
 import { describe, expect, it } from "vitest";
 import { htmlToJSON, jsonToHTML } from "./html";
 
+type JsonNode = Record<string, unknown>;
+
 type JsonDocument = {
   root: {
-    children: Array<Record<string, unknown>>;
+    children: JsonNode[];
+    [key: string]: unknown;
   };
 };
 
-function getFirstText(document: JsonDocument): string {
-  const paragraph = document.root.children[0] as {
-    children?: Array<{ text?: string }>;
+function textNode(text: string, format = 0): JsonNode {
+  return {
+    type: "text",
+    version: 1,
+    text,
+    detail: 0,
+    format,
+    mode: "normal",
+    style: "",
   };
-  return paragraph.children?.[0]?.text ?? "";
+}
+
+function paragraphNode(children: JsonNode[]): JsonNode {
+  return {
+    type: "paragraph",
+    version: 1,
+    format: "",
+    indent: 0,
+    direction: null,
+    children,
+  };
+}
+
+function createDocument(children: JsonNode[]): JsonDocument {
+  return {
+    root: {
+      type: "root",
+      version: 1,
+      format: "",
+      indent: 0,
+      direction: null,
+      children,
+    },
+  };
+}
+
+function getChildren(node: JsonNode): JsonNode[] {
+  return Array.isArray(node.children) ? (node.children as JsonNode[]) : [];
+}
+
+function collectNodeText(node: JsonNode): string {
+  const type = typeof node.type === "string" ? node.type : "";
+  if (type === "text") {
+    return typeof node.text === "string" ? node.text : "";
+  }
+
+  if (type === "linebreak") {
+    return "\n";
+  }
+
+  if (type === "tab") {
+    return "\t";
+  }
+
+  return getChildren(node).map((child) => collectNodeText(child)).join("");
+}
+
+function findTopLevelNode(
+  document: JsonDocument,
+  type: string,
+  index = 0,
+): JsonNode | undefined {
+  return document.root.children.filter((node) => node.type === type)[index];
+}
+
+function findNestedNode(node: JsonNode, type: string): JsonNode | null {
+  if (node.type === type) {
+    return node;
+  }
+
+  for (const child of getChildren(node)) {
+    const nested = findNestedNode(child, type);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+function roundTripJSON(input: JsonDocument): JsonDocument {
+  return htmlToJSON(jsonToHTML(input)) as JsonDocument;
 }
 
 describe("html bridge", () => {
   it("converts between HTML and JSON for basic content", () => {
     const json = htmlToJSON("<p>Hello HTML</p>") as JsonDocument;
-    expect(getFirstText(json)).toBe("Hello HTML");
+    const paragraph = findTopLevelNode(json, "paragraph");
+    expect(paragraph).toBeDefined();
+    expect(collectNodeText(paragraph as JsonNode)).toBe("Hello HTML");
 
     const html = jsonToHTML(json);
     expect(html).toContain("Hello HTML");
   });
 
   it("preserves unsupported nodes via metadata envelopes", () => {
-    const input = {
-      root: {
-        type: "root",
+    const input = createDocument([
+      paragraphNode([textNode("Before")]),
+      {
+        type: "featureCard",
         version: 1,
-        format: "",
-        indent: 0,
-        direction: null,
-        children: [
-          {
-            type: "paragraph",
-            version: 1,
-            format: "",
-            indent: 0,
-            direction: null,
-            children: [
-              {
-                type: "text",
-                version: 1,
-                text: "Before",
-                detail: 0,
-                format: 0,
-                mode: "normal",
-                style: "",
-              },
-            ],
-          },
-          {
-            type: "featureCard",
-            version: 1,
-            payload: { title: "AI Draft" },
-          },
-        ],
+        payload: { title: "AI Draft" },
       },
-    };
+    ]);
 
     const html = jsonToHTML(input);
     expect(html).toContain("luthor:meta v1");
@@ -73,25 +129,176 @@ describe("html bridge", () => {
     expect(restoredNode.payload).toEqual({ title: "AI Draft" });
   });
 
-  it("exports and re-imports image nodes natively", () => {
-    const input = {
-      root: {
-        type: "root",
+  it("normalizes indentation-heavy pre-wrap html without creating formatter artifacts", () => {
+    const formattedHtml = [
+      "<p>",
+      "  <b>",
+      "    <strong style=\"white-space: pre-wrap;\">",
+      "      Hello ",
+      "    </strong>",
+      "  </b>",
+      "  <span style=\"white-space: pre-wrap;\">world</span>",
+      "  <span style=\"white-space: pre-wrap;\"> and </span>",
+      "  <i>",
+      "    <em style=\"white-space: pre-wrap;\">friends</em>",
+      "  </i>",
+      "  <span style=\"white-space: pre-wrap;\">.</span>",
+      "</p>",
+    ].join("\n");
+
+    const parsed = htmlToJSON(formattedHtml) as JsonDocument;
+    const paragraph = findTopLevelNode(parsed, "paragraph");
+    expect(paragraph).toBeDefined();
+    expect(collectNodeText(paragraph as JsonNode)).toBe("Hello world and friends.");
+  });
+
+  it("round-trips heading nodes", () => {
+    const input = createDocument([
+      {
+        type: "heading",
         version: 1,
+        tag: "h2",
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [textNode("Section heading")],
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const heading = findTopLevelNode(roundTrip, "heading");
+    expect(heading).toBeDefined();
+    expect(heading?.tag).toBe("h2");
+    expect(collectNodeText(heading as JsonNode)).toBe("Section heading");
+  });
+
+  it("round-trips quote nodes", () => {
+    const input = createDocument([
+      {
+        type: "quote",
+        version: 1,
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [textNode("Quoted line")],
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const quote = findTopLevelNode(roundTrip, "quote");
+    expect(quote).toBeDefined();
+    expect(collectNodeText(quote as JsonNode)).toBe("Quoted line");
+  });
+
+  it("round-trips list and listitem nodes", () => {
+    const input = createDocument([
+      {
+        type: "list",
+        version: 1,
+        listType: "bullet",
+        start: 1,
+        tag: "ul",
         format: "",
         indent: 0,
         direction: null,
         children: [
           {
-            type: "image",
+            type: "listitem",
             version: 1,
-            src: "https://example.com/photo.jpg",
-            alt: "Example",
-            alignment: "center",
+            value: 1,
+            checked: null,
+            format: "",
+            indent: 0,
+            direction: null,
+            children: [textNode("First item")],
+          },
+          {
+            type: "listitem",
+            version: 1,
+            value: 2,
+            checked: null,
+            format: "",
+            indent: 0,
+            direction: null,
+            children: [textNode("Second item")],
           },
         ],
       },
-    };
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const list = findTopLevelNode(roundTrip, "list");
+    expect(list).toBeDefined();
+    expect(list?.listType).toBe("bullet");
+    const listItems = getChildren(list as JsonNode);
+    expect(listItems).toHaveLength(2);
+    expect(collectNodeText(listItems[0])).toBe("First item");
+    expect(collectNodeText(listItems[1])).toBe("Second item");
+  });
+
+  it("round-trips link nodes", () => {
+    const input = createDocument([
+      paragraphNode([
+        textNode("Read "),
+        {
+          type: "link",
+          version: 1,
+          url: "https://example.com/docs",
+          rel: "noreferrer",
+          target: "_blank",
+          title: null,
+          children: [textNode("documentation")],
+        },
+        textNode(" now."),
+      ]),
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const paragraph = findTopLevelNode(roundTrip, "paragraph");
+    expect(paragraph).toBeDefined();
+    const linkNode = findNestedNode(paragraph as JsonNode, "link");
+    expect(linkNode).not.toBeNull();
+    expect(String(linkNode?.url ?? "")).toContain("https://example.com/docs");
+    expect(collectNodeText(linkNode as JsonNode)).toBe("documentation");
+  });
+
+  it("round-trips code nodes", () => {
+    const input = createDocument([
+      {
+        type: "code",
+        version: 1,
+        language: "typescript",
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [
+          {
+            type: "code-highlight",
+            version: 1,
+            text: "const value = 42;",
+            highlightType: "text",
+          },
+        ],
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const code = findTopLevelNode(roundTrip, "code");
+    expect(code).toBeDefined();
+    expect(code?.language).toBe("typescript");
+    expect(collectNodeText(code as JsonNode)).toContain("const value = 42;");
+  });
+
+  it("exports and re-imports image nodes natively", () => {
+    const input = createDocument([
+      {
+        type: "image",
+        version: 1,
+        src: "https://example.com/photo.jpg",
+        alt: "Example",
+        alignment: "center",
+      },
+    ]);
 
     const html = jsonToHTML(input);
     expect(html).toContain("<img");
@@ -105,5 +312,184 @@ describe("html bridge", () => {
     expect(imageNode.type).toBe("image");
     expect(imageNode.src).toContain("https://example.com/photo.jpg");
     expect(imageNode.alt).toBe("Example");
+  });
+
+  it("round-trips iframe embed nodes", () => {
+    const input = createDocument([
+      {
+        type: "iframe-embed",
+        version: 1,
+        src: "https://example.com/embed/widget",
+        width: 640,
+        height: 360,
+        alignment: "center",
+        title: "Widget",
+        caption: "External widget",
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const iframe = findTopLevelNode(roundTrip, "iframe-embed");
+    expect(iframe).toBeDefined();
+    expect(String(iframe?.src ?? "")).toContain("https://example.com/embed/widget");
+    expect(iframe?.width).toBe(640);
+    expect(iframe?.height).toBe(360);
+    expect(iframe?.alignment).toBe("center");
+    expect(iframe?.caption).toBe("External widget");
+  });
+
+  it("round-trips youtube embed nodes", () => {
+    const input = createDocument([
+      {
+        type: "youtube-embed",
+        version: 1,
+        src: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        width: 640,
+        height: 360,
+        alignment: "center",
+        caption: "Video caption",
+        start: 12,
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const youtube = findTopLevelNode(roundTrip, "youtube-embed");
+    expect(youtube).toBeDefined();
+    expect(String(youtube?.src ?? "")).toContain("youtube.com/embed/dQw4w9WgXcQ");
+    expect(youtube?.width).toBe(640);
+    expect(youtube?.height).toBe(360);
+    expect(youtube?.alignment).toBe("center");
+    expect(youtube?.caption).toBe("Video caption");
+  });
+
+  it("round-trips mixed extensive-editor component documents collectively", () => {
+    const input = createDocument([
+      {
+        type: "heading",
+        version: 1,
+        tag: "h1",
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [textNode("Composite document")],
+      },
+      paragraphNode([
+        textNode("Visit "),
+        {
+          type: "link",
+          version: 1,
+          url: "https://example.com",
+          rel: null,
+          target: null,
+          title: null,
+          children: [textNode("example.com")],
+        },
+        textNode(" for docs."),
+      ]),
+      {
+        type: "list",
+        version: 1,
+        listType: "bullet",
+        start: 1,
+        tag: "ul",
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [
+          {
+            type: "listitem",
+            version: 1,
+            value: 1,
+            checked: null,
+            format: "",
+            indent: 0,
+            direction: null,
+            children: [textNode("Checklist item")],
+          },
+        ],
+      },
+      {
+        type: "quote",
+        version: 1,
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [textNode("Keep round-trips stable.")],
+      },
+      {
+        type: "code",
+        version: 1,
+        language: "typescript",
+        format: "",
+        indent: 0,
+        direction: null,
+        children: [
+          {
+            type: "code-highlight",
+            version: 1,
+            text: "console.log('ok');",
+            highlightType: "text",
+          },
+        ],
+      },
+      {
+        type: "image",
+        version: 1,
+        src: "https://example.com/image.png",
+        alt: "Diagram",
+        alignment: "left",
+      },
+      {
+        type: "iframe-embed",
+        version: 1,
+        src: "https://example.com/embed/panel",
+        width: 640,
+        height: 360,
+        alignment: "center",
+        title: "Panel",
+        caption: "Panel caption",
+      },
+      {
+        type: "youtube-embed",
+        version: 1,
+        src: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+        width: 640,
+        height: 360,
+        alignment: "right",
+        caption: "Video caption",
+        start: 5,
+      },
+    ]);
+
+    const roundTrip = roundTripJSON(input);
+    const types = roundTrip.root.children.map((node) => String(node.type));
+    expect(types).toEqual([
+      "heading",
+      "paragraph",
+      "list",
+      "quote",
+      "code",
+      "image",
+      "iframe-embed",
+      "youtube-embed",
+    ]);
+
+    const heading = findTopLevelNode(roundTrip, "heading");
+    const paragraph = findTopLevelNode(roundTrip, "paragraph");
+    const list = findTopLevelNode(roundTrip, "list");
+    const quote = findTopLevelNode(roundTrip, "quote");
+    const code = findTopLevelNode(roundTrip, "code");
+    const image = findTopLevelNode(roundTrip, "image");
+    const iframe = findTopLevelNode(roundTrip, "iframe-embed");
+    const youtube = findTopLevelNode(roundTrip, "youtube-embed");
+
+    expect(collectNodeText(heading as JsonNode)).toBe("Composite document");
+    expect(collectNodeText(paragraph as JsonNode)).toContain("Visit example.com for docs.");
+    expect(collectNodeText(list as JsonNode)).toContain("Checklist item");
+    expect(collectNodeText(quote as JsonNode)).toContain("Keep round-trips stable.");
+    expect(collectNodeText(code as JsonNode)).toContain("console.log('ok');");
+    expect(String(image?.src ?? "")).toContain("https://example.com/image.png");
+    expect(String(iframe?.src ?? "")).toContain("https://example.com/embed/panel");
+    expect(String(youtube?.src ?? "")).toContain("youtube.com/embed/dQw4w9WgXcQ");
   });
 });

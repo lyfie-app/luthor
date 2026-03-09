@@ -40,6 +40,8 @@ const HTML_SUPPORTED_NODE_TYPES = new Set<string>([
   "youtube-embed",
 ]);
 
+const RAW_TEXT_TAGS = new Set(["pre", "script", "style", "textarea"]);
+
 function createHTMLEditor() {
   return createEditor({
     namespace: "luthor-html-converter",
@@ -83,6 +85,142 @@ function assertDOMSupport(): void {
   }
 }
 
+function hasWhitespacePreservingStyle(element: Element | null): boolean {
+  if (!element) {
+    return false;
+  }
+
+  const style = element.getAttribute("style");
+  if (!style) {
+    return false;
+  }
+
+  return /\bwhite-space\s*:\s*(pre|pre-wrap|pre-line)\b/i.test(style);
+}
+
+function isInsideRawTextContext(node: Node): boolean {
+  let current = node.parentElement;
+  while (current) {
+    if (RAW_TEXT_TAGS.has(current.tagName.toLowerCase())) {
+      return true;
+    }
+    current = current.parentElement;
+  }
+  return false;
+}
+
+function findAdjacentSignificantSibling(
+  node: Text,
+  direction: "previous" | "next",
+): Node | null {
+  let sibling = direction === "previous" ? node.previousSibling : node.nextSibling;
+  while (sibling) {
+    if (sibling.nodeType !== Node.TEXT_NODE) {
+      return sibling;
+    }
+
+    const text = sibling.textContent ?? "";
+    if (text.trim().length > 0) {
+      return sibling;
+    }
+
+    sibling = direction === "previous" ? sibling.previousSibling : sibling.nextSibling;
+  }
+
+  return null;
+}
+
+function shouldCollapseToSingleSpace(previousText: string, nextText: string): boolean {
+  if (!previousText || !nextText) {
+    return false;
+  }
+
+  if (/\s$/.test(previousText) || /^\s/.test(nextText)) {
+    return false;
+  }
+
+  const previousChar = previousText.at(-1) ?? "";
+  const nextChar = nextText[0] ?? "";
+
+  if (!previousChar || !nextChar) {
+    return false;
+  }
+
+  if (/^[,.;:!?)]$/.test(nextChar) || /^[([{"']$/.test(previousChar)) {
+    return false;
+  }
+
+  return true;
+}
+
+function normalizeWhitespaceArtifacts(parsedDocument: Document): void {
+  const preWrapCandidates = Array.from(parsedDocument.querySelectorAll<HTMLElement>("[style]"));
+  for (const element of preWrapCandidates) {
+    if (!hasWhitespacePreservingStyle(element)) {
+      continue;
+    }
+
+    if (element.childNodes.length !== 1 || element.firstChild?.nodeType !== Node.TEXT_NODE) {
+      continue;
+    }
+
+    const textNode = element.firstChild as Text;
+    if (!/[\r\n]/.test(textNode.data)) {
+      continue;
+    }
+
+    textNode.data = textNode.data
+      .replace(/^\s*\r?\n\s*/, "")
+      .replace(/\r?\n\s*$/, "");
+  }
+
+  const walker = parsedDocument.createTreeWalker(parsedDocument.body, NodeFilter.SHOW_TEXT);
+  const adjustments: Array<{ node: Text; replacement: string | null }> = [];
+  let current = walker.nextNode();
+
+  while (current) {
+    const textNode = current as Text;
+    const value = textNode.data;
+    const parentElement = textNode.parentElement;
+
+    if (
+      !/^[\s\r\n\t]+$/.test(value) ||
+      !/[\r\n]/.test(value) ||
+      isInsideRawTextContext(textNode) ||
+      hasWhitespacePreservingStyle(parentElement)
+    ) {
+      current = walker.nextNode();
+      continue;
+    }
+
+    const previousSibling = findAdjacentSignificantSibling(textNode, "previous");
+    const nextSibling = findAdjacentSignificantSibling(textNode, "next");
+    const previousText = previousSibling?.textContent ?? "";
+    const nextText = nextSibling?.textContent ?? "";
+
+    if (shouldCollapseToSingleSpace(previousText, nextText)) {
+      adjustments.push({ node: textNode, replacement: " " });
+    } else {
+      adjustments.push({ node: textNode, replacement: null });
+    }
+
+    current = walker.nextNode();
+  }
+
+  for (const adjustment of adjustments) {
+    if (!adjustment.node.parentNode) {
+      continue;
+    }
+
+    if (adjustment.replacement === null) {
+      adjustment.node.parentNode.removeChild(adjustment.node);
+      continue;
+    }
+
+    adjustment.node.data = adjustment.replacement;
+  }
+}
+
 export function htmlToJSON(html: string): JsonDocument {
   assertDOMSupport();
   const { content, envelopes, warnings } = extractMetadataEnvelopes(html);
@@ -94,6 +232,7 @@ export function htmlToJSON(html: string): JsonDocument {
   editor.update(
     () => {
       const parsedDocument = new DOMParser().parseFromString(content, "text/html");
+      normalizeWhitespaceArtifacts(parsedDocument);
       const nodes = $generateNodesFromDOM(editor, parsedDocument);
       const root = $getRoot();
       root.clear();

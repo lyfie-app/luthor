@@ -943,6 +943,46 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     });
   });
 
+  it("does not re-import untouched html source when returning to visual mode", async () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("source-view")).not.toBeInTheDocument();
+    });
+    expect(htmlToJSONMock).not.toHaveBeenCalled();
+  });
+
+  it("imports html source only after user edits before switching to visual mode", async () => {
+    const importedDocument = { root: { children: [{ type: "paragraph", marker: "from-html" }] } };
+    htmlToJSONMock.mockReturnValueOnce(importedDocument);
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "<p>Updated in html</p>" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(htmlToJSONMock).toHaveBeenCalledWith("<p>Updated in html</p>");
+    });
+    expect(mockEditorApi.import.fromJSON).toHaveBeenCalledWith(importedDocument);
+  });
+
   it("shows mode-specific errors and prevents destructive switch on invalid html", async () => {
     htmlToJSONMock.mockImplementationOnce(() => {
       throw new Error("Malformed HTML");
