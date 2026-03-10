@@ -4,6 +4,7 @@ export {
   LEGACY_RICH_TOOLBAR_LAYOUT,
   LEGACY_RICH_MARKDOWN_MODES,
   LEGACY_RICH_HTML_MODES,
+  LEGACY_RICH_DUAL_SOURCE_MODES,
   type LegacyRichEditorProps,
   type LegacyRichEditorMode,
   type LegacyRichSourceFormat,

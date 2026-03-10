@@ -18,7 +18,6 @@ import '@lyfie/luthor/styles.css';
 export function App() {
   return (
     <LegacyRichEditor
-      sourceFormat="markdown"
       defaultEditorView="markdown"
     />
   );
@@ -29,7 +28,7 @@ export function App() {
 
 `LegacyRichEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`, `availableModes`, and source-view mode props, then re-adds constrained mode variants.
 
-- `sourceFormat`: `'markdown' (default) | 'html'`
+- `sourceFormat`: `'both' (default) | 'markdown' | 'html'`
 - `initialMode`: `'visual' (default) | 'json' | 'markdown' | 'html'` (validated against `sourceFormat`)
 - `defaultEditorView`: `'visual' (default) | 'json' | 'markdown' | 'html'` (validated against `sourceFormat`)
 - `featureFlags`: `undefined (default) | FeatureFlagOverrides` (metadata-heavy features remain disabled)
@@ -46,5 +45,6 @@ export function App() {
 - Disabled to keep metadata-free round trips:
   - tables, images, embeds, custom nodes, draggable block, emoji, slash/command palette, theme toggle
 - Source views:
+  - `sourceFormat="both"` uses Visual/Markdown/HTML tabs
   - `sourceFormat="markdown"` uses Visual/JSON/Markdown tabs
   - `sourceFormat="html"` uses Visual/JSON/HTML tabs

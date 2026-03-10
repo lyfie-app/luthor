@@ -16,14 +16,14 @@ describe("LegacyRichEditor", () => {
     vi.clearAllMocks();
   });
 
-  it("uses markdown mode set by default", () => {
+  it("uses visual, markdown, and html mode set by default", () => {
     render(<LegacyRichEditor showDefaultContent={false} />);
 
     const props = extensiveEditorMock.mock.calls.at(-1)?.[0] as {
       availableModes?: string[];
       initialMode?: string;
     };
-    expect(props.availableModes).toEqual(["visual", "json", "markdown"]);
+    expect(props.availableModes).toEqual(["visual", "markdown", "html"]);
     expect(props.initialMode).toBe("visual");
   });
 

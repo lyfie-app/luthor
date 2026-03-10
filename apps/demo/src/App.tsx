@@ -68,7 +68,6 @@ function App() {
         return (
           <LegacyRichEditor
             showDefaultContent={false}
-            sourceFormat="markdown"
             defaultEditorView="markdown"
           />
         );

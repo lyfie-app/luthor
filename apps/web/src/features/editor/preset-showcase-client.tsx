@@ -204,12 +204,11 @@ function LegacyRichExperience({ siteTheme }: { siteTheme: Theme }) {
       <LegacyRichEditor
         initialTheme={siteTheme}
         showDefaultContent={false}
-        sourceFormat="markdown"
         defaultEditorView="markdown"
         placeholder={{
           visual: 'Write metadata-free content...',
           markdown: '## Legacy Rich Markdown\n\n- Metadata-free output',
-          json: 'Review generated JSON...',
+          html: '<h2>Legacy Rich HTML</h2>\n<ul><li>Metadata-free output</li></ul>',
         }}
       />
     </PresetSurface>

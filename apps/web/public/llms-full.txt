@@ -8,7 +8,7 @@ Concatenated markdown corpus for AI ingestion.
 - Rahul Anand is the creator and BDFL of Lyfie.org: [https://www.rahulnsanand.com](https://www.rahulnsanand.com)
 
 Source root: C:\Users\rahul\Documents\GitHub\luthor\apps\web\src\content\docs
-Generated at: 2026-03-10T09:32:44.981Z
+Generated at: 2026-03-10T09:38:00.699Z
 
 ---
 ## FILE: getting-started/capabilities.md
@@ -1202,7 +1202,6 @@ import '@lyfie/luthor/styles.css';
 export function App() {
   return (
     <LegacyRichEditor
-      sourceFormat="markdown"
       defaultEditorView="markdown"
     />
   );
@@ -1213,7 +1212,7 @@ export function App() {
 
 `LegacyRichEditorProps` inherits `ExtensiveEditorProps` except `featureFlags`, `availableModes`, and source-view mode props, then re-adds constrained mode variants.
 
-- `sourceFormat`: `'markdown' (default) | 'html'`
+- `sourceFormat`: `'both' (default) | 'markdown' | 'html'`
 - `initialMode`: `'visual' (default) | 'json' | 'markdown' | 'html'` (validated against `sourceFormat`)
 - `defaultEditorView`: `'visual' (default) | 'json' | 'markdown' | 'html'` (validated against `sourceFormat`)
 - `featureFlags`: `undefined (default) | FeatureFlagOverrides` (metadata-heavy features remain disabled)
@@ -1230,6 +1229,7 @@ export function App() {
 - Disabled to keep metadata-free round trips:
   - tables, images, embeds, custom nodes, draggable block, emoji, slash/command palette, theme toggle
 - Source views:
+  - `sourceFormat="both"` uses Visual/Markdown/HTML tabs
   - `sourceFormat="markdown"` uses Visual/JSON/Markdown tabs
   - `sourceFormat="html"` uses Visual/JSON/HTML tabs
 

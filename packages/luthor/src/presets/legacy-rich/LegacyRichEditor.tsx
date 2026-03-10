@@ -9,11 +9,13 @@ import {
 
 export const LEGACY_RICH_MARKDOWN_MODES = ["visual", "json", "markdown"] as const;
 export const LEGACY_RICH_HTML_MODES = ["visual", "json", "html"] as const;
+export const LEGACY_RICH_DUAL_SOURCE_MODES = ["visual", "markdown", "html"] as const;
 
-export type LegacyRichSourceFormat = "markdown" | "html";
+export type LegacyRichSourceFormat = "markdown" | "html" | "both";
 export type LegacyRichEditorMode =
   | (typeof LEGACY_RICH_MARKDOWN_MODES)[number]
-  | (typeof LEGACY_RICH_HTML_MODES)[number];
+  | (typeof LEGACY_RICH_HTML_MODES)[number]
+  | (typeof LEGACY_RICH_DUAL_SOURCE_MODES)[number];
 
 export const LEGACY_RICH_DEFAULT_FEATURE_FLAGS: FeatureFlagOverrides = {
   bold: true,
@@ -72,6 +74,10 @@ export const LEGACY_RICH_TOOLBAR_LAYOUT: ToolbarLayout = {
 };
 
 function resolveLegacyRichModes(sourceFormat: LegacyRichSourceFormat): readonly LegacyRichEditorMode[] {
+  if (sourceFormat === "both") {
+    return LEGACY_RICH_DUAL_SOURCE_MODES;
+  }
+
   return sourceFormat === "html"
     ? LEGACY_RICH_HTML_MODES
     : LEGACY_RICH_MARKDOWN_MODES;
@@ -94,7 +100,7 @@ export const LegacyRichEditor = forwardRef<ExtensiveEditorRef, LegacyRichEditorP
       variantClassName,
       toolbarClassName,
       toolbarLayout,
-      sourceFormat = "markdown",
+      sourceFormat = "both",
       initialMode = "visual",
       defaultEditorView,
       featureFlags,
