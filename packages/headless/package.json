@@ -21,9 +21,9 @@
   "scripts": {
     "build": "tsup",
     "prepack": "npm run build",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "node ../../node_modules/eslint/bin/eslint.js . --max-warnings 0",
     "dev": "tsup --watch",
-    "test": "vitest run",
+    "test": "node ../../node_modules/vitest/vitest.mjs run",
     "check:rule-contracts": "node ../../tools/check-rule-contracts.mjs --scope=headless"
   },
   "keywords": [
@@ -61,6 +61,7 @@
   },
   "peerDependencies": {
     "@lexical/code": ">=0.40.0",
+    "@lexical/html": ">=0.40.0",
     "@lexical/link": ">=0.40.0",
     "@lexical/list": ">=0.40.0",
     "@lexical/markdown": ">=0.40.0",

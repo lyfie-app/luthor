@@ -1,6 +1,22 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
+  resolve: {
+    alias: [
+      {
+        find: /^@lyfie\/luthor-headless\/(.*)$/,
+        replacement: path.resolve(__dirname, "../headless/src/$1"),
+      },
+      {
+        find: "@lyfie/luthor-headless",
+        replacement: path.resolve(__dirname, "../headless/src/index.ts"),
+      },
+    ],
+  },
   test: {
     environment: "jsdom",
     globals: true,

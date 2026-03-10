@@ -14,8 +14,12 @@ import {
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
+  CREATOR_NAME,
+  CREATOR_URL,
   GITHUB_URL,
   HEADLESS_PACKAGE_NAME,
+  MAINTAINER_ORG_NAME,
+  MAINTAINER_ORG_URL,
   NPM_URL,
   PRIMARY_PACKAGE_NAME,
   SEO_FAQS,
@@ -74,7 +78,7 @@ const packagePlans = [
       'One-liner editor configuration',
       'Single package for all your editor needs',
       'Polished toolbar and extensions',
-      'Type-safe React integration',
+      'Type-safe framework integration',
       'Built for production speed',
       'Includes Luthor Headless for maximum flexibility',
     ],
@@ -137,8 +141,8 @@ const compatibilityRows = [
   },
   {
     label: 'Frameworks',
-    version: 'Modern ESM React frameworks',
-    detail: 'Next.js, Vite, Remix, and similar React setups.',
+    version: 'Modern JavaScript frameworks',
+    detail: 'React, Next.js, Astro (via React integration), Vite, Remix, and similar setups.',
   },
 ] as const;
 
@@ -261,10 +265,10 @@ export default async function HomePage() {
               Editor That <span className="hero-highlight-title">Refuses</span> To Be Boring
             </h1>
             <p className="hero-copy">
-              Type-safe, open-source, typescript friendly and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span>
-              - designed for developers who want control without chaos. Every feature. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
+              Type-safe, TypeScript-first and <span className="hero-highlight-text">Lexical Based</span> rich text editor built for <span className="hero-highlight-text">React</span> and modern JS frameworks like{' '}
+              <span className="hero-highlight-text">Next.js</span> and <span className="hero-highlight-text">Astro</span>. Crafted with love by developers for developers who want control without chaos. <span className="hero-highlight-text"> Zero fluff. No paywalls. No nonsense.</span>
             </p>
-            <p className="hero-live-note">Free forever. Open forever. Ready for your next project.</p>            
+            <p className="hero-live-note">Fully open source. Fully free. Ready for your next project.</p>
             <div className="hero-uses-container">
               {heroUseCases.map((useCase) => (
                 <span className="eyebrow-muted" key={useCase.label}>
@@ -418,7 +422,7 @@ export default async function HomePage() {
         <div className="container support-shell">
           <h2 className="section-title">Works With Your Stack</h2>
           <p className="section-copy">
-            Plug Luthor into modern React workflows quickly with predictable version support.
+            Plug Luthor into modern JavaScript workflows quickly with predictable version support.
           </p>
           <div className="support-grid" role="list" aria-label="Compatibility highlights">
             {compatibilityRows.map((row) => (
@@ -479,8 +483,17 @@ export default async function HomePage() {
             </a>
           </div>
           <p className="mono-small">
-            Data sources: npm downloads API, npm registry API, GitHub API. Last sync: <LocalLastSync isoTimestamp={stats.fetchedAtIso} />
-          </p>
+            Maintained by{' '}
+            <a href={MAINTAINER_ORG_URL} target="_blank" rel="noopener noreferrer">
+              {MAINTAINER_ORG_NAME}
+            </a>
+            . Created by{' '}
+            <a href={CREATOR_URL} target="_blank" rel="noopener noreferrer">
+              {CREATOR_NAME}
+            </a>
+            , BDFL of {MAINTAINER_ORG_NAME}.
+            | Data sources last sync: <LocalLastSync isoTimestamp={stats.fetchedAtIso} /> 
+          </p>    
         </div>
       </section>
 
@@ -500,8 +513,8 @@ export default async function HomePage() {
               </details>
             ))}
           </div>
-        </div>
-      </section>
+        </div> 
+      </section>             
     </>
   );
 }

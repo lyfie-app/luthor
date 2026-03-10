@@ -1,5 +1,17 @@
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState, type CSSProperties } from "react";
-import { clearLexicalSelection, createEditorSystem, createEditorThemeStyleVars, defaultLuthorTheme, mergeThemes, RichText, type LuthorTheme } from "@lyfie/luthor-headless";
+import {
+  clearLexicalSelection,
+  createEditorSystem,
+  createEditorThemeStyleVars,
+  defaultLuthorTheme,
+  htmlToJSON,
+  jsonToHTML,
+  jsonToMarkdown,
+  markdownToJSON,
+  mergeThemes,
+  RichText,
+  type LuthorTheme,
+} from "@lyfie/luthor-headless";
 import {
   createExtensiveExtensions,
   extensiveExtensions,
@@ -16,7 +28,9 @@ import {
   EmojiSuggestionMenu,
   commandsToCommandPaletteItems,
   commandsToSlashCommandItems,
+  formatHTMLSource,
   formatJSONSource,
+  formatMarkdownSource,
   generateCommands,
   ModeTabs,
   LinkHoverBubble,
@@ -68,16 +82,103 @@ import type {
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
-export type ExtensiveEditorMode = "visual" | "json";
+export type ExtensiveEditorMode = "visual" | "json" | "markdown" | "html";
 export type ExtensiveEditorPlaceholder =
   | string
   | {
       visual?: string;
       json?: string;
+      markdown?: string;
+      html?: string;
     };
 
 const DEFAULT_VISUAL_PLACEHOLDER = "Write anything...";
 const DEFAULT_JSON_PLACEHOLDER = "Enter JSON document content...";
+const DEFAULT_MARKDOWN_PLACEHOLDER = "Enter Markdown content...";
+const DEFAULT_HTML_PLACEHOLDER = "Enter HTML content...";
+const NON_VISIBLE_OVERFLOW_VALUES = new Set(["auto", "scroll", "overlay"]);
+
+type ExtensiveEditorSourceMode = Exclude<ExtensiveEditorMode, "visual">;
+
+const SOURCE_MODE_ERROR_TITLE: Record<ExtensiveEditorSourceMode, string> = {
+  json: "Invalid JSON",
+  markdown: "Invalid Markdown",
+  html: "Invalid HTML",
+};
+
+function resolveOverflowY(style: CSSStyleDeclaration): string {
+  const overflowY = style.overflowY;
+  if (overflowY && overflowY !== "visible") {
+    return overflowY;
+  }
+  return style.overflow || overflowY || "visible";
+}
+
+function patchNonScrollingOverflowAncestors(wrapper: HTMLElement): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const patched: Array<{ element: HTMLElement; overflowY: string }> = [];
+  let ancestor = wrapper.parentElement;
+
+  while (ancestor && ancestor !== document.body && ancestor !== document.documentElement) {
+    const computedStyle = window.getComputedStyle(ancestor);
+    const overflowY = resolveOverflowY(computedStyle);
+
+    if (!NON_VISIBLE_OVERFLOW_VALUES.has(overflowY)) {
+      ancestor = ancestor.parentElement;
+      continue;
+    }
+
+    const isScrollableInY = ancestor.scrollHeight > ancestor.clientHeight + 1;
+
+    if (isScrollableInY) {
+      // This is an active scroll host (e.g. fixed-height editor pane); keep native sticky behavior.
+      break;
+    }
+
+    if (overflowY === "auto" || overflowY === "overlay") {
+      patched.push({ element: ancestor, overflowY: ancestor.style.overflowY });
+      ancestor.style.overflowY = "visible";
+      ancestor = ancestor.parentElement;
+      continue;
+    }
+
+    // Explicit overflow: scroll/hidden/clip likely indicates intentional clipping; avoid overriding.
+    break;
+  }
+
+  return () => {
+    for (let index = patched.length - 1; index >= 0; index -= 1) {
+      const patch = patched[index];
+      if (!patch) {
+        continue;
+      }
+      patch.element.style.overflowY = patch.overflowY;
+    }
+  };
+}
+
+function setupToolbarPinOverflowFallback(wrapper: HTMLElement): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  let cleanupPatch = patchNonScrollingOverflowAncestors(wrapper);
+
+  const reapply = () => {
+    cleanupPatch();
+    cleanupPatch = patchNonScrollingOverflowAncestors(wrapper);
+  };
+
+  window.addEventListener("resize", reapply);
+
+  return () => {
+    window.removeEventListener("resize", reapply);
+    cleanupPatch();
+  };
+}
 
 export interface ExtensiveEditorRef {
   injectJSON: (content: string) => void;
@@ -227,6 +328,19 @@ function normalizeMinimumDefaultLineHeightKey(value: string | number | undefined
   }
 
   return fallback;
+}
+
+function normalizeMaxListIndentationKey(value: number | undefined): string {
+  if (!Number.isFinite(value)) {
+    return "8";
+  }
+
+  const normalized = Math.floor(value as number);
+  if (normalized < 0) {
+    return "8";
+  }
+
+  return normalized.toString();
 }
 
 function normalizeStyleVarsKey(styleVars?: Record<string, string | undefined>): string {
@@ -517,6 +631,8 @@ function ExtensiveEditorContent({
   toggleTheme,
   visualPlaceholder,
   jsonPlaceholder,
+  markdownPlaceholder,
+  htmlPlaceholder,
   initialMode,
   availableModes,
   onReady,
@@ -527,6 +643,8 @@ function ExtensiveEditorContent({
   toolbarClassName,
   toolbarStyleVars,
   isToolbarEnabled,
+  isToolbarPinned,
+  isEditorViewTabsVisible,
   headingOptions,
   paragraphLabel,
   syncHeadingOptionsWithCommands,
@@ -539,6 +657,8 @@ function ExtensiveEditorContent({
   toggleTheme: () => void;
   visualPlaceholder: string;
   jsonPlaceholder: string;
+  markdownPlaceholder: string;
+  htmlPlaceholder: string;
   initialMode: ExtensiveEditorMode;
   availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
@@ -549,6 +669,8 @@ function ExtensiveEditorContent({
   toolbarClassName?: string;
   toolbarStyleVars?: ToolbarStyleVars;
   isToolbarEnabled: boolean;
+  isToolbarPinned: boolean;
+  isEditorViewTabsVisible: boolean;
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
@@ -567,9 +689,13 @@ function ExtensiveEditorContent({
     import: importApi,
   } = useEditor();
   const [mode, setMode] = useState<ExtensiveEditorMode>(initialMode);
-  const [content, setContent] = useState({ json: "" });
+  const [content, setContent] = useState<Record<ExtensiveEditorSourceMode, string>>({
+    json: "",
+    markdown: "",
+    html: "",
+  });
   const [convertingMode, setConvertingMode] = useState<ExtensiveEditorMode | null>(null);
-  const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorMode; error: string } | null>(null);
+  const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorSourceMode; error: string } | null>(null);
   const [commandPaletteState, setCommandPaletteState] = useState({
     isOpen: false,
     commands: [] as ReturnType<typeof commandsToCommandPaletteItems>,
@@ -658,6 +784,11 @@ function ExtensiveEditorContent({
   
   // Lazy conversion state: track which formats are valid cache
   const cacheValidRef = useRef(createModeCache<ExtensiveEditorMode>(["visual"]));
+  const sourceDirtyRef = useRef<Record<ExtensiveEditorSourceMode, boolean>>({
+    json: false,
+    markdown: false,
+    html: false,
+  });
   const editorChangeCountRef = useRef(0);
 
   useEffect(() => {
@@ -902,42 +1033,98 @@ function ExtensiveEditorContent({
     return unsubscribe;
   }, [editor, exportApi]);
 
+  const importFromSourceMode = (sourceMode: ExtensiveEditorSourceMode): void => {
+    const sourceValue = content[sourceMode];
+
+    if (sourceMode === "json") {
+      if (!sourceValue.trim()) {
+        importApi.fromJSON(createJSONDocumentFromText(""));
+        return;
+      }
+
+      const parsed = JSON.parse(sourceValue);
+      importApi.fromJSON(parsed);
+      return;
+    }
+
+    if (sourceMode === "markdown") {
+      importApi.fromJSON(markdownToJSON(sourceValue));
+    } else {
+      importApi.fromJSON(htmlToJSON(sourceValue));
+    }
+
+    sourceDirtyRef.current[sourceMode] = false;
+    invalidateModeCache(cacheValidRef.current, ["visual"]);
+  };
+
+  const exportToSourceMode = (sourceMode: ExtensiveEditorSourceMode): string => {
+    const visualDocument = exportApi.toJSON() ?? createJSONDocumentFromText("");
+
+    if (sourceMode === "json") {
+      return formatJSONSource(JSON.stringify(visualDocument));
+    }
+
+    if (sourceMode === "markdown") {
+      return formatMarkdownSource(jsonToMarkdown(visualDocument));
+    }
+
+    return formatHTMLSource(jsonToHTML(visualDocument));
+  };
+
+  const updateSourceModeContent = (
+    sourceMode: ExtensiveEditorSourceMode,
+    value: string,
+    options?: { dirty?: boolean },
+  ) => {
+    setContent((prev) => ({ ...prev, [sourceMode]: value }));
+    sourceDirtyRef.current[sourceMode] = options?.dirty === true;
+  };
+
   const handleModeChange = async (newMode: ExtensiveEditorMode) => {
+    if (newMode === mode) {
+      return;
+    }
+
     if (!availableModes.includes(newMode)) {
       return;
     }
 
+    const currentMode = mode;
+    let errorMode: ExtensiveEditorSourceMode | null = null;
+
     try {
-      // Clear any previous errors when attempting to switch modes
       setSourceError(null);
 
-      // Step 1: Import edited content from source tabs
-      if (mode === "json" && newMode !== "json") {
-        const parsed = JSON.parse(content.json);
-        importApi.fromJSON(parsed);
-        await new Promise((resolve) => setTimeout(resolve, 50));
+      if (currentMode !== "visual") {
+        const currentSourceMode = currentMode as ExtensiveEditorSourceMode;
+        if (sourceDirtyRef.current[currentSourceMode]) {
+          errorMode = currentSourceMode;
+          importFromSourceMode(currentSourceMode);
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          errorMode = null;
+        }
       }
 
-      if (mode === "visual" && newMode !== "visual") {
+      if (currentMode === "visual" && newMode !== "visual") {
         if (editor) {
           clearLexicalSelection(editor);
         }
         editor?.getRootElement()?.blur();
       }
 
-      // Immediately switch mode so UI shows new view
       setMode(newMode);
 
-      // Step 2: Lazy export - only convert format if not cached
-      // This ensures smooth tab switching with progressive conversion
-      if (newMode === "json" && mode !== "json") {
-        if (!isModeCached(cacheValidRef.current, "json")) {
-          setConvertingMode("json");
+      if (newMode !== "visual") {
+        const targetMode = newMode as ExtensiveEditorSourceMode;
+        if (!isModeCached(cacheValidRef.current, targetMode)) {
+          setConvertingMode(targetMode);
           await new Promise((resolve) => setTimeout(resolve, 50));
           try {
-            const json = formatJSONSource(JSON.stringify(exportApi.toJSON()));
-            setContent((prev) => ({ ...prev, json }));
-            markModeCached(cacheValidRef.current, "json");
+            errorMode = targetMode;
+            const nextSource = exportToSourceMode(targetMode);
+            updateSourceModeContent(targetMode, nextSource);
+            markModeCached(cacheValidRef.current, targetMode);
+            errorMode = null;
           } finally {
             setConvertingMode(null);
           }
@@ -948,10 +1135,10 @@ function ExtensiveEditorContent({
         setTimeout(() => editor?.focus(), 100);
       }
     } catch (error) {
-      // If an error occurs while importing, show it and keep the user in the current mode
       const errorMessage = error instanceof Error ? error.message : "Invalid format - could not parse content";
-      setSourceError({ mode: mode, error: errorMessage });
-      // Don't change mode if import fails
+      if (errorMode) {
+        setSourceError({ mode: errorMode, error: errorMessage });
+      }
     }
   };
 
@@ -978,28 +1165,44 @@ function ExtensiveEditorContent({
       }}
     />
   ) : null;
+  const shouldRenderModeTabs = isEditorViewTabsVisible;
   const shouldRenderTopToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "top";
+  const shouldPinTopRegion = isToolbarPinned && toolbarPosition === "top" && shouldRenderModeTabs;
+  const topRegionClassName = ["luthor-editor-top-region", shouldPinTopRegion ? "luthor-editor-top-region--pinned" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const shouldPinTopToolbarSlot = isToolbarPinned && toolbarPosition === "top" && !shouldRenderModeTabs;
+  const topToolbarSlotClassName = ["luthor-editor-toolbar-slot", "luthor-editor-toolbar-slot--top", shouldRenderTopToolbar && shouldPinTopToolbarSlot ? "luthor-editor-toolbar-slot--pinned" : ""]
+    .filter(Boolean)
+    .join(" ");
   const shouldRenderBottomToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "bottom";
   const overlayPortalContainer =
     (editor?.getRootElement()?.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
+  const activeSourceMode = mode === "visual" ? null : (mode as ExtensiveEditorSourceMode);
 
   return (
     <>
-      <div className="luthor-editor-header">
-        <ModeTabs 
-          mode={mode} 
-          onModeChange={handleModeChange} 
-          availableModes={availableModes}
-          isConverting={convertingMode}
-        />
-        {shouldRenderTopToolbar && (
-          <div className="luthor-editor-toolbar-slot luthor-editor-toolbar-slot--top">{toolbarNode}</div>
-        )}
-      </div>
       <div
         className={`luthor-editor${isDraggableBoxEnabled ? "" : " luthor-editor--draggable-disabled"}`}
         data-mode={mode}
       >
+        {(shouldRenderModeTabs || shouldRenderTopToolbar) && (
+          <div className={topRegionClassName}>
+            {shouldRenderModeTabs && (
+              <div className="luthor-editor-header">
+                <ModeTabs 
+                  mode={mode} 
+                  onModeChange={handleModeChange} 
+                  availableModes={availableModes}
+                  isConverting={convertingMode}
+                />
+              </div>
+            )}
+            {shouldRenderTopToolbar && (
+              <div className={topToolbarSlotClassName}>{toolbarNode}</div>
+            )}
+          </div>
+        )}
         <div
           className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}${isDraggableBoxEnabled ? "" : " luthor-editor-visual-shell--no-gutter"}`}
           aria-hidden={mode !== "visual"}
@@ -1016,20 +1219,42 @@ function ExtensiveEditorContent({
             }}
           />
         </div>
-        {mode !== "visual" && (
+        {activeSourceMode && (
           <div className="luthor-source-panel">
-            {sourceError && sourceError.mode === mode && (
+            {sourceError && sourceError.mode === activeSourceMode && (
               <div className="luthor-source-error">
-                <div className="luthor-source-error-icon">⚠️</div>
+                <div className="luthor-source-error-icon">!</div>
                 <div className="luthor-source-error-message">
-                  <strong>Invalid JSON</strong>
+                  <strong>{SOURCE_MODE_ERROR_TITLE[activeSourceMode]}</strong>
                   <p>{sourceError.error}</p>
                   <small>Fix the errors above and try switching modes again</small>
                 </div>
               </div>
             )}
-            {mode === "json" && (
-              <SourceView value={content.json} onChange={(value) => setContent((prev) => ({ ...prev, json: value }))} placeholder={jsonPlaceholder} />
+            {activeSourceMode === "json" && (
+              <SourceView
+                value={content.json}
+                onChange={(value) => updateSourceModeContent("json", value, { dirty: true })}
+                placeholder={jsonPlaceholder}
+              />
+            )}
+            {activeSourceMode === "markdown" && (
+              <SourceView
+                value={content.markdown}
+                onChange={(value) => updateSourceModeContent("markdown", value, { dirty: true })}
+                placeholder={markdownPlaceholder}
+                className="luthor-source-view--wrapped"
+                wrap="soft"
+              />
+            )}
+            {activeSourceMode === "html" && (
+              <SourceView
+                value={content.html}
+                onChange={(value) => updateSourceModeContent("html", value, { dirty: true })}
+                placeholder={htmlPlaceholder}
+                className="luthor-source-view--wrapped"
+                wrap="soft"
+              />
             )}
           </div>
         )}
@@ -1083,7 +1308,12 @@ export interface ExtensiveEditorProps {
   defaultContent?: string;
   showDefaultContent?: boolean;
   placeholder?: ExtensiveEditorPlaceholder;
+  defaultEditorView?: ExtensiveEditorMode;
   initialMode?: ExtensiveEditorMode;
+  /** Preferred prop name for toggling editor view tabs visibility */
+  isEditorViewTabsVisible?: boolean;
+  /** Backward-compatible alias for toggling editor view tabs visibility */
+  isEditorViewsTabVisible?: boolean;
   availableModes?: readonly ExtensiveEditorMode[];
   variantClassName?: string;
   toolbarLayout?: ToolbarLayout;
@@ -1097,6 +1327,7 @@ export interface ExtensiveEditorProps {
   defaultSettings?: DefaultSettings;
   editorThemeOverrides?: EditorThemeOverrides;
   isToolbarEnabled?: boolean;
+  isToolbarPinned?: boolean;
   fontFamilyOptions?: readonly FontFamilyOption[];
   fontSizeOptions?: readonly FontSizeOption[];
   lineHeightOptions?: readonly LineHeightOption[];
@@ -1116,6 +1347,8 @@ export interface ExtensiveEditorProps {
   maxAutoDetectCodeLength?: number;
   isCopyAllowed?: boolean;
   languageOptions?: readonly string[] | CodeLanguageOptionsConfig;
+  /** Maximum list sub-indent levels (excluding top-level list). Default: 8 */
+  maxListIndentation?: number;
 }
 
 export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorProps>(
@@ -1128,8 +1361,11 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     defaultContent,
     showDefaultContent = true,
     placeholder = DEFAULT_VISUAL_PLACEHOLDER,
+    defaultEditorView,
     initialMode = "visual",
-    availableModes = ["visual", "json"],
+    isEditorViewTabsVisible,
+    isEditorViewsTabVisible,
+    availableModes = ["visual", "json", "markdown", "html"],
     variantClassName,
     toolbarLayout,
     toolbarVisibility,
@@ -1142,6 +1378,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     defaultSettings,
     editorThemeOverrides,
     isToolbarEnabled = true,
+    isToolbarPinned = false,
     fontFamilyOptions,
     fontSizeOptions,
     lineHeightOptions,
@@ -1161,12 +1398,16 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     maxAutoDetectCodeLength,
     isCopyAllowed = true,
     languageOptions,
+    maxListIndentation = 8,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
     const isDark = editorTheme === "dark";
-    const resolvedInitialMode = availableModes.includes(initialMode)
-      ? initialMode
+    const requestedInitialMode = defaultEditorView ?? initialMode;
+    const resolvedInitialMode = availableModes.includes(requestedInitialMode)
+      ? requestedInitialMode
       : (availableModes[0] ?? "visual");
+    const resolvedIsEditorViewTabsVisible = isEditorViewTabsVisible ?? isEditorViewsTabVisible ?? true;
 
     const toggleTheme = () => setEditorTheme(isDark ? "light" : "dark");
     const resolvedPlaceholders = useMemo(() => {
@@ -1174,12 +1415,16 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         return {
           visual: placeholder,
           json: DEFAULT_JSON_PLACEHOLDER,
+          markdown: DEFAULT_MARKDOWN_PLACEHOLDER,
+          html: DEFAULT_HTML_PLACEHOLDER,
         };
       }
 
       return {
         visual: placeholder.visual ?? DEFAULT_VISUAL_PLACEHOLDER,
         json: placeholder.json ?? DEFAULT_JSON_PLACEHOLDER,
+        markdown: placeholder.markdown ?? DEFAULT_MARKDOWN_PLACEHOLDER,
+        html: placeholder.html ?? DEFAULT_HTML_PLACEHOLDER,
       };
     }, [placeholder]);
 
@@ -1190,6 +1435,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     useEffect(() => {
       onThemeChange?.(editorTheme);
     }, [editorTheme, onThemeChange]);
+
+    useEffect(() => {
+      if (!isToolbarPinned || toolbarPosition !== "top") {
+        return;
+      }
+
+      const wrapper = wrapperRef.current;
+      if (!wrapper) {
+        return;
+      }
+
+      return setupToolbarPinOverflowFallback(wrapper);
+    }, [isToolbarPinned, toolbarPosition]);
 
     const fontFamilyOptionsKey = useMemo(
       () => normalizeFontFamilyOptionsKey(fontFamilyOptions),
@@ -1206,6 +1464,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     const minimumDefaultLineHeightKey = useMemo(
       () => normalizeMinimumDefaultLineHeightKey(minimumDefaultLineHeight),
       [minimumDefaultLineHeight],
+    );
+    const maxListIndentationKey = useMemo(
+      () => normalizeMaxListIndentationKey(maxListIndentation),
+      [maxListIndentation],
     );
     const syntaxHighlightKey = syntaxHighlighting ?? "unset";
     const maxAutoDetectKey =
@@ -1235,7 +1497,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
       () => resolveFeatureFlags(effectiveFeatureFlags),
       [effectiveFeatureFlags],
     );
-    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${minimumDefaultLineHeightKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${languageOptionsKey}::${featureFlagsKey}`;
+    const extensionsKey = `${fontFamilyOptionsKey}::${fontSizeOptionsKey}::${lineHeightOptionsKey}::${minimumDefaultLineHeightKey}::${maxListIndentationKey}::${scaleByRatio ? "ratio-on" : "ratio-off"}::${syntaxHighlightKey}::${maxAutoDetectKey}::${copyAllowedKey}::${languageOptionsKey}::${featureFlagsKey}`;
     const stableFontFamilyOptionsRef = useRef<readonly FontFamilyOption[] | undefined>(fontFamilyOptions);
     const stableFontSizeOptionsRef = useRef<readonly FontSizeOption[] | undefined>(fontSizeOptions);
     const stableLineHeightOptionsRef = useRef<readonly LineHeightOption[] | undefined>(lineHeightOptions);
@@ -1277,6 +1539,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
         fontSizeOptions: stableFontSizeOptionsRef.current,
         lineHeightOptions: stableLineHeightOptionsRef.current,
         minimumDefaultLineHeight: stableMinimumDefaultLineHeightRef.current,
+        maxListIndentation: Number(maxListIndentationKey),
         scaleByRatio,
         ...(syntaxHighlighting !== undefined
           ? { syntaxHighlighting }
@@ -1380,7 +1643,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
 
     return (
       <div
-        className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper ${variantClassName || ""} ${className || ""}`.trim()}
+        ref={wrapperRef}
+        className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper${isToolbarPinned ? " luthor-editor-wrapper--toolbar-pinned" : ""} ${variantClassName || ""} ${className || ""}`.trim()}
         data-editor-theme={editorTheme}
         style={wrapperStyleVars}
       >
@@ -1390,6 +1654,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toggleTheme={toggleTheme}
             visualPlaceholder={resolvedPlaceholders.visual}
             jsonPlaceholder={resolvedPlaceholders.json}
+            markdownPlaceholder={resolvedPlaceholders.markdown}
+            htmlPlaceholder={resolvedPlaceholders.html}
             initialMode={resolvedInitialMode}
             availableModes={availableModes}
             onReady={handleReady}
@@ -1400,6 +1666,8 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toolbarClassName={toolbarClassName}
             toolbarStyleVars={toolbarStyleVars}
             isToolbarEnabled={isToolbarEnabled}
+            isToolbarPinned={isToolbarPinned}
+            isEditorViewTabsVisible={resolvedIsEditorViewTabsVisible}
             headingOptions={headingOptions}
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}
@@ -1415,5 +1683,3 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
 );
 
 ExtensiveEditor.displayName = "ExtensiveEditor";
-
-

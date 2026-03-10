@@ -1,0 +1,118 @@
+.luthor-preset-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: var(--luthor-composer-min-width, 240px);
+  max-width: var(--luthor-composer-max-width, 100%);
+}
+
+.luthor-composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.luthor-composer-shell {
+  position: relative;
+  width: 100%;
+  min-width: var(--luthor-composer-min-width, 240px);
+  max-width: var(--luthor-composer-max-width, 100%);
+}
+
+.luthor-preset-composer .luthor-preset-extensive.luthor-editor-wrapper {
+  min-height: var(--luthor-composer-min-height, 56px);
+  max-height: var(--luthor-composer-max-height, 220px);
+  height: var(--luthor-composer-current-height, var(--luthor-composer-min-height, 56px));
+  min-width: var(--luthor-composer-min-width, 240px);
+  max-width: var(--luthor-composer-max-width, 100%);
+  border-radius: 16px;
+}
+
+.luthor-preset-composer .luthor-editor-header {
+  display: none;
+}
+
+.luthor-preset-composer .luthor-editor {
+  min-height: 0;
+  height: 100%;
+}
+
+.luthor-preset-composer .luthor-editor-visual-shell {
+  min-height: 0;
+}
+
+.luthor-preset-composer .luthor-richtext-container {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  --luthor-editor-content-padding-y: 12px;
+  --luthor-editor-content-padding-x: 14px;
+  --luthor-first-block-offset: 0px;
+}
+
+.luthor-preset-composer .luthor-content-editable {
+  padding: var(--luthor-editor-content-padding-y) var(--luthor-editor-content-padding-x);
+  min-height: 100%;
+  box-sizing: border-box;
+  line-height: 1.45;
+}
+
+.luthor-preset-composer--send-inside .luthor-content-editable {
+  padding-right: 84px;
+  padding-bottom: 48px;
+}
+
+.luthor-preset-composer .luthor-placeholder {
+  top: var(--luthor-editor-content-padding-y);
+  left: var(--luthor-editor-content-padding-x);
+  line-height: 1.45;
+}
+
+.luthor-composer-bottom-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid var(--luthor-border);
+  background: var(--luthor-bg);
+}
+
+.luthor-composer-action {
+  border: 1px solid var(--luthor-border);
+  background: var(--luthor-muted);
+  color: var(--luthor-fg);
+  border-radius: 10px;
+  height: 32px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.luthor-composer-action-send {
+  border-color: var(--luthor-accent);
+  background: var(--luthor-accent);
+  color: var(--luthor-bg);
+}
+
+.luthor-composer-action-send--inside {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+}
+
+.luthor-composer-action-send--right {
+  align-self: flex-end;
+}
+
+@media (max-width: 640px) {
+  .luthor-composer-row {
+    flex-wrap: wrap;
+  }
+
+  .luthor-composer-action-send--right {
+    margin-left: auto;
+  }
+}
+

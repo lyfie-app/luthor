@@ -47,9 +47,11 @@ import {
   PaletteIcon,
   QuoteIcon,
   StrikethroughIcon,
+  ChevronDownIcon,
 } from "./icons";
 import { Button, Dialog, Dropdown, IconButton, Select } from "./ui";
 import { getOverlayThemeStyleFromElement } from "./overlay-theme";
+import { computeAnchoredOverlayStyle, resolveEditorPortalContainer } from "./overlay-position";
 import { BLOCK_HEADING_LEVELS, type BlockHeadingLevel, type CoreEditorActiveStates, type CoreEditorCommands, type CoreToolbarClassNames, type InsertTableConfig, type ImageAlignment, type ToolbarLayout, type ToolbarItemType, type ToolbarStyleVars, type ToolbarVisibility } from "./types";
 import { TRADITIONAL_TOOLBAR_LAYOUT } from "./types";
 
@@ -80,6 +82,195 @@ const EXTENSIVE_SWATCH_COLORS: readonly string[] = [
   "#ddebf7", "#bdd7ee", "#9dc3e6", "#5b9bd5", "#2f75b5", "#1f4e78",
   "#e4dfec", "#d9c2e9", "#b4a7d6", "#8e7cc3", "#674ea7", "#351c75",
 ];
+
+const ORDERED_LIST_OPTIONS: ReadonlyArray<{
+  title: string;
+  pattern:
+    | "decimal-alpha-roman"
+    | "decimal-hierarchical"
+    | "upper-roman-upper-alpha"
+    | "upper-alpha-lower-alpha";
+}> = [
+  { title: "1. a. i. style", pattern: "decimal-alpha-roman" },
+  { title: "A. a. i. style", pattern: "upper-alpha-lower-alpha" },
+  { title: "1. 1.1 1.2 style", pattern: "decimal-hierarchical" },
+  { title: "I. A. 1. style", pattern: "upper-roman-upper-alpha" },
+];
+
+type OrderedListPattern =
+  | "decimal-alpha-roman"
+  | "decimal-hierarchical"
+  | "upper-roman-upper-alpha"
+  | "upper-alpha-lower-alpha";
+
+const UNORDERED_LIST_OPTIONS: ReadonlyArray<{
+  title: string;
+  pattern:
+    | "disc-circle-square"
+    | "arrow-diamond-disc"
+    | "square-square-square"
+    | "arrow-circle-square";
+}> = [
+  { title: "Dot / Circle / Square", pattern: "disc-circle-square" },
+  { title: "Arrow / Diamond / Dot", pattern: "arrow-diamond-disc" },
+  { title: "Square / Square / Square", pattern: "square-square-square" },
+  { title: "Arrow / Circle / Square", pattern: "arrow-circle-square" },
+];
+
+type UnorderedMarkerType = "disc" | "circle" | "square" | "arrow" | "diamond";
+
+function getUnorderedMarkerPattern(
+  pattern: "disc-circle-square" | "arrow-diamond-disc" | "square-square-square" | "arrow-circle-square",
+): readonly [UnorderedMarkerType, UnorderedMarkerType, UnorderedMarkerType] {
+  switch (pattern) {
+    case "disc-circle-square":
+      return ["disc", "circle", "square"];
+    case "arrow-diamond-disc":
+      return ["arrow", "diamond", "disc"];
+    case "square-square-square":
+      return ["square", "square", "square"];
+    case "arrow-circle-square":
+      return ["arrow", "circle", "square"];
+  }
+}
+
+function UnorderedMarkerShape({ type, cy }: { type: UnorderedMarkerType; cy: number }) {
+  switch (type) {
+    case "disc":
+      return <circle cx="16" cy={cy} r="3.2" className="luthor-unordered-variant-marker" />;
+    case "circle":
+      return <circle cx="16" cy={cy} r="3.2" className="luthor-unordered-variant-marker-open" />;
+    case "square":
+      return <rect x="12.8" y={cy - 3.2} width="6.4" height="6.4" className="luthor-unordered-variant-marker" />;
+    case "diamond":
+      return <path d={`M16 ${cy - 3.8} L19.8 ${cy} L16 ${cy + 3.8} L12.2 ${cy} Z`} className="luthor-unordered-variant-marker" />;
+    case "arrow":
+      return <path d={`M11.6 ${cy - 2.8} L16.8 ${cy} L11.6 ${cy + 2.8} M11.6 ${cy} H19.6`} className="luthor-unordered-variant-arrow" />;
+  }
+}
+
+function UnorderedListVariantPreview({
+  pattern,
+}: {
+  pattern: "disc-circle-square" | "arrow-diamond-disc" | "square-square-square" | "arrow-circle-square";
+}) {
+  const markers = getUnorderedMarkerPattern(pattern);
+  const rowY = [12.5, 24.5, 36.5, 48.5, 60.5] as const;
+  const rowIndent =
+    pattern === "disc-circle-square"
+      ? [0, 1, 1, 2, 0]
+      : pattern === "arrow-diamond-disc"
+        ? [0, 1, 1, 2, 0]
+        : pattern === "square-square-square"
+          ? [0, 1, 2, 1, 0]
+          : [0, 1, 1, 2, 0];
+  const rowMarkers: readonly UnorderedMarkerType[] = [
+    markers[0],
+    markers[1],
+    markers[1],
+    markers[2],
+    markers[0],
+  ];
+
+  return (
+    <svg
+      width="94"
+      height="74"
+      viewBox="0 0 94 74"
+      role="img"
+      aria-hidden="true"
+      className="luthor-unordered-variant-svg"
+    >
+      <rect x="0.5" y="0.5" width="93" height="73" rx="3" className="luthor-unordered-variant-frame" />
+
+      {rowY.map((y, index) => {
+        const indentLevel = rowIndent[index] ?? 0;
+        const markerX = 12 + indentLevel * 12;
+        const textX = 24 + indentLevel * 12;
+        const textWidth = 57 - indentLevel * 10;
+        return (
+          <g key={`${pattern}-row-${index}`}>
+            <g transform={`translate(${markerX - 16}, 0)`}>
+              <UnorderedMarkerShape type={rowMarkers[index] ?? markers[0]} cy={y} />
+            </g>
+            <rect x={textX} y={y - 2.5} width={textWidth} height="5" rx="2.5" className="luthor-unordered-variant-line" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function ChecklistVariantPreview({ variant }: { variant: "strikethrough" | "plain" }) {
+  const strike = variant === "strikethrough";
+
+  return (
+    <svg
+      width="78"
+      height="42"
+      viewBox="0 0 78 42"
+      role="img"
+      aria-hidden="true"
+      className="luthor-checklist-variant-svg"
+    >
+      <rect x="0.5" y="0.5" width="77" height="41" rx="3" className="luthor-checklist-variant-frame" />
+
+      <rect x="10.5" y="10.5" width="10" height="10" rx="1.5" className="luthor-checklist-variant-box" />
+      <rect x="10.5" y="24.5" width="10" height="10" rx="1.5" className="luthor-checklist-variant-box" />
+      <path d="M12.6 29.2l2 2.2 3.8-4.3" className="luthor-checklist-variant-check" />
+
+      <rect x="26.5" y="11.8" width="40" height="6" rx="2" className="luthor-checklist-variant-line" />
+      <rect x="26.5" y="25.8" width="40" height="6" rx="2" className="luthor-checklist-variant-line" />
+      {strike ? (
+        <>
+          <line x1="26.5" y1="28.8" x2="66.5" y2="28.8" className="luthor-checklist-variant-strike" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
+function OrderedListVariantPreview({ pattern }: { pattern: OrderedListPattern }) {
+  const rowY = [12.5, 24.5, 36.5, 48.5, 60.5] as const;
+  const rowIndent = [0, 1, 1, 2, 0] as const;
+
+  const rowLabels: readonly string[] =
+    pattern === "decimal-alpha-roman"
+      ? ["1.", "a.", "b.", "i.", "2."]
+      : pattern === "upper-alpha-lower-alpha"
+        ? ["A.", "a.", "b.", "i.", "B."]
+        : pattern === "decimal-hierarchical"
+          ? ["1.", "1.1.", "1.2.", "1.2.1.", "2."]
+          : ["I.", "A.", "B.", "1.", "II."];
+
+  return (
+    <svg
+      width="94"
+      height="74"
+      viewBox="0 0 94 74"
+      role="img"
+      aria-hidden="true"
+      className="luthor-ordered-variant-svg"
+    >
+      <rect x="0.5" y="0.5" width="93" height="73" rx="3" className="luthor-ordered-variant-frame" />
+      {rowY.map((y, index) => {
+        const indentLevel = rowIndent[index] ?? 0;
+        const labelX = 9 + indentLevel * 12;
+        const textX = 26 + indentLevel * 12;
+        const textWidth = 56 - indentLevel * 10;
+
+        return (
+          <g key={`${pattern}-ordered-row-${index}`}>
+            <text x={labelX} y={y + 2.8} className="luthor-ordered-variant-label">
+              {rowLabels[index]}
+            </text>
+            <rect x={textX} y={y - 2.5} width={textWidth} height="5" rx="2.5" className="luthor-ordered-variant-line" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 function normalizeColorValue(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, "");
@@ -397,27 +588,25 @@ function ColorPickerButton({
     if (!trigger) return;
 
     const rect = trigger.getBoundingClientRect();
-    const container =
-      (trigger.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
+    const measuredPanel = panelRef.current?.getBoundingClientRect();
+    const container = resolveEditorPortalContainer(trigger);
     setPortalContainer(container);
-    if (container) {
-      const containerRect = container.getBoundingClientRect();
-      setPanelStyle({
-        position: "absolute",
-        top: rect.bottom - containerRect.top + 6,
-        left: Math.max(0, rect.left - containerRect.left),
-        width: 230,
-        visibility: isVisible ? "visible" : "hidden",
-        ...getOverlayThemeStyleFromElement(trigger),
-      });
-      return;
-    }
-
+    const placement = computeAnchoredOverlayStyle({
+      anchorRect: rect,
+      overlay: {
+        width: measuredPanel?.width ?? 248,
+        height: measuredPanel?.height ?? 340,
+      },
+      portalContainer: container,
+      gap: 6,
+      margin: 8,
+      preferredX: "start",
+      preferredY: "bottom",
+      flipX: true,
+      flipY: true,
+    });
     setPanelStyle({
-      position: "fixed",
-      top: rect.bottom + 6,
-      left: rect.left,
-      width: 230,
+      ...placement,
       visibility: isVisible ? "visible" : "hidden",
       ...getOverlayThemeStyleFromElement(trigger),
     });
@@ -804,6 +993,9 @@ export function Toolbar({
   const [showEmojiDropdown, setShowEmojiDropdown] = useState(false);
   const [showAlignDropdown, setShowAlignDropdown] = useState(false);
   const [showEmbedDropdown, setShowEmbedDropdown] = useState(false);
+  const [showUnorderedListDropdown, setShowUnorderedListDropdown] = useState(false);
+  const [showOrderedListDropdown, setShowOrderedListDropdown] = useState(false);
+  const [showCheckListDropdown, setShowCheckListDropdown] = useState(false);
   const [showTableDialog, setShowTableDialog] = useState(false);
   const [fontFamilyValue, setFontFamilyValue] = useState("default");
   const [fontFamilyOptions, setFontFamilyOptions] = useState<SelectOption[]>([
@@ -1246,6 +1438,39 @@ export function Toolbar({
     setTextHighlightValue(value);
   };
 
+  const applyOrderedListPattern = (pattern: OrderedListPattern) => {
+    if (typeof commands.setOrderedListPattern === "function") {
+      commands.setOrderedListPattern(pattern);
+      return;
+    }
+
+    commands.toggleOrderedList();
+  };
+
+  const applyUnorderedListPattern = (
+    pattern:
+      | "disc-circle-square"
+      | "arrow-diamond-disc"
+      | "square-square-square"
+      | "arrow-circle-square",
+  ) => {
+    if (typeof commands.setUnorderedListPattern === "function") {
+      commands.setUnorderedListPattern(pattern);
+      return;
+    }
+
+    commands.toggleUnorderedList();
+  };
+
+  const applyCheckListVariant = (variant: "strikethrough" | "plain") => {
+    if (typeof commands.setCheckListVariant === "function") {
+      commands.setCheckListVariant(variant);
+      return;
+    }
+
+    commands.toggleCheckList();
+  };
+
   const renderToolbarItem = (itemType: ToolbarItemType): ReactElement | null => {
     switch (itemType) {
       case "fontFamily":
@@ -1445,25 +1670,136 @@ export function Toolbar({
       case "unorderedList":
         if (!hasExtension("list")) return null;
         return (
-          <IconButton key="unorderedList" onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
-            <ListIcon size={16} />
-          </IconButton>
+          <div key="unorderedList" className="luthor-toolbar-split-button">
+            <IconButton onClick={() => commands.toggleUnorderedList()} active={activeStates.unorderedList} title="Bullet List">
+              <ListIcon size={16} />
+            </IconButton>
+            <Dropdown
+              trigger={
+                <button
+                  type="button"
+                  className={`luthor-toolbar-button luthor-toolbar-button-arrow${activeStates.unorderedList ? " active" : ""}`}
+                  title="Bullet List Styles"
+                  aria-label="Bullet List Styles"
+                >
+                  <ChevronDownIcon size={12} />
+                </button>
+              }
+              isOpen={showUnorderedListDropdown}
+              onOpenChange={setShowUnorderedListDropdown}
+            >
+              <div className="luthor-unordered-variant-grid">
+                {UNORDERED_LIST_OPTIONS.map((option) => (
+                  <button
+                    key={option.pattern}
+                    className="luthor-unordered-variant-option"
+                    type="button"
+                    title={option.title}
+                    aria-label={option.title}
+                    onClick={() => {
+                      applyUnorderedListPattern(option.pattern);
+                      setShowUnorderedListDropdown(false);
+                    }}
+                  >
+                    <UnorderedListVariantPreview pattern={option.pattern} />
+                  </button>
+                ))}
+              </div>
+            </Dropdown>
+          </div>
         );
 
       case "orderedList":
         if (!hasExtension("list")) return null;
         return (
-          <IconButton key="orderedList" onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
-            <ListOrderedIcon size={16} />
-          </IconButton>
+          <div key="orderedList" className="luthor-toolbar-split-button">
+            <IconButton onClick={() => commands.toggleOrderedList()} active={activeStates.orderedList} title="Numbered List">
+              <ListOrderedIcon size={16} />
+            </IconButton>
+            <Dropdown
+              trigger={
+                <button
+                  type="button"
+                  className={`luthor-toolbar-button luthor-toolbar-button-arrow${activeStates.orderedList ? " active" : ""}`}
+                  title="Numbered List Styles"
+                  aria-label="Numbered List Styles"
+                >
+                  <ChevronDownIcon size={12} />
+                </button>
+              }
+              isOpen={showOrderedListDropdown}
+              onOpenChange={setShowOrderedListDropdown}
+            >
+              <div className="luthor-ordered-variant-grid">
+                {ORDERED_LIST_OPTIONS.map((option) => (
+                  <button
+                    key={option.pattern}
+                    className="luthor-ordered-variant-option"
+                    type="button"
+                    title={option.title}
+                    aria-label={option.title}
+                    onClick={() => {
+                      applyOrderedListPattern(option.pattern);
+                      setShowOrderedListDropdown(false);
+                    }}
+                  >
+                    <OrderedListVariantPreview pattern={option.pattern} />
+                  </button>
+                ))}
+              </div>
+            </Dropdown>
+          </div>
         );
 
       case "checkList":
         if (!hasExtension("list")) return null;
         return (
-          <IconButton key="checkList" onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
-            <ListCheckIcon size={16} />
-          </IconButton>
+          <div key="checkList" className="luthor-toolbar-split-button">
+            <IconButton onClick={() => commands.toggleCheckList()} active={activeStates.checkList} title="Checklist">
+              <ListCheckIcon size={16} />
+            </IconButton>
+            <Dropdown
+              trigger={
+                <button
+                  type="button"
+                  className={`luthor-toolbar-button luthor-toolbar-button-arrow${activeStates.checkList ? " active" : ""}`}
+                  title="Checklist Styles"
+                  aria-label="Checklist Styles"
+                >
+                  <ChevronDownIcon size={12} />
+                </button>
+              }
+              isOpen={showCheckListDropdown}
+              onOpenChange={setShowCheckListDropdown}
+            >
+              <div className="luthor-checklist-variant-grid">
+                <button
+                  className="luthor-checklist-variant-option"
+                  type="button"
+                  title="Checked = Strike through"
+                  aria-label="Checked = Strike through"
+                  onClick={() => {
+                    applyCheckListVariant("strikethrough");
+                    setShowCheckListDropdown(false);
+                  }}
+                >
+                  <ChecklistVariantPreview variant="strikethrough" />
+                </button>
+                <button
+                  className="luthor-checklist-variant-option"
+                  type="button"
+                  title="Checked = Keep text"
+                  aria-label="Checked = Keep text"
+                  onClick={() => {
+                    applyCheckListVariant("plain");
+                    setShowCheckListDropdown(false);
+                  }}
+                >
+                  <ChecklistVariantPreview variant="plain" />
+                </button>
+              </div>
+            </Dropdown>
+          </div>
         );
 
       case "indentList":
@@ -1473,7 +1809,6 @@ export function Toolbar({
             key="indentList"
             onClick={() => commands.indentList()}
             title="Indent List"
-            disabled={activeStates.checkList}
           >
             <IndentIcon size={14} />
           </IconButton>
@@ -1486,7 +1821,6 @@ export function Toolbar({
             key="outdentList"
             onClick={() => commands.outdentList()}
             title="Outdent List"
-            disabled={activeStates.checkList}
           >
             <OutdentIcon size={14} />
           </IconButton>
@@ -1775,3 +2109,4 @@ export function Toolbar({
     </>
   );
 }
+

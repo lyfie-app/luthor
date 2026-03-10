@@ -1,11 +1,11 @@
 'use client';
 
-import { BookOpen, GithubLogo, House, List, MoonStars, PlayCircle, Sun, X } from '@phosphor-icons/react';
+import { ArrowSquareOut, BookOpen, Code, GithubLogo, List, MoonStars, PlayCircle, Sun, X } from '@phosphor-icons/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { GITHUB_URL } from '@/config/site';
+import { GITHUB_URL, REACT_PLAYGROUND_URL } from '@/config/site';
 
 const THEME_STORAGE_KEY = 'luthor-site-theme';
 
@@ -58,7 +58,6 @@ export function SiteHeader() {
     document.documentElement.style.colorScheme = nextTheme;
   }
 
-  const isHomeActive = pathname === '/';
   const isDocsActive = pathname.startsWith('/docs');
   const isDemoActive = pathname.startsWith('/demo');
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -93,18 +92,10 @@ export function SiteHeader() {
           {mobileMenuOpen ? <X size={18} weight="bold" aria-hidden="true" /> : <List size={18} weight="bold" aria-hidden="true" />}
         </button>
         <nav id="site-primary-nav" className={mobileMenuOpen ? 'site-nav is-open' : 'site-nav'} aria-label="Primary">
-          <Link href="/" aria-current={isHomeActive ? 'page' : undefined} className={isHomeActive ? 'active' : undefined} onClick={closeMobileMenu}>
-            <House size={16} weight="duotone" aria-hidden="true" />
-            <span>Home</span>
-          </Link>          
-          <Link href="/#features" className="nav-secondary-link" onClick={closeMobileMenu}>
-            <PlayCircle size={16} weight="duotone" aria-hidden="true" />
-            <span>Features</span>
-          </Link>          
           <Link href="/demo/" aria-current={isDemoActive ? 'page' : undefined} className={isDemoActive ? 'active' : undefined} onClick={closeMobileMenu}>
             <PlayCircle size={16} weight="duotone" aria-hidden="true" />
             <span>Demo</span>
-          </Link>    
+          </Link>
           <Link
             href="/docs/getting-started/"
             aria-current={isDocsActive ? 'page' : undefined}
@@ -112,11 +103,29 @@ export function SiteHeader() {
             onClick={closeMobileMenu}
           >
             <BookOpen size={16} weight="duotone" aria-hidden="true" />
-            <span>Documentation</span>
+            <span>Docs</span>
           </Link>
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer" onClick={closeMobileMenu}>
+          <a
+            href={REACT_PLAYGROUND_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Playground (opens in a new tab)"
+            onClick={closeMobileMenu}
+          >
+            <Code size={16} weight="duotone" aria-hidden="true" />
+            <span>Playground</span>
+            <ArrowSquareOut size={12} weight="bold" aria-hidden="true" className="nav-external-indicator" />
+          </a>
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub (opens in a new tab)"
+            onClick={closeMobileMenu}
+          >
             <GithubLogo size={16} weight="duotone" aria-hidden="true" />
             <span>GitHub</span>
+            <ArrowSquareOut size={12} weight="bold" aria-hidden="true" className="nav-external-indicator" />
           </a>
           <button
             className={mounted && theme === 'dark' ? 'theme-toggle active' : 'theme-toggle'}

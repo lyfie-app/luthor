@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach } from "vitest";
 import { vi } from "vitest";
@@ -12,6 +12,10 @@ const {
   createExtensiveExtensionsMock,
   createEditorThemeStyleVarsMock,
   providerMock,
+  htmlToJSONMock,
+  jsonToHTMLMock,
+  jsonToMarkdownMock,
+  markdownToJSONMock,
   richTextMock,
   sourceViewMock,
 } = vi.hoisted(() => ({
@@ -25,12 +29,35 @@ const {
   createExtensiveExtensionsMock: vi.fn(() => []),
   createEditorThemeStyleVarsMock: vi.fn((overrides?: Record<string, string>) => overrides),
   providerMock: vi.fn(),
+  htmlToJSONMock: vi.fn(() => ({ root: { children: [] } })),
+  jsonToHTMLMock: vi.fn(() => "<p></p>"),
+  jsonToMarkdownMock: vi.fn(() => ""),
+  markdownToJSONMock: vi.fn(() => ({ root: { children: [] } })),
   richTextMock: vi.fn(({ placeholder, classNames }: { placeholder?: string; classNames?: { placeholder?: string } }) => (
     <div data-testid="richtext" data-placeholder-class={classNames?.placeholder}>{placeholder}</div>
   )),
   sourceViewMock: vi.fn(
-    ({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) => (
-      <textarea data-testid="source-view" data-placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)} />
+    ({
+      value,
+      onChange,
+      placeholder,
+      className,
+      wrap,
+    }: {
+      value: string;
+      onChange: (value: string) => void;
+      placeholder: string;
+      className?: string;
+      wrap?: "soft" | "hard" | "off";
+    }) => (
+      <textarea
+        data-testid="source-view"
+        data-placeholder={placeholder}
+        data-classname={className}
+        data-wrap={wrap}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
     ),
   ),
 }));
@@ -122,8 +149,18 @@ vi.mock("../../core", () => ({
   EmojiSuggestionMenu: () => null,
   commandsToCommandPaletteItems: commandsToCommandPaletteItemsMock,
   commandsToSlashCommandItems: commandsToSlashCommandItemsMock,
+  formatHTMLSource: (value: string) => value,
   formatJSONSource: (value: string) => value,
-  ModeTabs: () => <div data-testid="mode-tabs" />,
+  formatMarkdownSource: (value: string) => value,
+  ModeTabs: ({ availableModes, onModeChange }: { availableModes?: string[]; onModeChange: (mode: string) => void }) => (
+    <div data-testid="mode-tabs">
+      {(availableModes ?? ["visual", "json"]).map((mode) => (
+        <button key={mode} type="button" onClick={() => onModeChange(mode)}>
+          {mode}
+        </button>
+      ))}
+    </div>
+  ),
   registerKeyboardShortcuts: registerKeyboardShortcutsMock,
   generateCommands: vi.fn(() => [
     { id: "format.bold", shortcuts: [{ key: "b", ctrlKey: true }] },
@@ -183,6 +220,10 @@ vi.mock("@lyfie/luthor-headless", () => ({
     ...override,
   }),
   createEditorThemeStyleVars: createEditorThemeStyleVarsMock,
+  htmlToJSON: htmlToJSONMock,
+  jsonToHTML: jsonToHTMLMock,
+  jsonToMarkdown: jsonToMarkdownMock,
+  markdownToJSON: markdownToJSONMock,
   clearLexicalSelection: vi.fn(),
 }));
 
@@ -199,11 +240,22 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     const toolbar = screen.getByTestId("toolbar");
     const header = container.querySelector(".luthor-editor-header");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
 
     expect(toolbar).toHaveClass("luthor-toolbar");
     expect(toolbar).toHaveClass("luthor-toolbar--align-left");
-    expect(header).toContainElement(toolbar);
+    expect(header).not.toContainElement(toolbar);
+    expect(topSlot).toContainElement(toolbar);
     expect(container.querySelector(".luthor-editor-toolbar-slot--bottom")).toBeNull();
+  });
+
+  it("enables visual, json, markdown, and html modes by default", () => {
+    render(<ExtensiveEditor showDefaultContent={false} />);
+
+    expect(screen.getByRole("button", { name: "visual" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "json" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "markdown" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "html" })).toBeInTheDocument();
   });
 
   it("renders toolbar in the bottom slot when toolbarPosition is bottom", () => {
@@ -215,6 +267,178 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
 
     expect(header).not.toContainElement(toolbar);
     expect(bottomSlot).toContainElement(toolbar);
+  });
+
+  it("pins tabs + toolbar together when tabs are visible and isToolbarPinned is true", () => {
+    const { container } = render(<ExtensiveEditor showDefaultContent={false} isToolbarPinned />);
+
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+    const wrapper = container.querySelector(".luthor-editor-wrapper");
+
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
+  });
+
+  it("keeps pinned classes when rendered in demo app scroll container structure", () => {
+    const { container } = render(
+      <div className="editor-stage" style={{ overflow: "auto", maxHeight: "480px" }}>
+        <div className="editor-frame">
+          <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+        </div>
+      </div>,
+    );
+
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+    const wrapper = container.querySelector(".luthor-editor-wrapper");
+
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
+  });
+
+  it("keeps pinned classes when rendered in web homepage editor pane structure", () => {
+    const { container } = render(
+      <div className="browser-frame demo-showcase-frame">
+        <div className="editor-pane demo-showcase-editor-pane" style={{ overflow: "auto", minHeight: 0 }}>
+          <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+        </div>
+      </div>,
+    );
+
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+    const wrapper = container.querySelector(".luthor-editor-wrapper");
+
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
+  });
+
+  it("pins toolbar directly at the top when editor view tabs are hidden", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isToolbarPinned
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
+    expect(topRegion).not.toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+  });
+
+  it("renders pinned top region inside .luthor-editor so nested scroll containers can stick correctly", () => {
+    const { container } = render(<ExtensiveEditor showDefaultContent={false} isToolbarPinned />);
+
+    const editor = container.querySelector(".luthor-editor");
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+
+    expect(editor).toContainElement(topRegion);
+    expect(editor?.firstElementChild).toBe(topRegion);
+  });
+
+  it("keeps top toolbar slot inside .luthor-editor when tabs are hidden", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isToolbarPinned
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    const editor = container.querySelector(".luthor-editor");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+
+    expect(editor).toContainElement(topSlot);
+  });
+
+  it("patches non-scrolling overflow:auto ancestors for demo-like page-scroll usage", async () => {
+    const { getByTestId } = render(
+      <div data-testid="demo-stage" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const stage = getByTestId("demo-stage") as HTMLDivElement;
+    Object.defineProperty(stage, "clientHeight", { configurable: true, value: 600 });
+    Object.defineProperty(stage, "scrollHeight", { configurable: true, value: 600 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(stage.style.overflowY).toBe("visible");
+    });
+  });
+
+  it("keeps active overflow:auto scroll ancestors unchanged for web-homepage nested scroll usage", async () => {
+    const { getByTestId } = render(
+      <div data-testid="web-editor-pane" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const pane = getByTestId("web-editor-pane") as HTMLDivElement;
+    Object.defineProperty(pane, "clientHeight", { configurable: true, value: 320 });
+    Object.defineProperty(pane, "scrollHeight", { configurable: true, value: 920 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(pane.style.overflowY).toBe("auto");
+    });
+  });
+
+  it("restores patched overflow:auto ancestors on unmount", async () => {
+    const { getByTestId, unmount } = render(
+      <div data-testid="demo-stage" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const stage = getByTestId("demo-stage") as HTMLDivElement;
+    Object.defineProperty(stage, "clientHeight", { configurable: true, value: 600 });
+    Object.defineProperty(stage, "scrollHeight", { configurable: true, value: 600 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(stage.style.overflowY).toBe("visible");
+    });
+
+    unmount();
+    expect(stage.style.overflowY).toBe("auto");
+  });
+
+  it("supports defaultEditorView and starts in json mode when requested", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        defaultEditorView="json"
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
+    expect(screen.getByTestId("source-view")).toBeInTheDocument();
+    expect(screen.queryByTestId("toolbar")).toBeNull();
+  });
+
+  it("hides editor view tabs with the alias prop isEditorViewsTabVisible", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isEditorViewsTabVisible={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
   });
 
   it("applies center and right alignment classes", () => {
@@ -759,6 +983,161 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     );
   });
 
+  it("supports mode-specific placeholder pass-through for markdown mode", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="markdown"
+        availableModes={["visual", "markdown"]}
+        placeholder={{
+          visual: "Write in visual mode",
+          markdown: "Write markdown here",
+        }}
+      />,
+    );
+
+    const sourceViewCall = sourceViewMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(sourceViewCall.placeholder).toBe("Write markdown here");
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-placeholder",
+      "Write markdown here",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-wrap",
+      "soft",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-classname",
+      "luthor-source-view--wrapped",
+    );
+  });
+
+  it("supports mode-specific placeholder pass-through for html mode", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+        placeholder={{
+          visual: "Write in visual mode",
+          html: "Write HTML here",
+        }}
+      />,
+    );
+
+    const sourceViewCall = sourceViewMock.mock.calls.at(-1)?.[0] as {
+      placeholder?: string;
+    };
+    expect(sourceViewCall.placeholder).toBe("Write HTML here");
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-placeholder",
+      "Write HTML here",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-wrap",
+      "soft",
+    );
+    expect(screen.getByTestId("source-view")).toHaveAttribute(
+      "data-classname",
+      "luthor-source-view--wrapped",
+    );
+  });
+
+  it("routes markdown to json transitions through the visual import/export pipeline", async () => {
+    const importedDocument = { root: { children: [{ type: "paragraph" }] } };
+    const exportedDocument = { root: { children: [{ type: "paragraph", marker: "from-visual" }] } };
+    markdownToJSONMock.mockReturnValueOnce(importedDocument);
+    mockEditorApi.export.toJSON.mockReturnValue(exportedDocument);
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="markdown"
+        availableModes={["visual", "markdown", "json"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "## Draft heading" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "json" }));
+
+    await waitFor(() => {
+      expect(markdownToJSONMock).toHaveBeenCalledWith("## Draft heading");
+    });
+    expect(mockEditorApi.import.fromJSON).toHaveBeenCalledWith(importedDocument);
+    await waitFor(() => {
+      expect(screen.getByTestId("source-view")).toHaveValue(JSON.stringify(exportedDocument));
+    });
+  });
+
+  it("does not re-import untouched html source when returning to visual mode", async () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId("source-view")).not.toBeInTheDocument();
+    });
+    expect(htmlToJSONMock).not.toHaveBeenCalled();
+  });
+
+  it("imports html source only after user edits before switching to visual mode", async () => {
+    const importedDocument = { root: { children: [{ type: "paragraph", marker: "from-html" }] } };
+    htmlToJSONMock.mockReturnValueOnce(importedDocument);
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "<p>Updated in html</p>" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(htmlToJSONMock).toHaveBeenCalledWith("<p>Updated in html</p>");
+    });
+    expect(mockEditorApi.import.fromJSON).toHaveBeenCalledWith(importedDocument);
+  });
+
+  it("shows mode-specific errors and prevents destructive switch on invalid html", async () => {
+    htmlToJSONMock.mockImplementationOnce(() => {
+      throw new Error("Malformed HTML");
+    });
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="html"
+        availableModes={["visual", "html"]}
+      />,
+    );
+
+    fireEvent.change(screen.getByTestId("source-view"), {
+      target: { value: "<div><p>broken" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Invalid HTML")).toBeInTheDocument();
+      expect(screen.getByText("Malformed HTML")).toBeInTheDocument();
+    });
+    expect(screen.getByTestId("source-view")).toBeInTheDocument();
+  });
+
   it("emits onThemeChange on mount and when initialTheme prop changes", () => {
     const onThemeChange = vi.fn();
     const { rerender } = render(
@@ -782,3 +1161,4 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(onThemeChange).toHaveBeenLastCalledWith("dark");
   });
 });
+

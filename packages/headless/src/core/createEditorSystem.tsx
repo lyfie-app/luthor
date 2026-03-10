@@ -319,6 +319,14 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
                 json as string | SerializedEditorState<SerializedLexicalNode>,
               ),
             );
+            const maybeListCommands = commands as {
+              rehydrateListStyles?: () => void;
+            };
+            if (typeof maybeListCommands.rehydrateListStyles === "function") {
+              queueMicrotask(() => {
+                maybeListCommands.rehydrateListStyles?.();
+              });
+            }
           }
         },
       },

@@ -27,7 +27,7 @@ const FALLBACK_THEME_VARS: Record<string, string> = {
   "--luthor-toolbar-button-active-shadow": "0 2px 8px rgba(0, 0, 0, 0.2)",
   "--luthor-toolbar-button-overlay": "linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
   "--luthor-toolbar-button-active-overlay": "linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%)",
-  "--luthor-toolbar-color-indicator-border": "#e2e8f0",
+  "--luthor-toolbar-color-indicator-border": "#000000",
   "--luthor-toolbar-highlight-bg": "#f8fafc",
   "--luthor-quote-bg": "#f8fafc",
   "--luthor-quote-fg": "#0f172a",
