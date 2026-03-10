@@ -688,9 +688,8 @@ a {
   height: auto;
 }
 
-.demo-showcase-editor-pane {
-  display: block;
-  overflow: visible;
+.demo-showcase-frame::before {
+  display: none;
 }
 
 .demo-preset-writeup {
@@ -755,9 +754,18 @@ a {
   background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
-.demo-showcase-editor-pane > * {
+.demo-showcase-frame > :not(.browser-frame-header) {
   width: min(100%, 1080px);
   min-height: clamp(320px, 42vh, 540px);
+}
+
+.demo-preset-surface-body {
+  padding: 0.55rem;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+  box-shadow: none;
 }
 
 .demo-chat-shell {
@@ -908,25 +916,25 @@ a {
   animation-delay: 0.28s;
 }
 
-.demo-chat-composer .luthor-preset-composer {
+.demo-chat-composer .luthor-preset-simple-editor {
   width: 100%;
   max-width: 100%;
 }
 
-.demo-chat-composer .luthor-composer-row {
+.demo-chat-composer .luthor-simple-editor-row {
   align-items: flex-end;
   gap: 0.55rem;
   width: 100%;
 }
 
-.demo-chat-composer .luthor-composer-shell {
+.demo-chat-composer .luthor-simple-editor-shell {
   flex: 1;
   width: auto;
   min-width: 0;
   max-width: none;
 }
 
-.demo-chat-composer .luthor-composer-action-send--right {
+.demo-chat-composer .luthor-simple-editor-action-send--right {
   width: 46px;
   height: 46px;
   min-width: 46px;
@@ -945,7 +953,7 @@ a {
   flex-shrink: 0;
 }
 
-.demo-chat-composer .luthor-composer-action-send--right:hover {
+.demo-chat-composer .luthor-simple-editor-action-send--right:hover {
   transform: translateY(-1px);
   filter: saturate(1.12);
   border-color: color-mix(in srgb, var(--accent) 62%, #fff 38%);
@@ -980,6 +988,11 @@ a {
 [data-theme='dark'] .demo-showcase-main {
   border-color: color-mix(in srgb, var(--line) 62%, var(--accent) 38%);
   background: color-mix(in srgb, var(--bg-elevated) 84%, #17273b 16%);
+}
+
+[data-theme='dark'] .demo-preset-surface-body {
+  border-color: transparent;
+  background: transparent;
 }
 
 [data-theme='dark'] .demo-preset-inline-code {
@@ -2517,10 +2530,6 @@ a {
     margin-bottom: 1rem;
   }
 
-  .demo-showcase-editor-pane {
-    padding: 0;
-  }
-
   .browser-frame,
   .demo-showcase-frame {
     max-height: none;
@@ -2559,12 +2568,12 @@ a {
     font-size: 0.7rem;
   }
 
-  .demo-chat-composer .luthor-composer-row {
+  .demo-chat-composer .luthor-simple-editor-row {
     flex-wrap: wrap;
     gap: 0.55rem;
   }
 
-  .demo-chat-composer .luthor-composer-action-send--right {
+  .demo-chat-composer .luthor-simple-editor-action-send--right {
     width: 46px;
     min-width: 46px;
     min-height: 42px;

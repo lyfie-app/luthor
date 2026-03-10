@@ -1,10 +1,12 @@
 import {
   ComposeEditor,
-  ComposerEditor,
   ExtensiveEditor,
   HeadlessEditorPreset,
-  MDFriendlyEditor,
-  NotionLikeEditor,
+  HTMLEditor,
+  LegacyRichEditor,
+  MDEditor,
+  SimpleEditor,
+  SlashEditor,
 } from "@lyfie/luthor";
 import "@lyfie/luthor/styles.css";
 import { useMemo, useState } from "react";
@@ -14,18 +16,22 @@ import "highlight.js/styles/github.css";
 type PresetId =
   | "extensive"
   | "compose"
-  | "composer"
-  | "md-friendly"
-  | "notion-like"
+  | "simple-editor"
+  | "legacy-rich"
+  | "md-editor"
+  | "html-editor"
+  | "slash-editor"
   | "headless-editor";
 
 const PRESET_OPTIONS: Array<{ value: PresetId; label: string }> = [
   { value: "extensive", label: "Extensive Editor" },
-  { value: "compose", label: "Rich Text Input" },
-  { value: "composer", label: "Simple Text Input" },
-  { value: "md-friendly", label: "MD Editor" },
-  { value: "notion-like", label: "Slash Editor" },
-  { value: "headless-editor", label: "Headless Text Input" },
+  { value: "compose", label: "Compose Editor" },
+  { value: "simple-editor", label: "Simple Editor" },
+  { value: "legacy-rich", label: "Legacy Rich Editor" },
+  { value: "md-editor", label: "MD Editor" },
+  { value: "html-editor", label: "HTML Editor" },
+  { value: "slash-editor", label: "Slash Editor" },
+  { value: "headless-editor", label: "Headless Editor" },
 ];
 
 function App() {
@@ -39,33 +45,38 @@ function App() {
           <ComposeEditor
             showDefaultContent={false}
             compactToolbar
-            showTo
-            showSubject
             placeholder="Write a draft..."
           />
         );
-      case "composer":
-        return <ComposerEditor
-          placeholder="Type a message"
-          maxHeight={250}
-          minHeight={150}
-          submitOnEnter={false}
-          showBottomToolbar
-          toolbarButtons={[
-            { id: 'attachment', content: 'Attach', ariaLabel: 'Attach file', onClick: () => {} },
-            { id: 'image', content: 'Image', ariaLabel: 'Add image', onClick: () => {} },
-          ]}
-          sendButtonPlacement="inside"
-          outputFormat="md"
-          formattingOptions={{ bold: true, italic: true, strikethrough: true }}
-          onSend={({ format, text }) => {
-            console.log("composer-send", { format, text });
-          }}
-        />
-      case "md-friendly":
-        return <MDFriendlyEditor showDefaultContent={false} />;
-      case "notion-like":
-        return <NotionLikeEditor showDefaultContent={false} />;
+      case "simple-editor":
+        return (
+          <SimpleEditor
+            placeholder="Type a message"
+            maxHeight={220}
+            minHeight={140}
+            submitOnEnter={false}
+            showBottomToolbar={false}
+            sendButtonPlacement="inside"
+            outputFormat="md"
+            formattingOptions={{ bold: true, italic: true, strikethrough: true }}
+            onSend={({ format, text }) => {
+              console.log("simple-editor-send", { format, text });
+            }}
+          />
+        );
+      case "legacy-rich":
+        return (
+          <LegacyRichEditor
+            showDefaultContent={false}
+            defaultEditorView="markdown"
+          />
+        );
+      case "md-editor":
+        return <MDEditor showDefaultContent={false} />;
+      case "html-editor":
+        return <HTMLEditor showDefaultContent={false} />;
+      case "slash-editor":
+        return <SlashEditor showDefaultContent={false} />;
       case "headless-editor":
         return <HeadlessEditorPreset />;
       default:
@@ -110,7 +121,9 @@ function App() {
         </header>
 
         <main className="editor-stage">
-          <div className="editor-frame">{presetNode}</div>
+          <div className="editor-frame">
+            <div className="demo-editor-host">{presetNode}</div>
+          </div>
         </main>
       </div>
     </div>

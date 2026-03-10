@@ -10,17 +10,17 @@ Slash-first preset with draggable-focused defaults.
 ## Usage
 
 ```tsx
-import { NotionLikeEditor } from '@lyfie/luthor';
+import { SlashEditor } from '@lyfie/luthor';
 import '@lyfie/luthor/styles.css';
 
 export function App() {
-  return <NotionLikeEditor isDraggableEnabled slashVisibility={{ allowlist: ['block.paragraph'] }} />;
+  return <SlashEditor showDefaultContent={false} />;
 }
 ```
 
 ## Props
 
-`NotionLikeEditorProps` inherits `ExtensiveEditorProps` except `featureFlags` and `isToolbarEnabled`, then re-adds both.
+`SlashEditorProps` inherits `ExtensiveEditorProps` except `featureFlags` and `isToolbarEnabled`, then re-adds both.
 
 - `slashVisibility`: `undefined (default) | SlashCommandVisibility`
 - `isDraggableEnabled`: `true (default) | false`
@@ -29,5 +29,5 @@ export function App() {
 
 ## Behavior
 
-Defaults enable slash commands, draggable blocks, and command palette while keeping toolbar hidden.
+Defaults keep toolbar hidden, enable draggable blocks, and provide a curated slash-command list for basic editing actions (headings, lists, quote, code block, inline code, bold/italic, links, horizontal rule, table) across Visual/JSON/Markdown/HTML views.
 

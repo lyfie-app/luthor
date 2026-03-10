@@ -7,9 +7,11 @@ import {
   createExtensiveExtensions,
 } from "./extensive";
 import { composePreset, ComposeEditor } from "./compose";
-import { composerPreset, ComposerEditor } from "./composer";
-import { mdFriendlyPreset, MDFriendlyEditor } from "./md-friendly";
-import { notionLikePreset, NotionLikeEditor } from "./notion-like";
+import { simpleEditorPreset, SimpleEditor } from "./simple-editor";
+import { mdEditorPreset, MDEditor } from "./md-editor";
+import { htmlEditorPreset, HTMLEditor } from "./html-editor";
+import { legacyRichPreset, LegacyRichEditor } from "./legacy-rich";
+import { slashEditorPreset, SlashEditor } from "./slash-editor";
 import { headlessEditorPreset, HeadlessEditorPreset } from "./headless-editor";
 import type {
   ExtensiveEditorMode,
@@ -23,14 +25,20 @@ import type {
 } from "./extensive";
 import type { ComposeEditorProps } from "./compose";
 import type {
-  ComposerFormattingOptions,
-  ComposerEditorProps,
-  ComposerEditorSendPayload,
-  ComposerOutputFormat,
-  ComposerToolbarButton,
-} from "./composer";
-import type { MDFriendlyEditorProps, MDFriendlyEditorMode } from "./md-friendly";
-import type { NotionLikeEditorProps } from "./notion-like";
+  SimpleFormattingOptions,
+  SimpleEditorProps,
+  SimpleEditorSendPayload,
+  SimpleEditorOutputFormat,
+  SimpleToolbarButton,
+} from "./simple-editor";
+import type { MDEditorProps, MDEditorMode } from "./md-editor";
+import type { HTMLEditorProps, HTMLEditorMode } from "./html-editor";
+import type {
+  LegacyRichEditorProps,
+  LegacyRichEditorMode,
+  LegacyRichSourceFormat,
+} from "./legacy-rich";
+import type { SlashEditorProps } from "./slash-editor";
 import type { HeadlessEditorPresetProps } from "./headless-editor";
 
 export { createPresetEditorConfig } from "../core/preset-config";
@@ -56,12 +64,16 @@ export {
   createExtensiveExtensions,
   composePreset,
   ComposeEditor,
-  composerPreset,
-  ComposerEditor,
-  mdFriendlyPreset,
-  MDFriendlyEditor,
-  notionLikePreset,
-  NotionLikeEditor,
+  simpleEditorPreset,
+  SimpleEditor,
+  mdEditorPreset,
+  MDEditor,
+  htmlEditorPreset,
+  HTMLEditor,
+  legacyRichPreset,
+  LegacyRichEditor,
+  slashEditorPreset,
+  SlashEditor,
   headlessEditorPreset,
   HeadlessEditorPreset,
 };
@@ -76,22 +88,29 @@ export type {
   FeatureFlagOverrides,
   ExtensivePresetConfig,
   ComposeEditorProps,
-  ComposerEditorProps,
-  ComposerEditorSendPayload,
-  ComposerOutputFormat,
-  ComposerFormattingOptions,
-  ComposerToolbarButton,
-  MDFriendlyEditorProps,
-  MDFriendlyEditorMode,
-  NotionLikeEditorProps,
+  SimpleEditorProps,
+  SimpleEditorSendPayload,
+  SimpleEditorOutputFormat,
+  SimpleFormattingOptions,
+  SimpleToolbarButton,
+  MDEditorProps,
+  MDEditorMode,
+  HTMLEditorProps,
+  HTMLEditorMode,
+  LegacyRichEditorProps,
+  LegacyRichEditorMode,
+  LegacyRichSourceFormat,
+  SlashEditorProps,
   HeadlessEditorPresetProps,
 };
 
 export const presetRegistry: Record<string, EditorPreset> = {
   extensive: extensivePreset,
   compose: composePreset,
-  composer: composerPreset,
-  "md-friendly": mdFriendlyPreset,
-  "notion-like": notionLikePreset,
+  "simple-editor": simpleEditorPreset,
+  "legacy-rich": legacyRichPreset,
+  "md-editor": mdEditorPreset,
+  "html-editor": htmlEditorPreset,
+  "slash-editor": slashEditorPreset,
   "headless-editor": headlessEditorPreset,
 };
