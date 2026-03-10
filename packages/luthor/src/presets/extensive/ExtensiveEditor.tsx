@@ -96,6 +96,7 @@ const DEFAULT_VISUAL_PLACEHOLDER = "Write anything...";
 const DEFAULT_JSON_PLACEHOLDER = "Enter JSON document content...";
 const DEFAULT_MARKDOWN_PLACEHOLDER = "Enter Markdown content...";
 const DEFAULT_HTML_PLACEHOLDER = "Enter HTML content...";
+const NON_VISIBLE_OVERFLOW_VALUES = new Set(["auto", "scroll", "overlay"]);
 
 type ExtensiveEditorSourceMode = Exclude<ExtensiveEditorMode, "visual">;
 
@@ -104,6 +105,80 @@ const SOURCE_MODE_ERROR_TITLE: Record<ExtensiveEditorSourceMode, string> = {
   markdown: "Invalid Markdown",
   html: "Invalid HTML",
 };
+
+function resolveOverflowY(style: CSSStyleDeclaration): string {
+  const overflowY = style.overflowY;
+  if (overflowY && overflowY !== "visible") {
+    return overflowY;
+  }
+  return style.overflow || overflowY || "visible";
+}
+
+function patchNonScrollingOverflowAncestors(wrapper: HTMLElement): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  const patched: Array<{ element: HTMLElement; overflowY: string }> = [];
+  let ancestor = wrapper.parentElement;
+
+  while (ancestor && ancestor !== document.body && ancestor !== document.documentElement) {
+    const computedStyle = window.getComputedStyle(ancestor);
+    const overflowY = resolveOverflowY(computedStyle);
+
+    if (!NON_VISIBLE_OVERFLOW_VALUES.has(overflowY)) {
+      ancestor = ancestor.parentElement;
+      continue;
+    }
+
+    const isScrollableInY = ancestor.scrollHeight > ancestor.clientHeight + 1;
+
+    if (isScrollableInY) {
+      // This is an active scroll host (e.g. fixed-height editor pane); keep native sticky behavior.
+      break;
+    }
+
+    if (overflowY === "auto" || overflowY === "overlay") {
+      patched.push({ element: ancestor, overflowY: ancestor.style.overflowY });
+      ancestor.style.overflowY = "visible";
+      ancestor = ancestor.parentElement;
+      continue;
+    }
+
+    // Explicit overflow: scroll/hidden/clip likely indicates intentional clipping; avoid overriding.
+    break;
+  }
+
+  return () => {
+    for (let index = patched.length - 1; index >= 0; index -= 1) {
+      const patch = patched[index];
+      if (!patch) {
+        continue;
+      }
+      patch.element.style.overflowY = patch.overflowY;
+    }
+  };
+}
+
+function setupToolbarPinOverflowFallback(wrapper: HTMLElement): () => void {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  let cleanupPatch = patchNonScrollingOverflowAncestors(wrapper);
+
+  const reapply = () => {
+    cleanupPatch();
+    cleanupPatch = patchNonScrollingOverflowAncestors(wrapper);
+  };
+
+  window.addEventListener("resize", reapply);
+
+  return () => {
+    window.removeEventListener("resize", reapply);
+    cleanupPatch();
+  };
+}
 
 export interface ExtensiveEditorRef {
   injectJSON: (content: string) => void;
@@ -569,6 +644,7 @@ function ExtensiveEditorContent({
   toolbarStyleVars,
   isToolbarEnabled,
   isToolbarPinned,
+  isEditorViewTabsVisible,
   headingOptions,
   paragraphLabel,
   syncHeadingOptionsWithCommands,
@@ -594,6 +670,7 @@ function ExtensiveEditorContent({
   toolbarStyleVars?: ToolbarStyleVars;
   isToolbarEnabled: boolean;
   isToolbarPinned: boolean;
+  isEditorViewTabsVisible: boolean;
   headingOptions?: readonly BlockHeadingLevel[];
   paragraphLabel?: string;
   syncHeadingOptionsWithCommands: boolean;
@@ -1088,8 +1165,14 @@ function ExtensiveEditorContent({
       }}
     />
   ) : null;
+  const shouldRenderModeTabs = isEditorViewTabsVisible;
   const shouldRenderTopToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "top";
-  const topToolbarSlotClassName = ["luthor-editor-toolbar-slot", "luthor-editor-toolbar-slot--top", shouldRenderTopToolbar && isToolbarPinned ? "luthor-editor-toolbar-slot--pinned" : ""]
+  const shouldPinTopRegion = isToolbarPinned && toolbarPosition === "top" && shouldRenderModeTabs;
+  const topRegionClassName = ["luthor-editor-top-region", shouldPinTopRegion ? "luthor-editor-top-region--pinned" : ""]
+    .filter(Boolean)
+    .join(" ");
+  const shouldPinTopToolbarSlot = isToolbarPinned && toolbarPosition === "top" && !shouldRenderModeTabs;
+  const topToolbarSlotClassName = ["luthor-editor-toolbar-slot", "luthor-editor-toolbar-slot--top", shouldRenderTopToolbar && shouldPinTopToolbarSlot ? "luthor-editor-toolbar-slot--pinned" : ""]
     .filter(Boolean)
     .join(" ");
   const shouldRenderBottomToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "bottom";
@@ -1099,21 +1182,27 @@ function ExtensiveEditorContent({
 
   return (
     <>
-      <div className="luthor-editor-header">
-        <ModeTabs 
-          mode={mode} 
-          onModeChange={handleModeChange} 
-          availableModes={availableModes}
-          isConverting={convertingMode}
-        />
-      </div>
-      {shouldRenderTopToolbar && (
-        <div className={topToolbarSlotClassName}>{toolbarNode}</div>
-      )}
       <div
         className={`luthor-editor${isDraggableBoxEnabled ? "" : " luthor-editor--draggable-disabled"}`}
         data-mode={mode}
       >
+        {(shouldRenderModeTabs || shouldRenderTopToolbar) && (
+          <div className={topRegionClassName}>
+            {shouldRenderModeTabs && (
+              <div className="luthor-editor-header">
+                <ModeTabs 
+                  mode={mode} 
+                  onModeChange={handleModeChange} 
+                  availableModes={availableModes}
+                  isConverting={convertingMode}
+                />
+              </div>
+            )}
+            {shouldRenderTopToolbar && (
+              <div className={topToolbarSlotClassName}>{toolbarNode}</div>
+            )}
+          </div>
+        )}
         <div
           className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}${isDraggableBoxEnabled ? "" : " luthor-editor-visual-shell--no-gutter"}`}
           aria-hidden={mode !== "visual"}
@@ -1219,7 +1308,12 @@ export interface ExtensiveEditorProps {
   defaultContent?: string;
   showDefaultContent?: boolean;
   placeholder?: ExtensiveEditorPlaceholder;
+  defaultEditorView?: ExtensiveEditorMode;
   initialMode?: ExtensiveEditorMode;
+  /** Preferred prop name for toggling editor view tabs visibility */
+  isEditorViewTabsVisible?: boolean;
+  /** Backward-compatible alias for toggling editor view tabs visibility */
+  isEditorViewsTabVisible?: boolean;
   availableModes?: readonly ExtensiveEditorMode[];
   variantClassName?: string;
   toolbarLayout?: ToolbarLayout;
@@ -1267,7 +1361,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     defaultContent,
     showDefaultContent = true,
     placeholder = DEFAULT_VISUAL_PLACEHOLDER,
+    defaultEditorView,
     initialMode = "visual",
+    isEditorViewTabsVisible,
+    isEditorViewsTabVisible,
     availableModes = ["visual", "json", "markdown", "html"],
     variantClassName,
     toolbarLayout,
@@ -1304,10 +1401,13 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     maxListIndentation = 8,
   }, ref) => {
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
     const isDark = editorTheme === "dark";
-    const resolvedInitialMode = availableModes.includes(initialMode)
-      ? initialMode
+    const requestedInitialMode = defaultEditorView ?? initialMode;
+    const resolvedInitialMode = availableModes.includes(requestedInitialMode)
+      ? requestedInitialMode
       : (availableModes[0] ?? "visual");
+    const resolvedIsEditorViewTabsVisible = isEditorViewTabsVisible ?? isEditorViewsTabVisible ?? true;
 
     const toggleTheme = () => setEditorTheme(isDark ? "light" : "dark");
     const resolvedPlaceholders = useMemo(() => {
@@ -1335,6 +1435,19 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     useEffect(() => {
       onThemeChange?.(editorTheme);
     }, [editorTheme, onThemeChange]);
+
+    useEffect(() => {
+      if (!isToolbarPinned || toolbarPosition !== "top") {
+        return;
+      }
+
+      const wrapper = wrapperRef.current;
+      if (!wrapper) {
+        return;
+      }
+
+      return setupToolbarPinOverflowFallback(wrapper);
+    }, [isToolbarPinned, toolbarPosition]);
 
     const fontFamilyOptionsKey = useMemo(
       () => normalizeFontFamilyOptionsKey(fontFamilyOptions),
@@ -1530,6 +1643,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
 
     return (
       <div
+        ref={wrapperRef}
         className={`luthor-preset luthor-preset-extensive luthor-editor-wrapper${isToolbarPinned ? " luthor-editor-wrapper--toolbar-pinned" : ""} ${variantClassName || ""} ${className || ""}`.trim()}
         data-editor-theme={editorTheme}
         style={wrapperStyleVars}
@@ -1553,6 +1667,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             toolbarStyleVars={toolbarStyleVars}
             isToolbarEnabled={isToolbarEnabled}
             isToolbarPinned={isToolbarPinned}
+            isEditorViewTabsVisible={resolvedIsEditorViewTabsVisible}
             headingOptions={headingOptions}
             paragraphLabel={paragraphLabel}
             syncHeadingOptionsWithCommands={syncHeadingOptionsWithCommands}

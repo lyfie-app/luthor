@@ -152,6 +152,12 @@
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
 }
 
+.luthor-editor-top-region--pinned {
+	position: sticky;
+	top: 0;
+	z-index: 40;
+}
+
 .luthor-editor-toolbar-slot {
 	background-color: var(--luthor-toolbar-bg, var(--luthor-muted));
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);

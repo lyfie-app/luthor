@@ -5,17 +5,32 @@ import { ExtensiveEditor, type ExtensiveEditorProps, type ExtensiveEditorRef } f
 import { createModeCache, invalidateModeCache, isModeCached, markModeCached } from "../_shared";
 
 export type MDFriendlyEditorMode = "visual" | "markdown";
+export type MDFriendlyEditorView = "visual" | "json" | "markdown" | "html";
 
 export type MDFriendlyEditorProps = Omit<ExtensiveEditorProps, "availableModes" | "initialMode"> & {
   initialMode?: MDFriendlyEditorMode;
+  defaultEditorView?: MDFriendlyEditorView;
+  isEditorViewTabsVisible?: boolean;
+  isEditorViewsTabVisible?: boolean;
 };
 
-export function MDFriendlyEditor({ className, variantClassName, initialMode = "visual", ...props }: MDFriendlyEditorProps) {
+export function MDFriendlyEditor({
+  className,
+  variantClassName,
+  initialMode = "visual",
+  defaultEditorView,
+  isEditorViewTabsVisible,
+  isEditorViewsTabVisible,
+  ...props
+}: MDFriendlyEditorProps) {
   const editorRef = useRef<ExtensiveEditorRef | null>(null);
   const modeCacheRef = useRef(createModeCache<MDFriendlyEditorMode>(["visual"]));
   const markdownCacheRef = useRef("");
   const pendingVisualJSONRef = useRef<string | null>(null);
-  const [mode, setMode] = useState<MDFriendlyEditorMode>(initialMode);
+  const requestedInitialMode = defaultEditorView ?? initialMode;
+  const resolvedInitialMode: MDFriendlyEditorMode = requestedInitialMode === "markdown" ? "markdown" : "visual";
+  const shouldShowViewTabs = isEditorViewTabsVisible ?? isEditorViewsTabVisible ?? true;
+  const [mode, setMode] = useState<MDFriendlyEditorMode>(resolvedInitialMode);
   const [markdown, setMarkdown] = useState("");
   const [sourceError, setSourceError] = useState<string | null>(null);
 
@@ -72,14 +87,16 @@ export function MDFriendlyEditor({ className, variantClassName, initialMode = "v
         }
       }}
     >
-      <div className="luthor-md-friendly-tabs">
-        <button type="button" className={mode === "visual" ? "active" : ""} onClick={() => handleModeChange("visual")}>
-          Visual
-        </button>
-        <button type="button" className={mode === "markdown" ? "active" : ""} onClick={() => handleModeChange("markdown")}>
-          Markdown
-        </button>
-      </div>
+      {shouldShowViewTabs && (
+        <div className="luthor-md-friendly-tabs">
+          <button type="button" className={mode === "visual" ? "active" : ""} onClick={() => handleModeChange("visual")}>
+            Visual
+          </button>
+          <button type="button" className={mode === "markdown" ? "active" : ""} onClick={() => handleModeChange("markdown")}>
+            Markdown
+          </button>
+        </div>
+      )}
       {mode === "visual" && (
         <ExtensiveEditor
           ref={editorRef}

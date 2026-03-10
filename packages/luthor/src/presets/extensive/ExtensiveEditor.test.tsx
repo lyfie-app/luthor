@@ -269,13 +269,15 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(bottomSlot).toContainElement(toolbar);
   });
 
-  it("applies pinned toolbar slot class when isToolbarPinned is true", () => {
+  it("pins tabs + toolbar together when tabs are visible and isToolbarPinned is true", () => {
     const { container } = render(<ExtensiveEditor showDefaultContent={false} isToolbarPinned />);
 
+    const topRegion = container.querySelector(".luthor-editor-top-region");
     const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
     const wrapper = container.querySelector(".luthor-editor-wrapper");
 
-    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
     expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
   });
 
@@ -288,10 +290,12 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       </div>,
     );
 
+    const topRegion = container.querySelector(".luthor-editor-top-region");
     const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
     const wrapper = container.querySelector(".luthor-editor-wrapper");
 
-    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
     expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
   });
 
@@ -304,11 +308,137 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       </div>,
     );
 
+    const topRegion = container.querySelector(".luthor-editor-top-region");
     const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
     const wrapper = container.querySelector(".luthor-editor-wrapper");
 
-    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+    expect(topRegion).toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).not.toHaveClass("luthor-editor-toolbar-slot--pinned");
     expect(wrapper).toHaveClass("luthor-editor-wrapper--toolbar-pinned");
+  });
+
+  it("pins toolbar directly at the top when editor view tabs are hidden", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isToolbarPinned
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
+    expect(topRegion).not.toHaveClass("luthor-editor-top-region--pinned");
+    expect(topSlot).toHaveClass("luthor-editor-toolbar-slot--pinned");
+  });
+
+  it("renders pinned top region inside .luthor-editor so nested scroll containers can stick correctly", () => {
+    const { container } = render(<ExtensiveEditor showDefaultContent={false} isToolbarPinned />);
+
+    const editor = container.querySelector(".luthor-editor");
+    const topRegion = container.querySelector(".luthor-editor-top-region");
+
+    expect(editor).toContainElement(topRegion);
+    expect(editor?.firstElementChild).toBe(topRegion);
+  });
+
+  it("keeps top toolbar slot inside .luthor-editor when tabs are hidden", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isToolbarPinned
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    const editor = container.querySelector(".luthor-editor");
+    const topSlot = container.querySelector(".luthor-editor-toolbar-slot--top");
+
+    expect(editor).toContainElement(topSlot);
+  });
+
+  it("patches non-scrolling overflow:auto ancestors for demo-like page-scroll usage", async () => {
+    const { getByTestId } = render(
+      <div data-testid="demo-stage" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const stage = getByTestId("demo-stage") as HTMLDivElement;
+    Object.defineProperty(stage, "clientHeight", { configurable: true, value: 600 });
+    Object.defineProperty(stage, "scrollHeight", { configurable: true, value: 600 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(stage.style.overflowY).toBe("visible");
+    });
+  });
+
+  it("keeps active overflow:auto scroll ancestors unchanged for web-homepage nested scroll usage", async () => {
+    const { getByTestId } = render(
+      <div data-testid="web-editor-pane" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const pane = getByTestId("web-editor-pane") as HTMLDivElement;
+    Object.defineProperty(pane, "clientHeight", { configurable: true, value: 320 });
+    Object.defineProperty(pane, "scrollHeight", { configurable: true, value: 920 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(pane.style.overflowY).toBe("auto");
+    });
+  });
+
+  it("restores patched overflow:auto ancestors on unmount", async () => {
+    const { getByTestId, unmount } = render(
+      <div data-testid="demo-stage" style={{ overflowY: "auto" }}>
+        <ExtensiveEditor showDefaultContent={false} isToolbarPinned />
+      </div>,
+    );
+
+    const stage = getByTestId("demo-stage") as HTMLDivElement;
+    Object.defineProperty(stage, "clientHeight", { configurable: true, value: 600 });
+    Object.defineProperty(stage, "scrollHeight", { configurable: true, value: 600 });
+
+    fireEvent(window, new Event("resize"));
+
+    await waitFor(() => {
+      expect(stage.style.overflowY).toBe("visible");
+    });
+
+    unmount();
+    expect(stage.style.overflowY).toBe("auto");
+  });
+
+  it("supports defaultEditorView and starts in json mode when requested", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        defaultEditorView="json"
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
+    expect(screen.getByTestId("source-view")).toBeInTheDocument();
+    expect(screen.queryByTestId("toolbar")).toBeNull();
+  });
+
+  it("hides editor view tabs with the alias prop isEditorViewsTabVisible", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        isEditorViewsTabVisible={false}
+      />,
+    );
+
+    expect(screen.queryByTestId("mode-tabs")).toBeNull();
   });
 
   it("applies center and right alignment classes", () => {

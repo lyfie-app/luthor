@@ -69,5 +69,26 @@ describe("MDFriendlyEditor", () => {
       expect(injectJSONMock).toHaveBeenCalledWith(JSON.stringify({ root: { children: [] } }));
     });
   });
+
+  it("hides view tabs when isEditorViewTabsVisible is false", () => {
+    render(<MDFriendlyEditor showDefaultContent={false} isEditorViewTabsVisible={false} />);
+
+    expect(screen.queryByRole("button", { name: "Visual" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Markdown" })).toBeNull();
+    expect(screen.getByTestId("md-extensive-editor")).toBeInTheDocument();
+  });
+
+  it("respects defaultEditorView='markdown' and can hide tabs", () => {
+    render(
+      <MDFriendlyEditor
+        showDefaultContent={false}
+        defaultEditorView="markdown"
+        isEditorViewTabsVisible={false}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Visual" })).toBeNull();
+    expect(screen.getByRole("textbox")).toBeInTheDocument();
+  });
 });
 
