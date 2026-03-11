@@ -2,8 +2,10 @@ import type { SlashCommandVisibility } from "../../core";
 import {
   ExtensiveEditor,
   type ExtensiveEditorProps,
+  type FeatureFlag,
   type FeatureFlagOverrides,
 } from "../extensive";
+import { PresetFeaturePolicy, joinClassNames } from "../_shared";
 
 export const SLASH_EDITOR_DEFAULT_MODES = ["visual", "json", "markdown", "html"] as const;
 
@@ -42,6 +44,16 @@ const SLASH_EDITOR_DEFAULT_FLAGS: FeatureFlagOverrides = {
   customNode: false,
   themeToggle: false,
 };
+
+const SLASH_EDITOR_ENFORCED_FEATURE_FLAGS: FeatureFlagOverrides = {
+  slashCommand: true,
+  commandPalette: false,
+};
+
+const SLASH_EDITOR_FEATURE_POLICY = new PresetFeaturePolicy<FeatureFlag>(
+  SLASH_EDITOR_DEFAULT_FLAGS,
+  SLASH_EDITOR_ENFORCED_FEATURE_FLAGS,
+);
 
 export const SLASH_EDITOR_COMMAND_ALLOWLIST = [
   "format.bold",
@@ -89,23 +101,23 @@ export function SlashEditor({
   isToolbarEnabled = false,
   ...props
 }: SlashEditorProps) {
+  const resolvedFeatureFlags = {
+    ...SLASH_EDITOR_FEATURE_POLICY.resolve(featureFlags),
+    draggableBlock: isDraggableEnabled,
+  };
+
   return (
     <ExtensiveEditor
       {...props}
-      className={["luthor-preset-slash-editor", className].filter(Boolean).join(" ")}
-      variantClassName={["luthor-preset-slash-editor__variant", variantClassName]
-        .filter(Boolean)
-        .join(" ")}
+      className={joinClassNames("luthor-preset-slash-editor", className)}
+      variantClassName={joinClassNames(
+        "luthor-preset-slash-editor__variant",
+        variantClassName,
+      )}
       availableModes={SLASH_EDITOR_DEFAULT_MODES}
       isToolbarEnabled={isToolbarEnabled}
       slashCommandVisibility={slashVisibility ?? SLASH_EDITOR_DEFAULT_VISIBILITY}
-      featureFlags={{
-        ...SLASH_EDITOR_DEFAULT_FLAGS,
-        ...(featureFlags ?? {}),
-        draggableBlock: isDraggableEnabled,
-        slashCommand: true,
-        commandPalette: false,
-      }}
+      featureFlags={resolvedFeatureFlags}
     />
   );
 }

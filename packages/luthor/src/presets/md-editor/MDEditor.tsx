@@ -6,6 +6,7 @@ import {
   LEGACY_RICH_TOOLBAR_LAYOUT,
 } from "../legacy-rich";
 import type { ExtensiveEditorRef } from "../extensive";
+import { joinClassNames } from "../_shared";
 
 export const MD_EDITOR_DEFAULT_MODES = ["visual", "json", "markdown"] as const;
 export const MD_EDITOR_DEFAULT_FEATURE_FLAGS = LEGACY_RICH_DEFAULT_FEATURE_FLAGS;
@@ -39,13 +40,15 @@ export const MDEditor = forwardRef<ExtensiveEditorRef, MDEditorProps>(
       <LegacyRichEditor
         ref={ref}
         {...props}
-        className={["luthor-preset-md-editor", className].filter(Boolean).join(" ")}
-        variantClassName={["luthor-preset-md-editor__variant", variantClassName]
-          .filter(Boolean)
-          .join(" ")}
-        toolbarClassName={["luthor-preset-md-editor__toolbar", toolbarClassName]
-          .filter(Boolean)
-          .join(" ")}
+        className={joinClassNames("luthor-preset-md-editor", className)}
+        variantClassName={joinClassNames(
+          "luthor-preset-md-editor__variant",
+          variantClassName,
+        )}
+        toolbarClassName={joinClassNames(
+          "luthor-preset-md-editor__toolbar",
+          toolbarClassName,
+        )}
         sourceFormat="markdown"
         initialMode={initialMode}
         defaultEditorView={defaultEditorView}

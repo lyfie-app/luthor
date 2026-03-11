@@ -13,8 +13,10 @@ import {
   extensiveExtensions,
   type ExtensiveEditorProps,
   type ExtensiveEditorRef,
+  type FeatureFlag,
   type FeatureFlagOverrides,
 } from "../extensive";
+import { PresetFeaturePolicy, joinClassNames } from "../_shared";
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
@@ -119,6 +121,25 @@ export const HEADLESS_EDITOR_DEFAULT_FEATURE_FLAGS: FeatureFlagOverrides = {
   customNode: false,
   themeToggle: false,
 };
+
+const HEADLESS_EDITOR_ENFORCED_FEATURE_FLAGS: FeatureFlagOverrides = {
+  draggableBlock: false,
+  themeToggle: false,
+  table: false,
+  image: false,
+  iframeEmbed: false,
+  youTubeEmbed: false,
+  customNode: false,
+  slashCommand: false,
+  commandPalette: false,
+  contextMenu: false,
+  floatingToolbar: false,
+};
+
+const HEADLESS_EDITOR_FEATURE_POLICY = new PresetFeaturePolicy<FeatureFlag>(
+  HEADLESS_EDITOR_DEFAULT_FEATURE_FLAGS,
+  HEADLESS_EDITOR_ENFORCED_FEATURE_FLAGS,
+);
 
 type HeadlessActiveStates = {
   bold?: boolean;
@@ -675,21 +696,7 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
     const placeholders = useMemo(() => resolvePlaceholders(placeholder), [placeholder]);
 
     const resolvedFeatureFlags = useMemo<FeatureFlagOverrides>(
-      () => ({
-        ...HEADLESS_EDITOR_DEFAULT_FEATURE_FLAGS,
-        ...(featureFlags ?? {}),
-        draggableBlock: false,
-        themeToggle: false,
-        table: false,
-        image: false,
-        iframeEmbed: false,
-        youTubeEmbed: false,
-        customNode: false,
-        slashCommand: false,
-        commandPalette: false,
-        contextMenu: false,
-        floatingToolbar: false,
-      }),
+      () => HEADLESS_EDITOR_FEATURE_POLICY.resolve(featureFlags),
       [featureFlags],
     );
 
@@ -739,16 +746,14 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
 
     return (
       <div
-        className={[
+        className={joinClassNames(
           "luthor-preset",
           "luthor-preset-headless-editor",
           "luthor-editor-wrapper",
           "luthor-preset-headless-editor__variant",
           variantClassName,
           className,
-        ]
-          .filter(Boolean)
-          .join(" ")}
+        )}
       >
         <Provider extensions={presetExtensions}>
           <HeadlessEditorContent
