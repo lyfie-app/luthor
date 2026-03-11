@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import type { CoreEditorMode } from "./types";
 
+const SOURCE_VIEW_MIN_HEIGHT = 400;
+
 export function ModeTabs({
   mode,
   onModeChange,
@@ -14,11 +16,28 @@ export function ModeTabs({
   availableModes?: readonly CoreEditorMode[];
   isConverting?: CoreEditorMode | null;
 }) {
-  const orderedModes: CoreEditorMode[] = ["visual", "json", "markdown", "html"];
-  const modeSet = new Set(availableModes ?? ["visual", "json", "markdown", "html"]);
+  type CanonicalMode = Exclude<CoreEditorMode, "visual">;
+  const toCanonicalMode = (value: CoreEditorMode): CanonicalMode =>
+    value === "visual" ? "visual-editor" : value;
+  const preferredVisualMode: CoreEditorMode = (availableModes ?? []).includes("visual-editor")
+    ? "visual-editor"
+    : "visual";
+  const fromCanonicalMode = (value: CanonicalMode): CoreEditorMode => {
+    if (value === "visual-editor") {
+      return preferredVisualMode;
+    }
+    return value;
+  };
+
+  const orderedModes: CanonicalMode[] = ["visual-only", "visual-editor", "json", "markdown", "html"];
+  const sourceModes = availableModes ?? ["visual-only", "visual-editor", "json", "markdown", "html"];
+  const modeSet = new Set<CanonicalMode>(sourceModes.map(toCanonicalMode));
   const modes = orderedModes.filter((candidate) => modeSet.has(candidate));
-  const tabLabels: Record<CoreEditorMode, string> = {
-    visual: labels?.visual ?? "Visual",
+  const activeMode = toCanonicalMode(mode);
+  const convertingMode = isConverting ? toCanonicalMode(isConverting) : null;
+  const tabLabels: Record<CanonicalMode, string> = {
+    "visual-only": labels?.["visual-only"] ?? "Visual Only",
+    "visual-editor": labels?.["visual-editor"] ?? labels?.visual ?? "Visual Editor",
     json: labels?.json ?? "JSON",
     markdown: labels?.markdown ?? "Markdown",
     html: labels?.html ?? "HTML",
@@ -27,9 +46,13 @@ export function ModeTabs({
   return (
     <div className="luthor-mode-tabs">
       {modes.map((tabMode) => (
-        <button key={tabMode} className={`luthor-mode-tab ${mode === tabMode ? "active" : ""}`} onClick={() => onModeChange(tabMode)}>
+        <button
+          key={tabMode}
+          className={`luthor-mode-tab ${activeMode === tabMode ? "active" : ""}`}
+          onClick={() => onModeChange(fromCanonicalMode(tabMode))}
+        >
           {tabLabels[tabMode]}
-          {isConverting === tabMode && <span className="luthor-tab-converting-spinner" />}
+          {convertingMode === tabMode && <span className="luthor-tab-converting-spinner" />}
         </button>
       ))}
     </div>
@@ -58,7 +81,8 @@ export function SourceView({
     }
 
     textarea.style.height = "auto";
-    const nextHeight = Math.max(textarea.scrollHeight, 280);
+    const textareaChromeHeight = Math.max(0, textarea.offsetHeight - textarea.clientHeight);
+    const nextHeight = Math.max(textarea.scrollHeight + textareaChromeHeight + 1, SOURCE_VIEW_MIN_HEIGHT);
     textarea.style.height = `${nextHeight}px`;
   }, [value]);
 

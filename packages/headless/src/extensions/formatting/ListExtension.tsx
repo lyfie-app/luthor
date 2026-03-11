@@ -9,6 +9,7 @@ import {
   INDENT_CONTENT_COMMAND,
   KEY_SPACE_COMMAND,
   OUTDENT_CONTENT_COMMAND,
+  $getNearestNodeFromDOMNode,
   $isParagraphNode,
   $getRoot,
 } from "lexical";
@@ -647,6 +648,57 @@ function getSelectionListContext(selection: any): ListSelectionContext {
   return { listNode, listItemNode, topListNode };
 }
 
+function resolveReadOnlyChecklistToggleListItem(
+  event: MouseEvent | PointerEvent,
+): HTMLLIElement | null {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) {
+    return null;
+  }
+
+  const listItem = target.closest("li");
+  if (!(listItem instanceof HTMLLIElement)) {
+    return null;
+  }
+
+  const firstChild = listItem.firstElementChild;
+  if (
+    firstChild instanceof HTMLElement &&
+    (firstChild.tagName === "UL" || firstChild.tagName === "OL")
+  ) {
+    return null;
+  }
+
+  const parentList = listItem.parentElement as
+    | (HTMLElement & { __lexicalListType?: string })
+    | null;
+  if (!parentList || parentList.__lexicalListType !== "check") {
+    return null;
+  }
+
+  const rect = listItem.getBoundingClientRect();
+  const clientX = event.clientX;
+  const computedStyle = window.getComputedStyle
+    ? window.getComputedStyle(listItem, "::before")
+    : ({ width: "0px" } as CSSStyleDeclaration);
+  const checkboxWidth = Number.parseFloat(computedStyle.width);
+  if (!Number.isFinite(checkboxWidth) || checkboxWidth <= 0) {
+    return null;
+  }
+
+  const pointerType =
+    "pointerType" in event ? (event as PointerEvent).pointerType : "";
+  const extraPadding = pointerType === "touch" ? 32 : 0;
+  const isRtl = listItem.dir === "rtl";
+  const isCheckboxHit = isRtl
+    ? clientX < rect.right + extraPadding &&
+      clientX > rect.right - checkboxWidth - extraPadding
+    : clientX > rect.left - extraPadding &&
+      clientX < rect.left + checkboxWidth + extraPadding;
+
+  return isCheckboxHit ? listItem : null;
+}
+
 /**
  * Commands exposed by the list extension.
  */
@@ -799,12 +851,70 @@ export class ListExtension extends BaseExtension<
       },
       COMMAND_PRIORITY_EDITOR,
     );
+    const handleReadOnlyChecklistPointerDown = (event: PointerEvent) => {
+      if (editor.isEditable()) {
+        return;
+      }
+
+      if (!resolveReadOnlyChecklistToggleListItem(event)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const handleReadOnlyChecklistClick = (event: MouseEvent) => {
+      if (editor.isEditable()) {
+        return;
+      }
+
+      const listItemElement = resolveReadOnlyChecklistToggleListItem(event);
+      if (!listItemElement) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      editor.update(() => {
+        const node = $getNearestNodeFromDOMNode(listItemElement);
+        if (!$isListItemNode(node)) {
+          return;
+        }
+
+        const parent = node.getParent();
+        if (!$isListNode(parent) || parent.getListType() !== "check") {
+          return;
+        }
+
+        node.toggleChecked();
+      });
+    };
+    const unregisterReadOnlyChecklistInteraction = editor.registerRootListener(
+      (nextRoot, prevRoot) => {
+        if (prevRoot) {
+          prevRoot.removeEventListener(
+            "pointerdown",
+            handleReadOnlyChecklistPointerDown,
+          );
+          prevRoot.removeEventListener("click", handleReadOnlyChecklistClick);
+        }
+
+        if (nextRoot) {
+          nextRoot.addEventListener(
+            "pointerdown",
+            handleReadOnlyChecklistPointerDown,
+          );
+          nextRoot.addEventListener("click", handleReadOnlyChecklistClick);
+        }
+      },
+    );
 
     return () => {
       unregisterListStyleTransform();
       unregisterListItemStyleTransform();
       unregisterOrderedShortcut();
       unregisterListIndentLimit();
+      unregisterReadOnlyChecklistInteraction();
     };
   }
 
@@ -1538,6 +1648,7 @@ export const listExtension = new ListExtension();
 export const __TEST_ONLY_LIST_INTERNALS = {
   resolveUnorderedPatternToken,
   resolveUnorderedMarkerKind,
+  resolveReadOnlyChecklistToggleListItem,
   unorderedPatternKeys: Object.keys(UNORDERED_LIST_PATTERNS),
   checkListVariants: ["strikethrough", "plain"] as const,
 } as const;

@@ -154,6 +154,10 @@ export class DraggableBlockExtension extends BaseExtension<
         targetKey: string,
         insertAfter: boolean,
       ) => {
+        if (!editor.isEditable()) {
+          return;
+        }
+
         editor.update(() => {
           const sourceNode = $getNodeByKey(sourceKey);
           const targetNode = $getNodeByKey(targetKey);
@@ -168,6 +172,10 @@ export class DraggableBlockExtension extends BaseExtension<
         });
       },
       moveCurrentBlockUp: () => {
+        if (!editor.isEditable()) {
+          return;
+        }
+
         editor.update(() => {
           const selection = $getSelection();
           if ($isRangeSelection(selection)) {
@@ -186,6 +194,10 @@ export class DraggableBlockExtension extends BaseExtension<
         });
       },
       moveCurrentBlockDown: () => {
+        if (!editor.isEditable()) {
+          return;
+        }
+
         editor.update(() => {
           const selection = $getSelection();
           if ($isRangeSelection(selection)) {
@@ -256,6 +268,9 @@ function DraggableBlockPlugin({
   );
   const [hoveredBlock, setHoveredBlock] = useState<HTMLElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isEditorEditable, setIsEditorEditable] = useState(() =>
+    editor.isEditable(),
+  );
   const [dropIndicator, setDropIndicator] = useState<{
     top: number;
     left: number;
@@ -416,6 +431,27 @@ function DraggableBlockPlugin({
     [mergedThemeClasses, mergedStyles.blockDragging],
   );
 
+  useEffect(() => {
+    return editor.registerEditableListener((editable) => {
+      setIsEditorEditable(editable);
+
+      if (editable) {
+        return;
+      }
+
+      setIsDragging(false);
+      setDropIndicator(null);
+      setHoveredBlock(null);
+      setIsVisible(false);
+
+      if (draggedElementRef.current) {
+        cleanupDragClasses(draggedElementRef.current);
+      }
+      draggedElementRef.current = null;
+      draggedKeyRef.current = null;
+    });
+  }, [editor, cleanupDragClasses]);
+
   const focusEditorWithoutScroll = useCallback(() => {
     const editorElement = editor.getRootElement();
     if (!editorElement) return;
@@ -563,6 +599,11 @@ function DraggableBlockPlugin({
   // Mouse tracking for handle visibility with smooth positioning
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      if (!isEditorEditable) {
+        queueHoveredBlock(null);
+        return;
+      }
+
       if (isDragging) return;
 
       const editorElement = editor.getRootElement();
@@ -650,11 +691,16 @@ function DraggableBlockPlugin({
         pointerFrameRef.current = null;
       }
     };
-  }, [editor, isDragging, queueHoveredBlock, queuePointerPageY]);
+  }, [editor, isDragging, isEditorEditable, queueHoveredBlock, queuePointerPageY]);
 
   // Drag start handler for handle
   const handleDragStart = useCallback(
     (event: React.DragEvent, element: HTMLElement) => {
+      if (!editor.isEditable()) {
+        event.preventDefault();
+        return;
+      }
+
       event.stopPropagation();
 
       setIsDragging(true);
@@ -697,6 +743,10 @@ function DraggableBlockPlugin({
   // Handle touch events for mobile drag support (handle and long press on text)
   const handleTouchStart = useCallback(
     (e: React.TouchEvent, element: HTMLElement) => {
+      if (!editor.isEditable()) {
+        return;
+      }
+
       // Prevent default to avoid scrolling
       e.preventDefault();
 
@@ -719,6 +769,10 @@ function DraggableBlockPlugin({
 
   const handleTouchMove = useCallback(
     (e: TouchEvent) => {
+      if (!editor.isEditable()) {
+        return;
+      }
+
       if (!isDragging || !draggedElementRef.current) return;
 
       e.preventDefault();
@@ -764,6 +818,11 @@ function DraggableBlockPlugin({
 
   const handleTouchEnd = useCallback(
     (e: TouchEvent) => {
+      if (!editor.isEditable()) {
+        cleanupDragState();
+        return;
+      }
+
       if (!isDragging || !draggedKeyRef.current) {
         return; // Just return without cleanup/focus when not dragging
       }
@@ -840,6 +899,11 @@ function DraggableBlockPlugin({
     if (!editorElement) return;
 
     const handleDragStartEvent = (e: DragEvent) => {
+      if (!editor.isEditable()) {
+        e.preventDefault();
+        return;
+      }
+
       let targetNode = e.target as Node;
       if (targetNode.nodeType !== Node.ELEMENT_NODE) {
         targetNode = targetNode.parentNode as Node;
@@ -932,6 +996,10 @@ function DraggableBlockPlugin({
     };
 
     const handleDragOver = (event: DragEvent) => {
+      if (!editor.isEditable()) {
+        return;
+      }
+
       let targetNode = event.target as Node;
       if (targetNode.nodeType !== Node.ELEMENT_NODE) {
         targetNode = targetNode.parentNode as Node;
@@ -971,6 +1039,10 @@ function DraggableBlockPlugin({
     };
 
     const handleDrop = (event: DragEvent) => {
+      if (!editor.isEditable()) {
+        return;
+      }
+
       let targetNode = event.target as Node;
       if (targetNode.nodeType !== Node.ELEMENT_NODE) {
         targetNode = targetNode.parentNode as Node;
@@ -1117,6 +1189,10 @@ function DraggableBlockPlugin({
     let startY = 0;
 
     const handleTouchStartEvent = (e: TouchEvent) => {
+      if (!editor.isEditable()) {
+        return;
+      }
+
       if (
         e.touches.length !== 1 ||
         !(
@@ -1235,6 +1311,7 @@ function DraggableBlockPlugin({
 
   // Ensure we have a valid DOM element with getBoundingClientRect method
   if (
+    !isEditorEditable ||
     !isBrowser ||
     !anchorElem ||
     !currentElement ||
@@ -1266,6 +1343,7 @@ function DraggableBlockPlugin({
       layoutStyles.getPropertyValue("--luthor-drag-gutter-width"),
     ) || 40;
   const showAddButton =
+    isEditorEditable &&
     (draggableConfig?.showAddButton ?? config.showAddButton) !== false;
   const buttonStackWidth = showAddButton ? 52 : 24;
   const fixedGutterLeft =

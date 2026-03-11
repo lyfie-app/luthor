@@ -3,8 +3,10 @@ import {
   ExtensiveEditor,
   type ExtensiveEditorProps,
   type ExtensiveEditorRef,
+  type FeatureFlag,
   type FeatureFlagOverrides,
 } from "../extensive";
+import { PresetFeaturePolicy, joinClassNames } from "../_shared";
 
 const COMPOSE_DEFAULT_FLAGS: FeatureFlagOverrides = {
   bold: true,
@@ -29,6 +31,10 @@ const COMPOSE_DEFAULT_FLAGS: FeatureFlagOverrides = {
   customNode: false,
 };
 
+const COMPOSE_FEATURE_POLICY = new PresetFeaturePolicy<FeatureFlag>(
+  COMPOSE_DEFAULT_FLAGS,
+);
+
 export type ComposeEditorProps = Omit<ExtensiveEditorProps, "featureFlags"> & {
   featureFlags?: FeatureFlagOverrides;
   compactToolbar?: boolean;
@@ -47,26 +53,22 @@ export const ComposeEditor = forwardRef<ExtensiveEditorRef, ComposeEditorProps>(
     ref,
   ) => {
     return (
-      <div className={["luthor-preset-compose", className].filter(Boolean).join(" ")}>
+      <div className={joinClassNames("luthor-preset-compose", className)}>
         <ExtensiveEditor
           ref={ref}
           {...props}
           className="luthor-preset-compose__editor"
-          variantClassName={[
-            compactToolbar ? "luthor-preset-compose--compact" : "",
+          variantClassName={joinClassNames(
+            compactToolbar ? "luthor-preset-compose--compact" : undefined,
             "luthor-preset-compose__variant",
             variantClassName,
-          ]
-            .filter(Boolean)
-            .join(" ")}
-          toolbarClassName={[
-            compactToolbar ? "luthor-preset-compose__toolbar--compact" : "",
+          )}
+          toolbarClassName={joinClassNames(
+            compactToolbar ? "luthor-preset-compose__toolbar--compact" : undefined,
             toolbarClassName,
-          ]
-            .filter(Boolean)
-            .join(" ")}
+          )}
           availableModes={["visual", "json"]}
-          featureFlags={{ ...COMPOSE_DEFAULT_FLAGS, ...(featureFlags ?? {}) }}
+          featureFlags={COMPOSE_FEATURE_POLICY.resolve(featureFlags)}
         />
       </div>
     );

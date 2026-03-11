@@ -89,6 +89,9 @@ function App() {
             toolbarAlignment="center"
             maxListIndentation={15}
             isToolbarPinned={true}
+            availableModes={["visual-only", "visual-editor", "json", "markdown", "html"]}
+            initialMode="visual-only"
+            editOnClick={false}
           />
         );
     }

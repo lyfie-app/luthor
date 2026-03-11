@@ -6,6 +6,7 @@ import {
   LEGACY_RICH_TOOLBAR_LAYOUT,
 } from "../legacy-rich";
 import type { ExtensiveEditorRef } from "../extensive";
+import { joinClassNames } from "../_shared";
 
 export const HTML_EDITOR_DEFAULT_MODES = ["visual", "json", "html"] as const;
 export const HTML_EDITOR_DEFAULT_FEATURE_FLAGS = LEGACY_RICH_DEFAULT_FEATURE_FLAGS;
@@ -38,13 +39,15 @@ export const HTMLEditor = forwardRef<ExtensiveEditorRef, HTMLEditorProps>(
       <LegacyRichEditor
         ref={ref}
         {...props}
-        className={["luthor-preset-html-editor", className].filter(Boolean).join(" ")}
-        variantClassName={["luthor-preset-html-editor__variant", variantClassName]
-          .filter(Boolean)
-          .join(" ")}
-        toolbarClassName={["luthor-preset-html-editor__toolbar", toolbarClassName]
-          .filter(Boolean)
-          .join(" ")}
+        className={joinClassNames("luthor-preset-html-editor", className)}
+        variantClassName={joinClassNames(
+          "luthor-preset-html-editor__variant",
+          variantClassName,
+        )}
+        toolbarClassName={joinClassNames(
+          "luthor-preset-html-editor__toolbar",
+          toolbarClassName,
+        )}
         sourceFormat="html"
         initialMode={initialMode}
         defaultEditorView={defaultEditorView}

@@ -18,7 +18,11 @@ import {
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { BaseExtension } from "../base/BaseExtension";
 import { BaseExtensionConfig, ExtensionCategory } from "../types";
-import { EmbedAlignment } from "./IframeEmbedExtension";
+import {
+  EmbedAlignment,
+  resolveEmbedPointerEvents,
+  shouldShowEmbedResizeHandles,
+} from "./IframeEmbedExtension";
 
 export type YouTubeEmbedPayload = {
   src: string;
@@ -496,6 +500,7 @@ function YouTubeEmbedComponent({
   payload: YouTubeEmbedPayload;
 }) {
   const [editor] = useLexicalComposerContext();
+  const [isEditorEditable, setIsEditorEditable] = useState(() => editor.isEditable());
   const [isSelected, setIsSelected] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [localWidth, setLocalWidth] = useState(payload.width);
@@ -522,6 +527,12 @@ function YouTubeEmbedComponent({
       document.body.style.cursor = "";
     };
   }, []);
+
+  useEffect(() => {
+    return editor.registerEditableListener((editable) => {
+      setIsEditorEditable(editable);
+    });
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
@@ -624,7 +635,7 @@ function YouTubeEmbedComponent({
   };
 
   const wrapperStyle = useMemo(() => getAlignmentStyles(payload.alignment), [payload.alignment]);
-  const showResizeHandles = isSelected && !isResizing;
+  const showResizeHandles = shouldShowEmbedResizeHandles(isEditorEditable, isSelected, isResizing);
   const captionStyle: React.CSSProperties = useMemo(
     () => ({
       fontSize: "0.9em",
@@ -643,7 +654,7 @@ function YouTubeEmbedComponent({
         className={`luthor-media-embed-shell${isSelected ? " is-selected" : ""}${isResizing ? " is-resizing" : ""}`}
         data-luthor-selection-anchor="true"
         style={{ width: localWidth, maxWidth: "100%" }}
-        onClick={selectNode}
+        onClick={isEditorEditable ? selectNode : undefined}
       >
         <iframe
           ref={iframeRef}
@@ -658,7 +669,7 @@ function YouTubeEmbedComponent({
             height: `${localHeight}px`,
             border: "0",
             display: "block",
-            pointerEvents: isSelected && !isResizing ? "auto" : "none",
+            pointerEvents: resolveEmbedPointerEvents(isEditorEditable, isSelected, isResizing),
           }}
         />
 

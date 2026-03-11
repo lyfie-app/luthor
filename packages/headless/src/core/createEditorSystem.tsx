@@ -37,6 +37,39 @@ interface ProviderProps<Exts extends readonly Extension[]> {
   extensions: Exts;
 }
 
+type ExtensionMutationMethod = "add" | "remove" | "reorder";
+type ExtensionsAPIContract = EditorContextType<readonly Extension[]>["extensionsAPI"];
+
+class ReadonlyExtensionsAPI implements ExtensionsAPIContract {
+  private warnedMethods = new Set<ExtensionMutationMethod>();
+
+  add(ext: Extension): void {
+    this.warn("add", ext.name);
+  }
+
+  remove(name: string): void {
+    this.warn("remove", name);
+  }
+
+  reorder(names: string[]): void {
+    this.warn("reorder", names.join(", "));
+  }
+
+  private warn(method: ExtensionMutationMethod, target: string): void {
+    if (this.warnedMethods.has(method)) {
+      return;
+    }
+
+    this.warnedMethods.add(method);
+    console.warn(
+      `[luthor-headless] extensionsAPI.${method}("${target}") is not supported at runtime. ` +
+        "Pass an updated `extensions` array to <Provider /> instead.",
+    );
+  }
+}
+
+const readonlyExtensionsAPI = new ReadonlyExtensionsAPI();
+
 /**
  * Creates a typed editor system based on the provided extensions array.
  * This factory function generates a Provider component and useEditor hook
@@ -331,17 +364,7 @@ export function createEditorSystem<Exts extends readonly Extension[]>() {
         },
       },
       lexical: editor,
-      extensionsAPI: {
-        add: (ext: Extension) => {
-          void ext;
-        }, // TODO: Implement dynamic add
-        remove: (name: string) => {
-          void name;
-        },
-        reorder: (names: string[]) => {
-          void names;
-        },
-      },
+      extensionsAPI: readonlyExtensionsAPI,
       plugins,
       hasExtension: (name: Exts[number]["name"]) =>
         extensions.some((ext) => ext.name === name),

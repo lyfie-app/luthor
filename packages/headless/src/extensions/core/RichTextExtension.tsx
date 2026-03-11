@@ -13,6 +13,17 @@ export interface BaseRichTextProps {
   contentEditable?: React.ReactElement;
   placeholder?: React.ReactElement | string;
   className?: string;
+  /**
+   * Starts the visual surface in a non-editable state.
+   * Clicking inside the surface promotes it into editable mode and places the caret
+   * at the clicked coordinate (or nearest line when exact placement is unavailable).
+   */
+  nonEditableVisualMode?: boolean;
+  /**
+   * Optional callback invoked when a non-editable visual surface receives a click
+   * that indicates edit intent.
+   */
+  onEditIntent?: (position: { clientX: number; clientY: number }) => void;
   classNames?: {
     container?: string;
     contentEditable?: string;
@@ -111,16 +122,58 @@ function moveCaretToNearestLine(editable: HTMLElement, clientX: number, clientY:
   placeCaretFromPoint(x, y);
 }
 
+function scheduleCaretPlacement(callback: () => void): void {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(() => callback());
+    return;
+  }
+
+  globalThis.setTimeout(callback, 0);
+}
+
+function isInteractiveReadOnlyTarget(target: HTMLElement): boolean {
+  return Boolean(
+    target.closest(
+      [
+        "button",
+        "a",
+        "input",
+        "textarea",
+        "select",
+        "[role='button']",
+        "[role='checkbox']",
+        "iframe",
+        "video",
+        "audio",
+        "embed",
+        "object",
+        ".luthor-list-item-unchecked",
+        ".luthor-list-item-checked",
+        "[data-lexical-iframe-embed]",
+        "[data-lexical-youtube-embed]",
+        "[data-iframe-embed]",
+        "[data-youtube-video]",
+        ".luthor-media-embed-shell",
+      ].join(", "),
+    ),
+  );
+}
+
 const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
   const {
     contentEditable,
     placeholder,
     className,
+    nonEditableVisualMode = false,
+    onEditIntent,
     classNames,
     styles,
     errorBoundary,
   } = props;
   const editorContext = React.useContext(EditorContext);
+  const lexicalEditor = editorContext?.lexical ?? null;
+  const [isVisualEditable, setIsVisualEditable] = React.useState(!nonEditableVisualMode);
+  const readOnlyPointerDownRef = React.useRef<{ clientX: number; clientY: number } | null>(null);
   const contextConfig = editorContext?.config as
     | {
         placeholder?: unknown;
@@ -150,6 +203,14 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
     ...styles?.placeholder,
   };
 
+  React.useEffect(() => {
+    setIsVisualEditable(!nonEditableVisualMode);
+  }, [nonEditableVisualMode]);
+
+  React.useEffect(() => {
+    lexicalEditor?.setEditable(isVisualEditable);
+  }, [isVisualEditable, lexicalEditor]);
+
   return (
     <div
       className={
@@ -169,22 +230,79 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
           return;
         }
 
-        if (target.closest("button, a, input, textarea, select, [role='button']")) {
+        if (isInteractiveReadOnlyTarget(target)) {
           return;
         }
 
         const container = event.currentTarget;
+        const clickX = event.clientX;
+        const clickY = event.clientY;
+
+        if (nonEditableVisualMode && !isVisualEditable) {
+          if (onEditIntent) {
+            // Preserve native text selection in read-only mode.
+            readOnlyPointerDownRef.current = { clientX: clickX, clientY: clickY };
+            return;
+          }
+
+          const nonEditableElement = container.querySelector("[contenteditable]") as HTMLElement | null;
+          if (!nonEditableElement) {
+            return;
+          }
+
+          event.preventDefault();
+          lexicalEditor?.setEditable(true);
+          setIsVisualEditable(true);
+          scheduleCaretPlacement(() => {
+            const editableElement =
+              (container.querySelector("[contenteditable='true']") as HTMLElement | null) ?? nonEditableElement;
+            moveCaretToNearestLine(editableElement, clickX, clickY);
+          });
+          return;
+        }
+
         const editableElement = container.querySelector("[contenteditable='true']") as HTMLElement | null;
         if (!editableElement || editableElement.contains(target)) {
           return;
         }
 
         event.preventDefault();
-        moveCaretToNearestLine(editableElement, event.clientX, event.clientY);
+        moveCaretToNearestLine(editableElement, clickX, clickY);
+      }}
+      onMouseUp={(event) => {
+        if (event.button !== 0 || !onEditIntent || !nonEditableVisualMode || isVisualEditable) {
+          readOnlyPointerDownRef.current = null;
+          return;
+        }
+
+        const target = event.target as HTMLElement | null;
+        if (!target || isInteractiveReadOnlyTarget(target)) {
+          readOnlyPointerDownRef.current = null;
+          return;
+        }
+
+        const pointerDown = readOnlyPointerDownRef.current;
+        readOnlyPointerDownRef.current = null;
+        if (!pointerDown) {
+          return;
+        }
+
+        const moveX = Math.abs(event.clientX - pointerDown.clientX);
+        const moveY = Math.abs(event.clientY - pointerDown.clientY);
+        if (moveX > 4 || moveY > 4) {
+          return;
+        }
+
+        const selection = window.getSelection();
+        if (selection && !selection.isCollapsed) {
+          return;
+        }
+
+        onEditIntent({ clientX: event.clientX, clientY: event.clientY });
       }}
       style={{
         position: "relative",
-        cursor: "text",
+        cursor: nonEditableVisualMode ? "default" : "text",
         ...configStyles?.container,
         ...styles?.container,
       }}
@@ -201,6 +319,14 @@ const SharedRichText: React.FC<SharedRichTextProps> = (props) => {
                   "luthor-content-editable"
                 }
                 style={{
+                  ...(nonEditableVisualMode
+                    ? {
+                        cursor: "default",
+                        caretColor: "transparent",
+                        userSelect: "text",
+                        WebkitUserSelect: "text",
+                      }
+                    : {}),
                   ...configStyles?.contentEditable,
                   ...styles?.contentEditable,
                 }}

@@ -4,8 +4,10 @@ import {
   ExtensiveEditor,
   type ExtensiveEditorProps,
   type ExtensiveEditorRef,
+  type FeatureFlag,
   type FeatureFlagOverrides,
 } from "../extensive";
+import { PresetFeaturePolicy, joinClassNames } from "../_shared";
 
 export const LEGACY_RICH_MARKDOWN_MODES = ["visual", "json", "markdown"] as const;
 export const LEGACY_RICH_HTML_MODES = ["visual", "json", "html"] as const;
@@ -52,6 +54,24 @@ export const LEGACY_RICH_DEFAULT_FEATURE_FLAGS: FeatureFlagOverrides = {
   customNode: false,
   themeToggle: false,
 };
+
+const LEGACY_RICH_ENFORCED_FEATURE_FLAGS: FeatureFlagOverrides = {
+  draggableBlock: false,
+  table: false,
+  image: false,
+  iframeEmbed: false,
+  youTubeEmbed: false,
+  customNode: false,
+  emoji: false,
+  commandPalette: false,
+  slashCommand: false,
+  themeToggle: false,
+};
+
+const LEGACY_RICH_FEATURE_POLICY = new PresetFeaturePolicy<FeatureFlag>(
+  LEGACY_RICH_DEFAULT_FEATURE_FLAGS,
+  LEGACY_RICH_ENFORCED_FEATURE_FLAGS,
+);
 
 export const LEGACY_RICH_TOOLBAR_LAYOUT: ToolbarLayout = {
   sections: [
@@ -118,30 +138,19 @@ export const LegacyRichEditor = forwardRef<ExtensiveEditorRef, LegacyRichEditorP
       <ExtensiveEditor
         ref={ref}
         {...props}
-        className={["luthor-preset-legacy-rich", className].filter(Boolean).join(" ")}
-        variantClassName={["luthor-preset-legacy-rich__variant", variantClassName]
-          .filter(Boolean)
-          .join(" ")}
-        toolbarClassName={["luthor-preset-legacy-rich__toolbar", toolbarClassName]
-          .filter(Boolean)
-          .join(" ")}
+        className={joinClassNames("luthor-preset-legacy-rich", className)}
+        variantClassName={joinClassNames(
+          "luthor-preset-legacy-rich__variant",
+          variantClassName,
+        )}
+        toolbarClassName={joinClassNames(
+          "luthor-preset-legacy-rich__toolbar",
+          toolbarClassName,
+        )}
         availableModes={availableModes}
         initialMode={resolvedInitialMode}
         toolbarLayout={toolbarLayout ?? LEGACY_RICH_TOOLBAR_LAYOUT}
-        featureFlags={{
-          ...LEGACY_RICH_DEFAULT_FEATURE_FLAGS,
-          ...(featureFlags ?? {}),
-          draggableBlock: false,
-          table: false,
-          image: false,
-          iframeEmbed: false,
-          youTubeEmbed: false,
-          customNode: false,
-          emoji: false,
-          commandPalette: false,
-          slashCommand: false,
-          themeToggle: false,
-        }}
+        featureFlags={LEGACY_RICH_FEATURE_POLICY.resolve(featureFlags)}
       />
     );
   },
