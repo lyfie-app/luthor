@@ -82,7 +82,13 @@ import type {
 
 const { Provider, useEditor } = createEditorSystem<typeof extensiveExtensions>();
 
-export type ExtensiveEditorMode = "visual" | "json" | "markdown" | "html";
+export type ExtensiveEditorMode =
+  | "visual-only"
+  | "visual-editor"
+  | "visual"
+  | "json"
+  | "markdown"
+  | "html";
 export type ExtensiveEditorPlaceholder =
   | string
   | {
@@ -98,7 +104,11 @@ const DEFAULT_MARKDOWN_PLACEHOLDER = "Enter Markdown content...";
 const DEFAULT_HTML_PLACEHOLDER = "Enter HTML content...";
 const NON_VISIBLE_OVERFLOW_VALUES = new Set(["auto", "scroll", "overlay"]);
 
-type ExtensiveEditorSourceMode = Exclude<ExtensiveEditorMode, "visual">;
+type ExtensiveEditorCanonicalMode = Exclude<ExtensiveEditorMode, "visual">;
+type ExtensiveEditorSourceMode = Exclude<
+  ExtensiveEditorCanonicalMode,
+  "visual-only" | "visual-editor"
+>;
 
 const SOURCE_MODE_ERROR_TITLE: Record<ExtensiveEditorSourceMode, string> = {
   json: "Invalid JSON",
@@ -106,12 +116,87 @@ const SOURCE_MODE_ERROR_TITLE: Record<ExtensiveEditorSourceMode, string> = {
   html: "Invalid HTML",
 };
 
+function toCanonicalExtensiveMode(mode: ExtensiveEditorMode): ExtensiveEditorCanonicalMode {
+  return mode === "visual" ? "visual-editor" : mode;
+}
+
+function isVisualEditorMode(mode: ExtensiveEditorMode | ExtensiveEditorCanonicalMode): boolean {
+  return toCanonicalExtensiveMode(mode as ExtensiveEditorMode) === "visual-editor";
+}
+
+function hasExtensiveMode(
+  modes: readonly ExtensiveEditorMode[],
+  mode: ExtensiveEditorCanonicalMode,
+): boolean {
+  return modes.some((candidate) => toCanonicalExtensiveMode(candidate) === mode);
+}
+
+function isSourceMode(mode: ExtensiveEditorMode | ExtensiveEditorCanonicalMode): mode is ExtensiveEditorSourceMode {
+  return mode === "json" || mode === "markdown" || mode === "html";
+}
+
 function resolveOverflowY(style: CSSStyleDeclaration): string {
   const overflowY = style.overflowY;
   if (overflowY && overflowY !== "visible") {
     return overflowY;
   }
   return style.overflow || overflowY || "visible";
+}
+
+function scrollElementToTop(element: HTMLElement): void {
+  if (typeof element.scrollTo === "function") {
+    try {
+      element.scrollTo({ top: 0, behavior: "auto" });
+    } catch {
+      element.scrollTop = 0;
+      return;
+    }
+  }
+
+  if (element.scrollTop !== 0) {
+    element.scrollTop = 0;
+  }
+}
+
+function resetVisualEditorScrollPosition(rootElement: HTMLElement): void {
+  const candidates = new Set<HTMLElement>();
+  const addCandidate = (candidate: HTMLElement | null) => {
+    if (candidate) {
+      candidates.add(candidate);
+    }
+  };
+
+  addCandidate(rootElement);
+  addCandidate(rootElement.closest(".luthor-richtext-container") as HTMLElement | null);
+  addCandidate(rootElement.closest(".luthor-editor-visual-shell") as HTMLElement | null);
+  addCandidate(rootElement.closest(".luthor-editor") as HTMLElement | null);
+  addCandidate(rootElement.closest(".luthor-editor-wrapper") as HTMLElement | null);
+
+  if (typeof window !== "undefined") {
+    let ancestor = rootElement.parentElement;
+    while (ancestor && ancestor !== document.body && ancestor !== document.documentElement) {
+      const overflowY = resolveOverflowY(window.getComputedStyle(ancestor));
+      if (NON_VISIBLE_OVERFLOW_VALUES.has(overflowY)) {
+        addCandidate(ancestor);
+      }
+      ancestor = ancestor.parentElement;
+    }
+  }
+
+  candidates.forEach((candidate) => {
+    scrollElementToTop(candidate);
+  });
+}
+
+function scheduleAfterVisualShellMount(callback: () => void): void {
+  if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => callback());
+    });
+    return;
+  }
+
+  globalThis.setTimeout(callback, 0);
 }
 
 function patchNonScrollingOverflowAncestors(wrapper: HTMLElement): () => void {
@@ -251,6 +336,79 @@ function createJSONDocumentFromText(content: string): JsonDocument {
       children,
     },
   };
+}
+
+function clampCoordinate(value: number, min: number, max: number): number {
+  if (max <= min) {
+    return min;
+  }
+
+  return Math.min(max, Math.max(min, value));
+}
+
+function positionCaretFromViewportPoint(
+  x: number,
+  y: number,
+): boolean {
+  const documentAny = document as Document & {
+    caretPositionFromPoint?: (
+      xPos: number,
+      yPos: number,
+    ) => {
+      offsetNode: Node;
+      offset: number;
+    } | null;
+    caretRangeFromPoint?: (xPos: number, yPos: number) => Range | null;
+  };
+
+  const selection = window.getSelection();
+  if (!selection) {
+    return false;
+  }
+
+  const position = documentAny.caretPositionFromPoint?.(x, y);
+  if (position) {
+    const range = document.createRange();
+    range.setStart(position.offsetNode, position.offset);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return true;
+  }
+
+  const range = documentAny.caretRangeFromPoint?.(x, y);
+  if (!range) {
+    return false;
+  }
+
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return true;
+}
+
+function positionCaretInNearestLine(editable: HTMLElement, clientX: number, clientY: number): void {
+  const blocks = Array.from(editable.children).filter(
+    (node): node is HTMLElement => node instanceof HTMLElement,
+  );
+  const nearestBlock = blocks.reduce<HTMLElement | null>((closest, block) => {
+    const rect = block.getBoundingClientRect();
+    const centerY = rect.top + rect.height / 2;
+    if (!closest) {
+      return block;
+    }
+
+    const closestRect = closest.getBoundingClientRect();
+    const closestCenterY = closestRect.top + closestRect.height / 2;
+    return Math.abs(centerY - clientY) < Math.abs(closestCenterY - clientY) ? block : closest;
+  }, null);
+
+  const targetBlock = nearestBlock ?? (editable.firstElementChild as HTMLElement | null) ?? editable;
+  const editableRect = editable.getBoundingClientRect();
+  const targetRect = targetBlock.getBoundingClientRect();
+  const x = clampCoordinate(clientX, editableRect.left + 1, editableRect.right - 1);
+  const y = clampCoordinate(clientY, targetRect.top + 1, targetRect.bottom - 1);
+  positionCaretFromViewportPoint(x, y);
 }
 
 function toJSONInput(value: string): string {
@@ -652,6 +810,7 @@ function ExtensiveEditorContent({
   shortcutConfig,
   commandPaletteShortcutOnly,
   featureFlags,
+  editOnClick,
 }: {
   isDark: boolean;
   toggleTheme: () => void;
@@ -659,7 +818,7 @@ function ExtensiveEditorContent({
   jsonPlaceholder: string;
   markdownPlaceholder: string;
   htmlPlaceholder: string;
-  initialMode: ExtensiveEditorMode;
+  initialMode: ExtensiveEditorCanonicalMode;
   availableModes: readonly ExtensiveEditorMode[];
   onReady?: (methods: ExtensiveEditorRef) => void;
   toolbarLayout?: ToolbarLayout;
@@ -678,6 +837,7 @@ function ExtensiveEditorContent({
   shortcutConfig?: CommandShortcutConfig;
   commandPaletteShortcutOnly: boolean;
   featureFlags: FeatureFlags;
+  editOnClick: boolean;
 }) {
   const {
     commands,
@@ -688,13 +848,13 @@ function ExtensiveEditorContent({
     export: exportApi,
     import: importApi,
   } = useEditor();
-  const [mode, setMode] = useState<ExtensiveEditorMode>(initialMode);
+  const [mode, setMode] = useState<ExtensiveEditorCanonicalMode>(initialMode);
   const [content, setContent] = useState<Record<ExtensiveEditorSourceMode, string>>({
     json: "",
     markdown: "",
     html: "",
   });
-  const [convertingMode, setConvertingMode] = useState<ExtensiveEditorMode | null>(null);
+  const [convertingMode, setConvertingMode] = useState<ExtensiveEditorCanonicalMode | null>(null);
   const [sourceError, setSourceError] = useState<{ mode: ExtensiveEditorSourceMode; error: string } | null>(null);
   const [commandPaletteState, setCommandPaletteState] = useState({
     isOpen: false,
@@ -733,6 +893,10 @@ function ExtensiveEditorContent({
       return featureFlags[feature as FeatureFlag] !== false;
     },
     [featureFlags],
+  );
+  const isMenuFeatureEnabled = useMemo(
+    () => (feature: string) => isVisualEditorMode(mode) && isFeatureEnabled(feature),
+    [mode, isFeatureEnabled],
   );
   const resolvedToolbarVisibility = useMemo(
     () => mergeToolbarVisibilityWithFeatures(toolbarVisibility, featureFlags),
@@ -783,22 +947,23 @@ function ExtensiveEditorContent({
   }
   
   // Lazy conversion state: track which formats are valid cache
-  const cacheValidRef = useRef(createModeCache<ExtensiveEditorMode>(["visual"]));
+  const cacheValidRef = useRef(createModeCache<ExtensiveEditorCanonicalMode>(["visual-editor"]));
   const sourceDirtyRef = useRef<Record<ExtensiveEditorSourceMode, boolean>>({
     json: false,
     markdown: false,
     html: false,
   });
   const editorChangeCountRef = useRef(0);
+  const pendingEditIntentRef = useRef<{ clientX: number; clientY: number } | null>(null);
 
   useEffect(() => {
     setFloatingToolbarContext(
       safeCommands,
       activeStates,
       isDark ? "dark" : "light",
-      isFeatureEnabled,
+      isMenuFeatureEnabled,
     );
-  }, [safeCommands, activeStates, isDark, isFeatureEnabled]);
+  }, [safeCommands, activeStates, isDark, isMenuFeatureEnabled]);
 
   const methods = useMemo<ExtensiveEditorRef>(
     () => {
@@ -831,7 +996,7 @@ function ExtensiveEditorContent({
     const paletteItems = commandsToCommandPaletteItems(commandApi, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
-      isFeatureEnabled,
+      isFeatureEnabled: isMenuFeatureEnabled,
       shortcutConfig: stableShortcutConfigRef.current,
       commandPaletteShortcutOnly,
     });
@@ -842,7 +1007,7 @@ function ExtensiveEditorContent({
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
       slashCommandVisibility: stableSlashCommandVisibilityRef.current,
-      isFeatureEnabled,
+      isFeatureEnabled: isMenuFeatureEnabled,
       shortcutConfig: stableShortcutConfigRef.current,
     });
     if (typeof commandApi.setSlashCommands === "function") {
@@ -854,7 +1019,7 @@ function ExtensiveEditorContent({
     const unregisterShortcuts = registerKeyboardShortcuts(commandApi, document.body, {
       headingOptions: commandHeadingOptions,
       paragraphLabel: commandParagraphLabel,
-      isFeatureEnabled,
+      isFeatureEnabled: isMenuFeatureEnabled,
       shortcutConfig: stableShortcutConfigRef.current,
       scope: () => editor.getRootElement(),
     });
@@ -884,7 +1049,7 @@ function ExtensiveEditorContent({
     commandParagraphLabel,
     slashCommandVisibilityKey,
     shortcutConfigKey,
-    isFeatureEnabled,
+    isMenuFeatureEnabled,
     commandPaletteShortcutOnly,
   ]);
 
@@ -947,9 +1112,12 @@ function ExtensiveEditorContent({
         return true;
       });
 
-      setCommandPaletteState({ isOpen, commands: filteredItems });
+      setCommandPaletteState({
+        isOpen: isVisualEditorMode(mode) ? isOpen : false,
+        commands: filteredItems,
+      });
     });
-  }, [extensions, disabledCommandIdsSet, commandPaletteShortcutOnly]);
+  }, [extensions, disabledCommandIdsSet, commandPaletteShortcutOnly, mode]);
 
   useEffect(() => {
     if (blockedDefaultShortcuts.length === 0) {
@@ -995,13 +1163,13 @@ function ExtensiveEditorContent({
 
     return slashCommandExtension.subscribe((state) => {
       setSlashCommandState({
-        isOpen: state.isOpen,
-        query: state.query,
-        position: state.position,
-        commands: state.commands,
+        isOpen: isVisualEditorMode(mode) ? state.isOpen : false,
+        query: isVisualEditorMode(mode) ? state.query : "",
+        position: isVisualEditorMode(mode) ? state.position : null,
+        commands: isVisualEditorMode(mode) ? state.commands : [],
       });
     });
-  }, [extensions]);
+  }, [extensions, mode]);
 
   useEffect(() => {
     const emojiExtension = extensions.find(
@@ -1012,13 +1180,52 @@ function ExtensiveEditorContent({
 
     return emojiExtension.subscribe((state) => {
       setEmojiSuggestionState({
-        isOpen: state.isOpen,
-        query: state.query,
-        position: state.position,
-        suggestions: state.suggestions,
+        isOpen: isVisualEditorMode(mode) ? state.isOpen : false,
+        query: isVisualEditorMode(mode) ? state.query : "",
+        position: isVisualEditorMode(mode) ? state.position : null,
+        suggestions: isVisualEditorMode(mode) ? state.suggestions : [],
       });
     });
-  }, [extensions]);
+  }, [extensions, mode]);
+
+  useEffect(() => {
+    if (isVisualEditorMode(mode)) {
+      return;
+    }
+
+    setCommandPaletteState((previous) => (
+      previous.isOpen
+        ? {
+            ...previous,
+            isOpen: false,
+          }
+        : previous
+    ));
+    setSlashCommandState((previous) => (
+      previous.isOpen || previous.query.length > 0 || previous.position !== null || previous.commands.length > 0
+        ? {
+            isOpen: false,
+            query: "",
+            position: null,
+            commands: [],
+          }
+        : previous
+    ));
+    setEmojiSuggestionState((previous) => (
+      previous.isOpen || previous.query.length > 0 || previous.position !== null || previous.suggestions.length > 0
+        ? {
+            isOpen: false,
+            query: "",
+            position: null,
+            suggestions: [],
+          }
+        : previous
+    ));
+
+    safeCommands.hideCommandPalette?.();
+    safeCommands.closeSlashMenu?.();
+    safeCommands.closeEmojiSuggestions?.();
+  }, [mode, safeCommands]);
 
   useEffect(() => {
     if (!editor || !exportApi) return;
@@ -1027,7 +1234,7 @@ function ExtensiveEditorContent({
       // When visual editor changes, mark all cached formats as stale
       // This prevents stale cache but doesn't do any actual export work
       editorChangeCountRef.current += 1;
-      invalidateModeCache(cacheValidRef.current, ["visual"]);
+      invalidateModeCache(cacheValidRef.current, ["visual-editor"]);
     });
 
     return unsubscribe;
@@ -1054,7 +1261,7 @@ function ExtensiveEditorContent({
     }
 
     sourceDirtyRef.current[sourceMode] = false;
-    invalidateModeCache(cacheValidRef.current, ["visual"]);
+    invalidateModeCache(cacheValidRef.current, ["visual-editor"]);
   };
 
   const exportToSourceMode = (sourceMode: ExtensiveEditorSourceMode): string => {
@@ -1081,11 +1288,12 @@ function ExtensiveEditorContent({
   };
 
   const handleModeChange = async (newMode: ExtensiveEditorMode) => {
-    if (newMode === mode) {
+    const normalizedNextMode = toCanonicalExtensiveMode(newMode);
+    if (normalizedNextMode === mode) {
       return;
     }
 
-    if (!availableModes.includes(newMode)) {
+    if (!hasExtensiveMode(availableModes, normalizedNextMode)) {
       return;
     }
 
@@ -1095,8 +1303,8 @@ function ExtensiveEditorContent({
     try {
       setSourceError(null);
 
-      if (currentMode !== "visual") {
-        const currentSourceMode = currentMode as ExtensiveEditorSourceMode;
+      if (isSourceMode(currentMode)) {
+        const currentSourceMode = currentMode;
         if (sourceDirtyRef.current[currentSourceMode]) {
           errorMode = currentSourceMode;
           importFromSourceMode(currentSourceMode);
@@ -1105,17 +1313,17 @@ function ExtensiveEditorContent({
         }
       }
 
-      if (currentMode === "visual" && newMode !== "visual") {
+      if (isVisualEditorMode(currentMode) && !isVisualEditorMode(normalizedNextMode)) {
         if (editor) {
           clearLexicalSelection(editor);
         }
         editor?.getRootElement()?.blur();
       }
 
-      setMode(newMode);
+      setMode(normalizedNextMode);
 
-      if (newMode !== "visual") {
-        const targetMode = newMode as ExtensiveEditorSourceMode;
+      if (isSourceMode(normalizedNextMode)) {
+        const targetMode = normalizedNextMode;
         if (!isModeCached(cacheValidRef.current, targetMode)) {
           setConvertingMode(targetMode);
           await new Promise((resolve) => setTimeout(resolve, 50));
@@ -1131,8 +1339,22 @@ function ExtensiveEditorContent({
         }
       }
 
-      if (newMode === "visual") {
-        setTimeout(() => editor?.focus(), 100);
+      if (isVisualEditorMode(normalizedNextMode)) {
+        const isEditIntentTransition =
+          currentMode === "visual-only" && pendingEditIntentRef.current !== null;
+
+        if (isEditIntentTransition) {
+          setTimeout(() => editor?.focus(), 100);
+        } else {
+          scheduleAfterVisualShellMount(() => {
+            const rootElement = editor?.getRootElement();
+            if (!rootElement) {
+              return;
+            }
+
+            resetVisualEditorScrollPosition(rootElement);
+          });
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Invalid format - could not parse content";
@@ -1142,6 +1364,46 @@ function ExtensiveEditorContent({
     }
   };
 
+  const handleVisualOnlyEditIntent = (position: { clientX: number; clientY: number }) => {
+    if (!editOnClick || mode !== "visual-only" || !hasExtensiveMode(availableModes, "visual-editor")) {
+      return;
+    }
+
+    pendingEditIntentRef.current = position;
+    void handleModeChange("visual-editor");
+  };
+
+  useEffect(() => {
+    if (!isVisualEditorMode(mode)) {
+      return;
+    }
+
+    const pending = pendingEditIntentRef.current;
+    if (!pending) {
+      return;
+    }
+
+    pendingEditIntentRef.current = null;
+    const run = () => {
+      const editableElement = editor?.getRootElement();
+      if (!editableElement) {
+        return;
+      }
+
+      positionCaretInNearestLine(editableElement, pending.clientX, pending.clientY);
+    };
+
+    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => run());
+      return;
+    }
+
+    const timeoutId = globalThis.setTimeout(run, 0);
+    return () => {
+      globalThis.clearTimeout(timeoutId);
+    };
+  }, [editor, mode]);
+
   const toolbarNode = isToolbarEnabled ? (
     <Toolbar
       commands={safeCommands}
@@ -1150,7 +1412,7 @@ function ExtensiveEditorContent({
       isDark={isDark}
       toggleTheme={toggleTheme}
       onCommandPaletteOpen={() => {
-        if (featureFlags.commandPalette !== false) {
+        if (isVisualEditorMode(mode) && featureFlags.commandPalette !== false) {
           safeCommands.showCommandPalette();
         }
       }}
@@ -1166,7 +1428,7 @@ function ExtensiveEditorContent({
     />
   ) : null;
   const shouldRenderModeTabs = isEditorViewTabsVisible;
-  const shouldRenderTopToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "top";
+  const shouldRenderTopToolbar = isVisualEditorMode(mode) && isToolbarEnabled && toolbarPosition === "top";
   const shouldPinTopRegion = isToolbarPinned && toolbarPosition === "top" && shouldRenderModeTabs;
   const topRegionClassName = ["luthor-editor-top-region", shouldPinTopRegion ? "luthor-editor-top-region--pinned" : ""]
     .filter(Boolean)
@@ -1175,15 +1437,18 @@ function ExtensiveEditorContent({
   const topToolbarSlotClassName = ["luthor-editor-toolbar-slot", "luthor-editor-toolbar-slot--top", shouldRenderTopToolbar && shouldPinTopToolbarSlot ? "luthor-editor-toolbar-slot--pinned" : ""]
     .filter(Boolean)
     .join(" ");
-  const shouldRenderBottomToolbar = mode === "visual" && isToolbarEnabled && toolbarPosition === "bottom";
+  const shouldRenderBottomToolbar = isVisualEditorMode(mode) && isToolbarEnabled && toolbarPosition === "bottom";
   const overlayPortalContainer =
     (editor?.getRootElement()?.closest(".luthor-editor-wrapper") as HTMLElement | null) ?? null;
-  const activeSourceMode = mode === "visual" ? null : (mode as ExtensiveEditorSourceMode);
+  const activeSourceMode = isSourceMode(mode) ? mode : null;
+  const isVisualOnlyMode = mode === "visual-only";
+  const showVisualShell = isVisualEditorMode(mode) || isVisualOnlyMode;
+  const shouldHideDraggableAffordances = !isDraggableBoxEnabled || isVisualOnlyMode;
 
   return (
     <>
       <div
-        className={`luthor-editor${isDraggableBoxEnabled ? "" : " luthor-editor--draggable-disabled"}`}
+        className={`luthor-editor${shouldHideDraggableAffordances ? " luthor-editor--draggable-disabled" : ""}`}
         data-mode={mode}
       >
         {(shouldRenderModeTabs || shouldRenderTopToolbar) && (
@@ -1204,14 +1469,16 @@ function ExtensiveEditorContent({
           </div>
         )}
         <div
-          className={`luthor-editor-visual-shell${mode === "visual" ? "" : " is-hidden"}${isDraggableBoxEnabled ? "" : " luthor-editor-visual-shell--no-gutter"}`}
-          aria-hidden={mode !== "visual"}
+          className={`luthor-editor-visual-shell${showVisualShell ? "" : " is-hidden"}${shouldHideDraggableAffordances ? " luthor-editor-visual-shell--no-gutter" : ""}`}
+          aria-hidden={!showVisualShell}
         >
-          {isDraggableBoxEnabled && (
+          {!shouldHideDraggableAffordances && (
             <div className="luthor-editor-visual-gutter" aria-hidden="true" />
           )}
           <RichText
             placeholder={visualPlaceholder}
+            nonEditableVisualMode={isVisualOnlyMode}
+            onEditIntent={isVisualOnlyMode ? handleVisualOnlyEditIntent : undefined}
             classNames={{
               container: "luthor-richtext-container luthor-preset-extensive__container",
               contentEditable: "luthor-content-editable luthor-preset-extensive__content",
@@ -1263,38 +1530,44 @@ function ExtensiveEditorContent({
         editor={editor}
         commands={safeCommands}
         editorTheme={isDark ? "dark" : "light"}
-        disabled={mode !== "visual"}
+        disabled={!isVisualEditorMode(mode)}
       />
       {shouldRenderBottomToolbar && (
         <div className="luthor-editor-toolbar-slot luthor-editor-toolbar-slot--bottom">{toolbarNode}</div>
       )}
-      <CommandPalette
-        isOpen={commandPaletteState.isOpen}
-        onClose={() => safeCommands.hideCommandPalette()}
-        commands={commandPaletteState.commands}
-      />
-      <SlashCommandMenu
-        isOpen={slashCommandState.isOpen}
-        query={slashCommandState.query}
-        position={slashCommandState.position}
-        portalContainer={overlayPortalContainer}
-        commands={slashCommandState.commands}
-        onClose={() => safeCommands.closeSlashMenu?.()}
-        onExecute={(commandId) => {
-          safeCommands.executeSlashCommand?.(commandId);
-        }}
-      />
-      <EmojiSuggestionMenu
-        isOpen={emojiSuggestionState.isOpen}
-        query={emojiSuggestionState.query}
-        position={emojiSuggestionState.position}
-        portalContainer={overlayPortalContainer}
-        suggestions={emojiSuggestionState.suggestions}
-        onClose={() => safeCommands.closeEmojiSuggestions?.()}
-        onExecute={(emoji) => {
-          safeCommands.executeEmojiSuggestion?.(emoji);
-        }}
-      />
+      {isVisualEditorMode(mode) && (
+        <CommandPalette
+          isOpen={commandPaletteState.isOpen}
+          onClose={() => safeCommands.hideCommandPalette()}
+          commands={commandPaletteState.commands}
+        />
+      )}
+      {isVisualEditorMode(mode) && (
+        <SlashCommandMenu
+          isOpen={slashCommandState.isOpen}
+          query={slashCommandState.query}
+          position={slashCommandState.position}
+          portalContainer={overlayPortalContainer}
+          commands={slashCommandState.commands}
+          onClose={() => safeCommands.closeSlashMenu?.()}
+          onExecute={(commandId) => {
+            safeCommands.executeSlashCommand?.(commandId);
+          }}
+        />
+      )}
+      {isVisualEditorMode(mode) && (
+        <EmojiSuggestionMenu
+          isOpen={emojiSuggestionState.isOpen}
+          query={emojiSuggestionState.query}
+          position={emojiSuggestionState.position}
+          portalContainer={overlayPortalContainer}
+          suggestions={emojiSuggestionState.suggestions}
+          onClose={() => safeCommands.closeEmojiSuggestions?.()}
+          onExecute={(emoji) => {
+            safeCommands.executeEmojiSuggestion?.(emoji);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -1339,6 +1612,11 @@ export interface ExtensiveEditorProps {
   slashCommandVisibility?: SlashCommandVisibility;
   shortcutConfig?: CommandShortcutConfig;
   commandPaletteShortcutOnly?: boolean;
+  /**
+   * When enabled, clicking inside Visual Only view switches to editable Visual mode
+   * and places the caret at the clicked coordinate (or nearest line).
+   */
+  editOnClick?: boolean;
   isDraggableBoxEnabled?: boolean;
   featureFlags?: FeatureFlagOverrides;
   syntaxHighlighting?: "auto" | "disabled";
@@ -1362,10 +1640,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     showDefaultContent = true,
     placeholder = DEFAULT_VISUAL_PLACEHOLDER,
     defaultEditorView,
-    initialMode = "visual",
+    initialMode = "visual-editor",
     isEditorViewTabsVisible,
     isEditorViewsTabVisible,
-    availableModes = ["visual", "json", "markdown", "html"],
+    availableModes = ["visual-editor", "visual-only", "json", "markdown", "html"],
     variantClassName,
     toolbarLayout,
     toolbarVisibility,
@@ -1390,6 +1668,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     slashCommandVisibility,
     shortcutConfig,
     commandPaletteShortcutOnly = false,
+    editOnClick = true,
     isDraggableBoxEnabled,
     featureFlags,
     syntaxHighlighting,
@@ -1403,10 +1682,10 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
     const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const isDark = editorTheme === "dark";
-    const requestedInitialMode = defaultEditorView ?? initialMode;
-    const resolvedInitialMode = availableModes.includes(requestedInitialMode)
+    const requestedInitialMode = toCanonicalExtensiveMode(defaultEditorView ?? initialMode);
+    const resolvedInitialMode = hasExtensiveMode(availableModes, requestedInitialMode)
       ? requestedInitialMode
-      : (availableModes[0] ?? "visual");
+      : toCanonicalExtensiveMode(availableModes[0] ?? "visual-editor");
     const resolvedIsEditorViewTabsVisible = isEditorViewTabsVisible ?? isEditorViewsTabVisible ?? true;
 
     const toggleTheme = () => setEditorTheme(isDark ? "light" : "dark");
@@ -1675,6 +1954,7 @@ export const ExtensiveEditor = forwardRef<ExtensiveEditorRef, ExtensiveEditorPro
             shortcutConfig={shortcutConfig}
             commandPaletteShortcutOnly={commandPaletteShortcutOnly}
             featureFlags={resolvedFeatureFlags}
+            editOnClick={editOnClick}
           />
         </Provider>
       </div>

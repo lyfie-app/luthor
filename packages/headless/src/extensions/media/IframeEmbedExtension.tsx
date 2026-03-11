@@ -53,6 +53,26 @@ export type IframeEmbedQueries = {
   isIframeEmbedAlignedRight: () => Promise<boolean>;
 };
 
+export function shouldShowEmbedResizeHandles(
+  isEditorEditable: boolean,
+  isSelected: boolean,
+  isResizing: boolean,
+): boolean {
+  return isEditorEditable && isSelected && !isResizing;
+}
+
+export function resolveEmbedPointerEvents(
+  isEditorEditable: boolean,
+  isSelected: boolean,
+  isResizing: boolean,
+): "auto" | "none" {
+  if (!isEditorEditable) {
+    return "auto";
+  }
+
+  return isSelected && !isResizing ? "auto" : "none";
+}
+
 type SerializedIframeEmbedNode = Spread<
   {
     type: "iframe-embed";
@@ -295,6 +315,7 @@ function IframeEmbedComponent({
   payload: IframeEmbedPayload;
 }) {
   const [editor] = useLexicalComposerContext();
+  const [isEditorEditable, setIsEditorEditable] = useState(() => editor.isEditable());
   const [isSelected, setIsSelected] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [localWidth, setLocalWidth] = useState(payload.width);
@@ -321,6 +342,12 @@ function IframeEmbedComponent({
       document.body.style.cursor = "";
     };
   }, []);
+
+  useEffect(() => {
+    return editor.registerEditableListener((editable) => {
+      setIsEditorEditable(editable);
+    });
+  }, [editor]);
 
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
@@ -433,7 +460,7 @@ function IframeEmbedComponent({
     }),
     [],
   );
-  const showResizeHandles = isSelected && !isResizing;
+  const showResizeHandles = shouldShowEmbedResizeHandles(isEditorEditable, isSelected, isResizing);
 
   return (
     <div style={wrapperStyle}>
@@ -442,7 +469,7 @@ function IframeEmbedComponent({
         className={`luthor-media-embed-shell${isSelected ? " is-selected" : ""}${isResizing ? " is-resizing" : ""}`}
         data-luthor-selection-anchor="true"
         style={{ width: localWidth, maxWidth: "100%" }}
-        onClick={selectNode}
+        onClick={isEditorEditable ? selectNode : undefined}
       >
         <iframe
           ref={iframeRef}
@@ -456,7 +483,7 @@ function IframeEmbedComponent({
             height: `${localHeight}px`,
             border: "0",
             display: "block",
-            pointerEvents: isSelected && !isResizing ? "auto" : "none",
+            pointerEvents: resolveEmbedPointerEvents(isEditorEditable, isSelected, isResizing),
           }}
         />
 

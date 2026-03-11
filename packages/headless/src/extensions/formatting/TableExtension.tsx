@@ -47,6 +47,10 @@ function clamp(value: number, min: number, max: number): number {
   return value;
 }
 
+export function isTableEditingUiEnabled(isEditorEditable: boolean): boolean {
+  return isEditorEditable;
+}
+
 /**
  * Table extension configuration options.
  */
@@ -214,6 +218,7 @@ function DefaultTableBubbleMenu({
 
 function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
   const { editor } = useEditor();
+  const [isEditorEditable, setIsEditorEditable] = useState(() => editor?.isEditable() ?? true);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [headersEnabled, setHeadersEnabled] = useState(false);
@@ -222,7 +227,7 @@ function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
   const viewportRafIdRef = useRef<number | null>(null);
 
   const runWithSelectedTableCell = (action: (cell: TableCellNode) => void) => {
-    if (!editor) {
+    if (!editor || !isTableEditingUiEnabled(editor.isEditable())) {
       return;
     }
 
@@ -259,6 +264,20 @@ function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
       return;
     }
 
+    return editor.registerEditableListener((editable) => {
+      setIsEditorEditable(editable);
+      if (!isTableEditingUiEnabled(editable)) {
+        setIsVisible(false);
+        setBubblePosition(null);
+      }
+    });
+  }, [editor]);
+
+  useEffect(() => {
+    if (!editor) {
+      return;
+    }
+
     const rootElement = editor.getRootElement();
     const container = (rootElement?.closest(".luthor-editor-wrapper") as HTMLElement | null)
       || rootElement?.parentElement
@@ -267,6 +286,12 @@ function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
 
     const updateBubbleState = () => {
       editor.getEditorState().read(() => {
+        if (!isTableEditingUiEnabled(editor.isEditable())) {
+          setIsVisible(false);
+          setBubblePosition(null);
+          return;
+        }
+
         const selection = $getSelection();
 
         if ($isRangeSelection(selection) && !selection.isCollapsed()) {
@@ -352,7 +377,13 @@ function TableQuickActionsPlugin({ extension }: { extension: TableExtension }) {
     };
   }, [editor]);
 
-  if (!portalContainer || !isVisible || !bubblePosition || typeof document === "undefined") {
+  if (
+    !isTableEditingUiEnabled(isEditorEditable) ||
+    !portalContainer ||
+    !isVisible ||
+    !bubblePosition ||
+    typeof document === "undefined"
+  ) {
     return null;
   }
 
@@ -520,7 +551,11 @@ export class TableExtension extends BaseExtension<
           id: 'table',
           priority: 10, // Higher priority for tables
 
-          canHandle: ({ target, selection }) => {
+          canHandle: ({ editor, target, selection }) => {
+            if (!isTableEditingUiEnabled(editor.isEditable())) {
+              return false;
+            }
+
             // Check if we're in a table cell
             const tableCell = target.closest('td, th, [data-lexical-table-cell]');
             if (!tableCell) return false;

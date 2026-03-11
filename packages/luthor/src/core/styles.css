@@ -955,6 +955,7 @@
 .luthor-source-panel {
 	padding: 20px;
 	flex: 1;
+	min-height: 0;
 	overflow-y: auto;
 	background-color: var(--luthor-bg);
 	transition: background-color var(--luthor-theme-transition), border-color var(--luthor-theme-transition), color var(--luthor-theme-transition);
@@ -962,7 +963,7 @@
 
 .luthor-source-view {
 	width: 100%;
-	min-height: 280px;
+	min-height: 400px;
 	padding: 12px;
 	border: 1px solid var(--luthor-border);
 	font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', 'Courier New', monospace;
@@ -971,7 +972,7 @@
 	background-color: var(--luthor-bg);
 	color: var(--luthor-fg);
 	border-radius: 0;
-	resize: vertical;
+	resize: none;
 	overflow-x: auto;
 	overflow-y: auto;
 	white-space: pre;

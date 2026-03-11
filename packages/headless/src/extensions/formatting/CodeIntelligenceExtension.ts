@@ -200,6 +200,10 @@ export class CodeIntelligenceExtension extends BaseExtension<
     nodeKey: string,
     selectedLanguage: string,
   ): void {
+    if (!editor.isEditable()) {
+      return;
+    }
+
     editor.update(() => {
       const node = $getNodeByKey(nodeKey);
       if (!node || !$isCodeNode(node)) {
@@ -365,6 +369,7 @@ function CodeBlockControlsPlugin({
   extension: CodeIntelligenceExtension;
 }) {
   const [editor] = useLexicalComposerContext();
+  const [isEditorEditable, setIsEditorEditable] = useState(() => editor.isEditable());
   const [controls, setControls] = useState<CodeBlockControlModel[]>([]);
   const [copyStateByNodeKey, setCopyStateByNodeKey] = useState<
     Record<string, "copied" | "error">
@@ -469,10 +474,14 @@ function CodeBlockControlsPlugin({
 
   const handleLanguageChange = useCallback(
     (nodeKey: string, value: string) => {
+      if (!isEditorEditable) {
+        return;
+      }
+
       extension.setCodeBlockLanguage(editor, nodeKey, value);
       scheduleSyncControls();
     },
-    [editor, extension, scheduleSyncControls],
+    [editor, extension, isEditorEditable, scheduleSyncControls],
   );
 
   const canCopy = extension.isCopyAllowed();
@@ -498,6 +507,10 @@ function CodeBlockControlsPlugin({
     },
     [canCopy, editor, extension, setFeedbackState],
   );
+
+  useEffect(() => {
+    return editor.registerEditableListener(setIsEditorEditable);
+  }, [editor]);
 
   useEffect(() => {
     scheduleSyncControls();
@@ -617,6 +630,8 @@ function CodeBlockControlsPlugin({
                 className: "luthor-codeblock-language",
                 value: control.language,
                 "aria-label": "Code language",
+                disabled: !isEditorEditable,
+                "aria-disabled": !isEditorEditable,
                 onChange: (event: Event) => {
                   const target = event.target as HTMLSelectElement;
                   handleLanguageChange(control.key, target.value);

@@ -23,9 +23,9 @@ export function App() {
 - `initialTheme`: `'light' (default) | 'dark'`
 - `onThemeChange`: `(theme: 'light' | 'dark') => void`
 - `showDefaultContent`: `true (default) | false`
-- `placeholder`: `'Write anything...' (default) | string | { visual?: string; json?: string }`
-- `initialMode`: `'visual' (default) | 'json'`
-- `availableModes`: `['visual', 'json'] (default) | ('visual' | 'json')[]`
+- `placeholder`: `'Write anything...' (default) | string | { visual?: string; json?: string; markdown?: string; html?: string }`
+- `initialMode`: `'visual-editor' (default) | 'visual-only' | 'visual' (legacy alias) | 'json' | 'markdown' | 'html'`
+- `availableModes`: `['visual-editor', 'visual-only', 'json', 'markdown', 'html'] (default) | ExtensiveEditorMode[]`
 - `toolbarPosition`: `'top' (default) | 'bottom'`
 - `toolbarAlignment`: `'left' (default) | 'center' | 'right'`
 - `isToolbarEnabled`: `true (default) | false`
@@ -33,6 +33,7 @@ export function App() {
 - `scaleByRatio`: `false (default) | true`
 - `syncHeadingOptionsWithCommands`: `true (default) | false`
 - `commandPaletteShortcutOnly`: `false (default) | true`
+- `editOnClick`: `true (default) | false` (in `visual-only` mode, click jumps into editable `visual-editor` mode at click/nearest line)
 - `isCopyAllowed`: `true (default) | false`
 - `syntaxHighlighting`: `'auto' | 'disabled'` | extension default behavior if omitted
 - `maxListIndentation`: `8 (default) | number` (sub-indent levels below root)

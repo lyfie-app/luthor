@@ -69,6 +69,15 @@ function clampSize(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+export function shouldShowImageResizeHandles(
+  isEditorEditable: boolean,
+  isSelected: boolean,
+  isResizing: boolean,
+  isResizable: boolean,
+): boolean {
+  return isEditorEditable && isResizable && isSelected && !isResizing;
+}
+
 /**
  * ImageComponent - React component for rendering and interacting with images
  *
@@ -104,6 +113,7 @@ function ImageComponent({
   const heightRef = useRef<number>(0);
   const [isSelected, setIsSelected] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isEditorEditable, setIsEditorEditable] = useState(() => editor.isEditable());
   const [currentWidth, setCurrentWidth] = useState<number | "auto">(
     width || "auto",
   );
@@ -138,6 +148,12 @@ function ImageComponent({
     };
   }, []);
 
+  useEffect(() => {
+    return editor.registerEditableListener((editable) => {
+      setIsEditorEditable(editable);
+    });
+  }, [editor]);
+
   // Listen for selection changes
   useEffect(() => {
     if (!nodeKey) return;
@@ -158,6 +174,10 @@ function ImageComponent({
 
   // Handle click to select
   const onClick = (event: React.MouseEvent) => {
+    if (!isEditorEditable) {
+      return;
+    }
+
     event.preventDefault();
     event.stopPropagation();
     if (!nodeKey) return;
@@ -171,7 +191,7 @@ function ImageComponent({
   const startResize =
     (axis: "width" | "height") =>
     (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (!imageRef.current || !nodeKey) {
+    if (!isEditorEditable || !imageRef.current || !nodeKey) {
       return;
     }
 
@@ -303,7 +323,12 @@ function ImageComponent({
     textAlign: "center",
   };
 
-  const showResizeHandles = isSelected && resizable && !isResizing;
+  const showResizeHandles = shouldShowImageResizeHandles(
+    isEditorEditable,
+    isSelected,
+    isResizing,
+    resizable,
+  );
 
   return (
     <figure
@@ -319,9 +344,9 @@ function ImageComponent({
           display: "inline-block",
           width: currentWidth,
           maxWidth: "100%",
-          cursor: "pointer",
+          cursor: isEditorEditable ? "pointer" : "default",
         }}
-        onClick={onClick}
+        onClick={isEditorEditable ? onClick : undefined}
       >
         <img ref={imageRef} src={src} alt={alt} style={imgStyle} />
         {resizable ? (

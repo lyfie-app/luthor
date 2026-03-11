@@ -18,6 +18,10 @@ const {
   markdownToJSONMock,
   richTextMock,
   sourceViewMock,
+  setFloatingToolbarContextMock,
+  slashCommandMenuMock,
+  emojiSuggestionMenuMock,
+  linkHoverBubbleMock,
 } = vi.hoisted(() => ({
   registerKeyboardShortcutsMock: vi.fn(() => vi.fn()),
   commandsToCommandPaletteItemsMock: vi.fn(() => [{ id: "mock-command" }]),
@@ -33,9 +37,29 @@ const {
   jsonToHTMLMock: vi.fn(() => "<p></p>"),
   jsonToMarkdownMock: vi.fn(() => ""),
   markdownToJSONMock: vi.fn(() => ({ root: { children: [] } })),
-  richTextMock: vi.fn(({ placeholder, classNames }: { placeholder?: string; classNames?: { placeholder?: string } }) => (
-    <div data-testid="richtext" data-placeholder-class={classNames?.placeholder}>{placeholder}</div>
-  )),
+  richTextMock: vi.fn(
+    ({
+      placeholder,
+      classNames,
+      nonEditableVisualMode,
+      onEditIntent,
+    }: {
+      placeholder?: string;
+      classNames?: { placeholder?: string };
+      nonEditableVisualMode?: boolean;
+      onEditIntent?: (position: { clientX: number; clientY: number }) => void;
+    }) => (
+      <button
+        type="button"
+        data-testid="richtext"
+        data-placeholder-class={classNames?.placeholder}
+        data-non-editable-visual-mode={nonEditableVisualMode ? "true" : "false"}
+        onClick={() => onEditIntent?.({ clientX: 88, clientY: 144 })}
+      >
+        {placeholder}
+      </button>
+    ),
+  ),
   sourceViewMock: vi.fn(
     ({
       value,
@@ -60,6 +84,10 @@ const {
       />
     ),
   ),
+  setFloatingToolbarContextMock: vi.fn(),
+  slashCommandMenuMock: vi.fn(() => null),
+  emojiSuggestionMenuMock: vi.fn(() => null),
+  linkHoverBubbleMock: vi.fn(() => null),
 }));
 
 vi.mock("lexical", () => ({
@@ -69,7 +97,7 @@ vi.mock("lexical", () => ({
 vi.mock("./extensions", () => ({
   extensiveExtensions: [],
   createExtensiveExtensions: createExtensiveExtensionsMock,
-  setFloatingToolbarContext: vi.fn(),
+  setFloatingToolbarContext: setFloatingToolbarContextMock,
   resolveFeatureFlags: vi.fn((featureFlags) => ({
     bold: true,
     italic: true,
@@ -145,8 +173,8 @@ vi.mock("./extensions", () => ({
 
 vi.mock("../../core", () => ({
   CommandPalette: commandPaletteMock,
-  SlashCommandMenu: () => null,
-  EmojiSuggestionMenu: () => null,
+  SlashCommandMenu: slashCommandMenuMock,
+  EmojiSuggestionMenu: emojiSuggestionMenuMock,
   commandsToCommandPaletteItems: commandsToCommandPaletteItemsMock,
   commandsToSlashCommandItems: commandsToSlashCommandItemsMock,
   formatHTMLSource: (value: string) => value,
@@ -154,7 +182,7 @@ vi.mock("../../core", () => ({
   formatMarkdownSource: (value: string) => value,
   ModeTabs: ({ availableModes, onModeChange }: { availableModes?: string[]; onModeChange: (mode: string) => void }) => (
     <div data-testid="mode-tabs">
-      {(availableModes ?? ["visual", "json"]).map((mode) => (
+      {(availableModes ?? ["visual-editor", "json"]).map((mode) => (
         <button key={mode} type="button" onClick={() => onModeChange(mode)}>
           {mode}
         </button>
@@ -168,7 +196,7 @@ vi.mock("../../core", () => ({
     { id: "insert.table", shortcuts: [] },
   ]),
   SourceView: sourceViewMock,
-  LinkHoverBubble: () => null,
+  LinkHoverBubble: linkHoverBubbleMock,
   Toolbar: toolbarMock,
   TRADITIONAL_TOOLBAR_LAYOUT: { sections: [] },
   BLOCK_HEADING_LEVELS: ["h1", "h2", "h3", "h4", "h5", "h6"],
@@ -249,13 +277,27 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(container.querySelector(".luthor-editor-toolbar-slot--bottom")).toBeNull();
   });
 
-  it("enables visual, json, markdown, and html modes by default", () => {
+  it("enables visual-only, visual-editor, json, markdown, and html modes by default", () => {
     render(<ExtensiveEditor showDefaultContent={false} />);
 
-    expect(screen.getByRole("button", { name: "visual" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "visual-only" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "visual-editor" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "json" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "markdown" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "html" })).toBeInTheDocument();
+  });
+
+  it("accepts legacy visual mode values as aliases for visual-editor", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual"
+        availableModes={["visual-only", "visual", "json"]}
+      />,
+    );
+
+    expect(screen.getByTestId("toolbar")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "visual" })).toBeInTheDocument();
   });
 
   it("renders toolbar in the bottom slot when toolbarPosition is bottom", () => {
@@ -956,6 +998,162 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     );
   });
 
+  it("renders visual-only mode as non-editable and hides toolbar affordances", () => {
+    const { container } = render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual-only"
+      />,
+    );
+
+    const richTextCall = richTextMock.mock.calls.at(-1)?.[0] as {
+      nonEditableVisualMode?: boolean;
+      onEditIntent?: unknown;
+    };
+    expect(richTextCall.nonEditableVisualMode).toBe(true);
+    expect(richTextCall.onEditIntent).toBeTypeOf("function");
+    expect(screen.queryByTestId("toolbar")).toBeNull();
+    expect(screen.queryByTestId("source-view")).toBeNull();
+    expect(container.querySelector(".luthor-editor")).toHaveClass("luthor-editor--draggable-disabled");
+    expect(container.querySelector(".luthor-editor-visual-gutter")).toBeNull();
+  });
+
+  it("disables editing overlays and editing menu shortcuts in visual-only mode", () => {
+    const subscribe = vi.fn((listener: (isOpen: boolean, items: Array<{ id: string; shortcut?: string }>) => void) => {
+      listener(true, [{ id: "format.bold", shortcut: "Ctrl+B" }]);
+      return () => {};
+    });
+    mockEditorApi.extensions = [{ name: "commandPalette", subscribe }] as any;
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual-only"
+      />,
+    );
+
+    expect(commandPaletteMock).not.toHaveBeenCalled();
+    expect(slashCommandMenuMock).not.toHaveBeenCalled();
+    expect(emojiSuggestionMenuMock).not.toHaveBeenCalled();
+    expect(mockEditorApi.commands.hideCommandPalette).toHaveBeenCalled();
+    expect(mockEditorApi.commands.closeSlashMenu).toHaveBeenCalled();
+    expect(mockEditorApi.commands.closeEmojiSuggestions).toHaveBeenCalled();
+
+    const floatingToolbarCall = setFloatingToolbarContextMock.mock.calls.at(-1) as
+      | [unknown, unknown, unknown, ((feature: string) => boolean)?]
+      | undefined;
+    expect(floatingToolbarCall?.[3]?.("bold")).toBe(false);
+    expect(floatingToolbarCall?.[3]?.("commandPalette")).toBe(false);
+
+    const shortcutRegistrationCall = registerKeyboardShortcutsMock.mock.calls.at(-1) as
+      | [unknown, unknown, { isFeatureEnabled?: (feature: string) => boolean }]
+      | undefined;
+    expect(shortcutRegistrationCall?.[2]?.isFeatureEnabled?.("bold")).toBe(false);
+    expect(shortcutRegistrationCall?.[2]?.isFeatureEnabled?.("commandPalette")).toBe(false);
+  });
+
+  it("switches from visual-only to visual-editor when editOnClick is enabled", async () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual-only"
+        availableModes={["visual-only", "visual-editor", "json"]}
+        editOnClick
+      />,
+    );
+
+    expect(screen.queryByTestId("toolbar")).toBeNull();
+    fireEvent.click(screen.getByTestId("richtext"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("toolbar")).toBeInTheDocument();
+      expect(mockEditorApi.lexical.focus).toHaveBeenCalled();
+    });
+  });
+
+  it("places caret near clicked line when editOnClick transitions to visual-editor mode", async () => {
+    const getSelectionSpy = vi.spyOn(window, "getSelection").mockReturnValue({
+      removeAllRanges: vi.fn(),
+      addRange: vi.fn(),
+    } as unknown as Selection);
+
+    const offsetNode = document.createTextNode("line");
+    const editable = document.createElement("div");
+    const line = document.createElement("p");
+    line.append(offsetNode);
+    editable.append(line);
+
+    Object.defineProperty(editable, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        left: 0,
+        right: 500,
+      }),
+    });
+    Object.defineProperty(line, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({
+        top: 120,
+        bottom: 180,
+        height: 60,
+      }),
+    });
+
+    const originalGetRootElement = mockEditorApi.lexical.getRootElement;
+    mockEditorApi.lexical.getRootElement = vi.fn(() => editable);
+
+    const caretPositionFromPointMock = vi.fn(() => ({
+      offsetNode,
+      offset: 0,
+    }));
+    const originalCaretPositionFromPoint = (
+      document as Document & {
+        caretPositionFromPoint?: unknown;
+      }
+    ).caretPositionFromPoint;
+    Object.defineProperty(document, "caretPositionFromPoint", {
+      configurable: true,
+      value: caretPositionFromPointMock,
+    });
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual-only"
+        availableModes={["visual-only", "visual-editor"]}
+        editOnClick
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("richtext"));
+
+    await waitFor(() => {
+      expect(caretPositionFromPointMock).toHaveBeenCalled();
+    });
+
+    getSelectionSpy.mockRestore();
+    Object.defineProperty(document, "caretPositionFromPoint", {
+      configurable: true,
+      value: originalCaretPositionFromPoint,
+    });
+    mockEditorApi.lexical.getRootElement = originalGetRootElement;
+  });
+
+  it("keeps visual-only mode locked when editOnClick is disabled", () => {
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="visual-only"
+        availableModes={["visual-only", "visual-editor", "json"]}
+        editOnClick={false}
+      />,
+    );
+
+    fireEvent.click(screen.getByTestId("richtext"));
+    expect(screen.queryByTestId("toolbar")).toBeNull();
+    expect(mockEditorApi.lexical.focus).not.toHaveBeenCalled();
+  });
+
   it("supports mode-specific placeholder pass-through for visual and json modes", () => {
     render(
       <ExtensiveEditor
@@ -988,7 +1186,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="markdown"
-        availableModes={["visual", "markdown"]}
+        availableModes={["visual-editor", "markdown"]}
         placeholder={{
           visual: "Write in visual mode",
           markdown: "Write markdown here",
@@ -1019,7 +1217,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="html"
-        availableModes={["visual", "html"]}
+        availableModes={["visual-editor", "html"]}
         placeholder={{
           visual: "Write in visual mode",
           html: "Write HTML here",
@@ -1055,7 +1253,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="markdown"
-        availableModes={["visual", "markdown", "json"]}
+        availableModes={["visual-editor", "markdown", "json"]}
       />,
     );
 
@@ -1073,16 +1271,16 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     });
   });
 
-  it("does not re-import untouched html source when returning to visual mode", async () => {
+  it("does not re-import untouched html source when returning to visual-editor mode", async () => {
     render(
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="html"
-        availableModes={["visual", "html"]}
+        availableModes={["visual-editor", "html"]}
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+    fireEvent.click(screen.getByRole("button", { name: "visual-editor" }));
 
     await waitFor(() => {
       expect(screen.queryByTestId("source-view")).not.toBeInTheDocument();
@@ -1090,7 +1288,7 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
     expect(htmlToJSONMock).not.toHaveBeenCalled();
   });
 
-  it("imports html source only after user edits before switching to visual mode", async () => {
+  it("imports html source only after user edits before switching to visual-editor mode", async () => {
     const importedDocument = { root: { children: [{ type: "paragraph", marker: "from-html" }] } };
     htmlToJSONMock.mockReturnValueOnce(importedDocument);
 
@@ -1098,19 +1296,61 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="html"
-        availableModes={["visual", "html"]}
+        availableModes={["visual-editor", "html"]}
       />,
     );
 
     fireEvent.change(screen.getByTestId("source-view"), {
       target: { value: "<p>Updated in html</p>" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+    fireEvent.click(screen.getByRole("button", { name: "visual-editor" }));
 
     await waitFor(() => {
       expect(htmlToJSONMock).toHaveBeenCalledWith("<p>Updated in html</p>");
     });
     expect(mockEditorApi.import.fromJSON).toHaveBeenCalledWith(importedDocument);
+  });
+
+  it("resets visual editor scroll position when switching from source mode", async () => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "luthor-editor-wrapper";
+    wrapper.style.overflowY = "auto";
+    wrapper.scrollTop = 240;
+
+    const root = document.createElement("div");
+    root.className = "luthor-content-editable";
+    root.scrollTop = 180;
+    wrapper.append(root);
+    document.body.append(wrapper);
+
+    const originalGetRootElement = mockEditorApi.lexical.getRootElement;
+    mockEditorApi.lexical.getRootElement = vi.fn(() => root);
+
+    const requestAnimationFrameSpy = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation((callback: FrameRequestCallback) => {
+        callback(0);
+        return 1;
+      });
+
+    render(
+      <ExtensiveEditor
+        showDefaultContent={false}
+        initialMode="json"
+        availableModes={["visual-editor", "json"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "visual-editor" }));
+
+    await waitFor(() => {
+      expect(root.scrollTop).toBe(0);
+      expect(wrapper.scrollTop).toBe(0);
+    });
+    expect(mockEditorApi.lexical.focus).not.toHaveBeenCalled();
+
+    requestAnimationFrameSpy.mockRestore();
+    mockEditorApi.lexical.getRootElement = originalGetRootElement;
   });
 
   it("shows mode-specific errors and prevents destructive switch on invalid html", async () => {
@@ -1122,14 +1362,14 @@ describe("ExtensiveEditor toolbar placement and alignment", () => {
       <ExtensiveEditor
         showDefaultContent={false}
         initialMode="html"
-        availableModes={["visual", "html"]}
+        availableModes={["visual-editor", "html"]}
       />,
     );
 
     fireEvent.change(screen.getByTestId("source-view"), {
       target: { value: "<div><p>broken" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "visual" }));
+    fireEvent.click(screen.getByRole("button", { name: "visual-editor" }));
 
     await waitFor(() => {
       expect(screen.getByText("Invalid HTML")).toBeInTheDocument();

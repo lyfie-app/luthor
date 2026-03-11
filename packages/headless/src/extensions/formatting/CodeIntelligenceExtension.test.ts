@@ -1,4 +1,6 @@
+import type { LexicalEditor } from "lexical";
 import { CodeIntelligenceExtension } from "./CodeIntelligenceExtension";
+import { describe, expect, it, vi } from "vitest";
 
 describe("CodeIntelligenceExtension language options", () => {
   it("returns default language options when no override is provided", () => {
@@ -78,5 +80,31 @@ describe("CodeIntelligenceExtension language options", () => {
     expect(extension.getThemeForLanguage?.("typescript")).toBe("hljs");
     expect(extension.getThemeForLanguage?.("javascript")).toBe("hljs");
     expect(extension.getThemeForLanguage?.("tsx")).toBe("plain");
+  });
+
+  it("does not update code block language when the editor is non-editable", () => {
+    const extension = new CodeIntelligenceExtension();
+    const update = vi.fn();
+    const editor = {
+      isEditable: () => false,
+      update,
+    } as unknown as LexicalEditor;
+
+    extension.setCodeBlockLanguage(editor, "node-key", "typescript");
+
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it("queues code block language updates when the editor is editable", () => {
+    const extension = new CodeIntelligenceExtension();
+    const update = vi.fn();
+    const editor = {
+      isEditable: () => true,
+      update,
+    } as unknown as LexicalEditor;
+
+    extension.setCodeBlockLanguage(editor, "node-key", "typescript");
+
+    expect(update).toHaveBeenCalledTimes(1);
   });
 });
