@@ -7,7 +7,8 @@ import {
   GITHUB_URL,
   MAINTAINER_ORG_NAME,
   MAINTAINER_ORG_URL,
-  NPM_URL,
+  LYFIE_HEADLESS_NPM_URL,
+  LYFIE_NPM_URL,
   REACT_PLAYGROUND_URL,
   SPONSORS_URL,
 } from '@/config/site';
@@ -28,11 +29,9 @@ export function SiteFooter() {
             />
           </Link>
           <p>
-            A headless, extensible rich text editor built on Lexical.
+            An extensible rich text editor framework built on Lexical.
             Ship faster with production-ready defaults and TypeScript-first APIs.
             {' '}
-            Maintained by <a href={MAINTAINER_ORG_URL}>{MAINTAINER_ORG_NAME}</a>, created by{' '}
-            <a href={CREATOR_URL}>{CREATOR_NAME}</a> (BDFL of {MAINTAINER_ORG_NAME}).
           </p>
         </section>
 
@@ -72,11 +71,15 @@ export function SiteFooter() {
           </a>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
             <GithubLogo size={14} weight="duotone" aria-hidden="true" />
-            <span>GitHub Repository</span>
+            <span>GitHub</span>
           </a>
-          <a href={NPM_URL} target="_blank" rel="noopener noreferrer">
+          <a href={LYFIE_NPM_URL} target="_blank" rel="noopener noreferrer">
             <Package size={14} weight="duotone" aria-hidden="true" />
-            <span>npm Package</span>
+            <span>luthor @ npm</span>
+          </a>
+          <a href={LYFIE_HEADLESS_NPM_URL} target="_blank" rel="noopener noreferrer">
+            <Package size={14} weight="duotone" aria-hidden="true" />
+            <span>luthor-headless @ npm</span>
           </a>
         </section>
 
@@ -94,14 +97,15 @@ export function SiteFooter() {
       </div>
 
       <div className="container footer-bottom">
-        <p>Built with love by developers for developers at {MAINTAINER_ORG_NAME}.</p>
+        <p>Built with ❤️ by <a href={MAINTAINER_ORG_URL}>{MAINTAINER_ORG_NAME}</a>
+        </p>
         <div className="footer-bottom-links">
           <Link href="/">Home</Link>
           <Link href="/docs/getting-started/">Docs</Link>
           <Link href="/#features">Features</Link>
           <Link href="/demo/">Demo</Link>
           <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-            GitHub Repo
+            GitHub
           </a>
           <a href="/llms.txt">llms.txt</a>
           <a href="/llms-full.txt">llms-full.txt</a>

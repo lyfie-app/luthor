@@ -245,6 +245,38 @@ describe("HeadlessEditorPreset", () => {
     expect(screen.getByTestId("source-view")).toBeInTheDocument();
   });
 
+  it("applies and updates wrapper theme from initialTheme", async () => {
+    const onThemeChange = vi.fn();
+    const { container, rerender } = render(
+      <HeadlessEditorPreset
+        showDefaultContent={false}
+        initialTheme="dark"
+        onThemeChange={onThemeChange}
+      />,
+    );
+
+    const wrapper = container.querySelector(".luthor-preset-headless-editor");
+    expect(wrapper).toHaveAttribute("data-editor-theme", "dark");
+
+    await waitFor(() => {
+      expect(onThemeChange).toHaveBeenCalledWith("dark");
+    });
+
+    rerender(
+      <HeadlessEditorPreset
+        showDefaultContent={false}
+        initialTheme="light"
+        onThemeChange={onThemeChange}
+      />,
+    );
+
+    expect(wrapper).toHaveAttribute("data-editor-theme", "light");
+
+    await waitFor(() => {
+      expect(onThemeChange).toHaveBeenLastCalledWith("light");
+    });
+  });
+
   it("routes markdown source back into visual mode and surfaces source errors", async () => {
     render(<HeadlessEditorPreset showDefaultContent={false} />);
 
