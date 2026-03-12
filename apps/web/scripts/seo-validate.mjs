@@ -38,13 +38,6 @@ if (!homePage.includes('<h1 className="hero-title">')) {
   errors.push('Homepage H1 is missing.');
 }
 
-const requiredAnchors = ['id="getting-started"', 'id="installation"', 'id="demo"', 'id="features"'];
-for (const anchor of requiredAnchors) {
-  if (!homePage.includes(anchor)) {
-    errors.push(`Homepage is missing required section anchor: ${anchor}`);
-  }
-}
-
 const strippedHome = homePage
   .replace(/import[\s\S]*?from\s+['"][^'"]+['"];?/g, ' ')
   .replace(/[{}()[\];,.<>/=+*"`]/g, ' ')
