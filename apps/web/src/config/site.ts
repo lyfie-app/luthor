@@ -92,7 +92,8 @@ export const SOCIAL_CARD_PATH = '/social-card.svg';
 export const PRIMARY_PACKAGE_NAME = '@lyfie/luthor';
 export const HEADLESS_PACKAGE_NAME = '@lyfie/luthor-headless';
 export const GITHUB_URL = 'https://github.com/lyfie-org/luthor';
-export const NPM_URL = 'https://www.npmjs.com/package/@lyfie/luthor';
+export const LYFIE_NPM_URL = 'https://www.npmjs.com/package/@lyfie/luthor';
+export const LYFIE_HEADLESS_NPM_URL = 'https://www.npmjs.com/package/@lyfie/luthor';
 export const SPONSORS_URL = 'https://github.com/sponsors/lyfie-org';
 export const REACT_PLAYGROUND_URL = 'https://stackblitz.com/edit/luthor-playground';
 export const INSTALL_COMMAND = 'npm install @lyfie/luthor react react-dom';
@@ -110,6 +111,11 @@ export const SEO_FAQS = [
       `Start with ${PRIMARY_PACKAGE_NAME} for the fastest setup. Use ${HEADLESS_PACKAGE_NAME} when you need full custom UI control.`,
   },
   {
+    question: `How customizable is the all-inclusive ${PRIMARY_PACKAGE_NAME} package?`,
+    answer:
+      `yes.`,
+  },
+  {
     question: 'Can I ship this in a commercial app?',
     answer:
       'Yes. It is MIT licensed and free for commercial use.',
@@ -122,17 +128,17 @@ export const SEO_FAQS = [
   {
     question: `Do I need Lexical setup for ${PRIMARY_PACKAGE_NAME}?`,
     answer:
-      'No extra setup is needed for the preset package. Headless is where you manage Lexical-level composition.',
+      `${PRIMARY_PACKAGE_NAME} comes with everything you need out of the box. No extra setup is needed. However, ${HEADLESS_PACKAGE_NAME} is where you manage Lexical-level package composition.`,
   },
   {
     question: 'Can I switch from preset to headless later?',
     answer:
-      `Yes. Start with ${PRIMARY_PACKAGE_NAME} and move to ${HEADLESS_PACKAGE_NAME} as your product needs deeper customization.`,
+      `Yes. Start with ${PRIMARY_PACKAGE_NAME} and move to ${HEADLESS_PACKAGE_NAME} as your product needs deeper customization. Since ${PRIMARY_PACKAGE_NAME} exports all the headless primitives as well, you can incrementally replace preset components with headless ones without a full rewrite.`,
   },
   {
     question: 'What data format should I persist?',
     answer:
-      'Use JSON for reliable round trips and database-friendly storage.',
+      'Use JSON for reliable round trips and database-friendly storage. But you can also export HTML or Markdown if that suits your use case better.',
   },
   {
     question: 'Is TypeScript support first-class?',

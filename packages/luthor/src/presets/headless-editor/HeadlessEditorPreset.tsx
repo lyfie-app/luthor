@@ -675,6 +675,8 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
     {
       className,
       variantClassName,
+      initialTheme = "light",
+      onThemeChange,
       placeholder,
       onReady,
       defaultContent,
@@ -687,6 +689,8 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
     ref,
   ) => {
     void unusedProps;
+
+    const [editorTheme, setEditorTheme] = useState<"light" | "dark">(initialTheme);
 
     const requestedInitialMode = defaultEditorView ?? initialMode;
     const resolvedInitialMode = HEADLESS_EDITOR_DEFAULT_MODES.includes(requestedInitialMode)
@@ -714,6 +718,15 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
 
     const [methods, setMethods] = useState<HeadlessEditorMethods | null>(null);
     const didHydrateDefaultContentRef = useRef(false);
+
+    useEffect(() => {
+      setEditorTheme(initialTheme);
+    }, [initialTheme]);
+
+    useEffect(() => {
+      onThemeChange?.(editorTheme);
+    }, [editorTheme, onThemeChange]);
+
     useImperativeHandle(
       ref,
       () =>
@@ -754,6 +767,7 @@ export const HeadlessEditorPreset = forwardRef<ExtensiveEditorRef, HeadlessEdito
           variantClassName,
           className,
         )}
+        data-editor-theme={editorTheme}
       >
         <Provider extensions={presetExtensions}>
           <HeadlessEditorContent
