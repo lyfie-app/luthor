@@ -10,7 +10,7 @@ import {
   SlashEditor,
 } from "@lyfie/luthor";
 import "@lyfie/luthor/styles.css";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDemoTheme } from "./hooks/useDemoTheme";
 import "highlight.js/styles/github.css";
 
@@ -38,12 +38,36 @@ const PRESET_OPTIONS: Array<{ value: PresetId; label: string }> = [
 function App() {
   const { theme, toggleTheme } = useDemoTheme();
   const [preset, setPreset] = useState<PresetId>("extensive");
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const extensiveEditorRef = useRef<ExtensiveEditorRef | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMessage(null);
+      toastTimeoutRef.current = null;
+    }, 1800);
+  };
 
   const handleSave = () => {
     const methods = extensiveEditorRef.current;
     if (!methods) {
       console.log("demo-save-snapshot-unavailable", { preset });
+      showToast("Save unavailable for this preset.");
       return;
     }
 
@@ -54,6 +78,7 @@ function App() {
     };
 
     console.log("demo-save-snapshot", snapshot);
+    showToast("Done. Printed to console log.");
   };
 
   const presetNode = useMemo(() => {
@@ -158,6 +183,11 @@ function App() {
           </div>
         </main>
       </div>
+      {toastMessage ? (
+        <div className="demo-toast" role="status" aria-live="polite">
+          {toastMessage}
+        </div>
+      ) : null}
     </div>
   );
 }
